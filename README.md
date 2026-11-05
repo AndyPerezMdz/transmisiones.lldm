@@ -28,8 +28,8 @@ Si se cae el internet a media reunión, las TVs conectadas a la laptop siguen fu
 2. En **SQL Editor**, pega y ejecuta `supabase/migrations/20261105000000_inicio.sql`. Si usas el CLI, basta con `supabase db push`.
 3. En **Authentication → Sign In / Providers → Email**, desactiva *Allow new users to sign up* para que nadie más pueda crear cuenta.
 4. En **Authentication → Users → Add user**, crea tu usuario con correo y contraseña.
-5. En **Project Settings → API**, copia la *Project URL* y la *anon public key* a `public/config.js`.
-   La anon key está hecha para ir en el navegador. **Nunca** pongas la `service_role` key en el repo.
+5. En **Project Settings → API**, copia la *Project URL* y la *publishable key* (o la *anon key* antigua) a `public/config.js`.
+   La publishable key está hecha para ir en el navegador. **Nunca** pongas la *secret* / `service_role` key en el repo.
 
 ### 2. Vercel
 

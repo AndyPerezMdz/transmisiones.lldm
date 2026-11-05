@@ -19,7 +19,7 @@
 
   <!-- Lo que se ve ahora -->
   <section class="tarjeta ahora" id="ahora">
-    <div class="monitor"><iframe id="monitor" title="Vista de las TVs" tabindex="-1"></iframe><span class="monitor-tag">Así se ve en las TVs</span></div>
+    <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1"></iframe><span class="monitor-tag">Así se ve en la transmisión</span></div>
     <div class="ahora-info">
       <div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div>
       <div class="ahora-titulo" id="onairLabel">Las TVs muestran el fondo</div>
@@ -37,6 +37,13 @@
         <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U">📍 Ubicación</button>
         <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes">⚙ Ajustes</button>
       </div>
+      <form class="expositor" id="spForm" autocomplete="off">
+        <span class="expositor-tit">🎤 Quién expone</span>
+        <input class="campo" id="spName" maxlength="80" placeholder="Nombre, ej. Hno. Juan Pérez">
+        <input class="campo" id="spRole" maxlength="60" placeholder="Cargo (opcional), ej. Ministro">
+        <button class="btn btn-oro" id="btnSpeaker" type="submit" title="Tecla N">Mostrar nombre</button>
+        <div class="recientes" id="spRecent"></div>
+      </form>
     </div>
     <ol class="partes" id="slides" aria-label="Partes"></ol>
   </section>
@@ -96,6 +103,10 @@
       <span class="chico">Pon 0 para que se quede hasta que lo quites tú.</span>
     </label>
     <label class="fila etiqueta"><input name="showBanner" type="checkbox"> Mostrar el letrero en la transmisión cada vez que pongas algo</label>
+    <label class="etiqueta">¿Cuántos segundos se queda el nombre del expositor?
+      <input class="campo" name="speakerSeconds" type="number" min="0" max="3600" step="1">
+      <span class="chico">Pon 0 para que se quede hasta que lo quites tú.</span>
+    </label>
     <label class="etiqueta">Acento del micrófono
       <select class="campo" name="voiceLang">
         <option value="es-MX">Español de México</option>
@@ -106,8 +117,8 @@
       </select>
     </label>
     <div class="enlaces">
-      <span class="chico">Enlace para las TVs</span><code id="urlTv"></code>
-      <span class="chico">Enlace para OBS</span><code id="urlObs"></code>
+      <span class="chico">Gráficos para OBS (logos, letrero y expositor)</span><code id="urlObs"></code>
+      <span class="chico">Letra completa, opcional (otra fuente de Navegador en OBS)</span><code id="urlTv"></code>
     </div>
     <div class="dialogo-pie">
       <button class="btn btn-sec" value="cancel" formnovalidate>Cancelar</button>
@@ -121,8 +132,9 @@
     <h2 class="titulo" style="font-size:22px">Cómo se usa la cabina</h2>
     <ol class="guia">
       <li><span class="paso">1</span><div><b>Presiona “Escuchar”.</b> La cabina oye al expositor por el micrófono. Cuando diga una cita (“Juan capítulo 3, versículo 16”), un himno, un coro o el tema, aparece una tarjeta.</div></li>
-      <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en las TVs y, si está activado, en el letrero de la transmisión. Nada sale solo.</div></li>
+      <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en el letrero de la transmisión (y por lo tanto en las TVs). Nada sale solo.</div></li>
       <li><span class="paso">3</span><div><b>Avanza con “Siguiente”</b> para pasar de versículo o de estrofa. <b>Quitar todo</b> deja las TVs con el fondo (y el tema, si hay).</div></li>
+      <li><span class="paso">🎤</span><div><b>Nombre del expositor:</b> escríbelo arriba en “Quién expone” y presiona <b>Mostrar nombre</b>. Se queda abajo a la izquierda hasta que lo ocultes.</div></li>
       <li><span class="paso">✎</span><div><b>¿No lo detectó?</b> Escríbelo en “O búscalo tú”: <code>Juan 3:16</code>, <code>himno 25</code>, <code>coro 7</code> o un pedazo de la letra, y presiona Enter.</div></li>
     </ol>
     <h3>Teclas rápidas</h3>
@@ -134,6 +146,7 @@
       <span><kbd>Esc</kbd> quitar todo</span>
       <span><kbd>B</kbd> ocultar texto</span>
       <span><kbd>O</kbd> letrero</span>
+      <span><kbd>N</kbd> nombre del expositor</span>
       <span><kbd>M</kbd> micrófono</span>
       <span><kbd>/</kbd> buscar</span>
     </div>

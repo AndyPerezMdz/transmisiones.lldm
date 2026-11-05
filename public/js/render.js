@@ -15,17 +15,33 @@ export const POSITIONS = {
   'arriba-izq': 'Arriba a la izquierda', 'arriba-der': 'Arriba a la derecha'
 };
 
+// Plantilla de un letrero (se usa para el de cantos/citas/tema y para el del expositor).
+const lowerThird = ({ position, margin, tag, title }) => ({
+  mode: 'default',              // 'default' | 'image'
+  anim: 'deslizar',             // 'deslizar' | 'aparecer'
+  position, size: 100, margin,  // margin: distancia al borde en px (x horizontal, y vertical)
+  colors: { bg: '#0a3156', accent: '#c7ae6e', text: '#ffffff', tagText: '#061f38' },
+  font: 'inter', tagFont: 'cinzel',
+  image: null,                  // { url, w, h, x, y, width }
+  tag:   { show: true, w: 420, size: 30, color: '#ffffff', font: 'cinzel', weight: 800, align: 'left', upper: true, ...tag },
+  title: { show: true, w: 1100, size: 54, color: '#ffffff', font: 'inter', weight: 600, align: 'left', upper: false, ...title }
+});
+
+export const LAYER_SLOTS = {
+  izq:    { name: 'Arriba a la izquierda', hint: 'Otra imagen (por ejemplo, el logo del aniversario)' },
+  der:    { name: 'Arriba a la derecha', hint: 'Logo de la iglesia' },
+  centro: { name: 'Abajo, a todo lo ancho', hint: 'La imagen central de abajo' }
+};
+
 export const DEFAULT_DESIGN = {
-  banner: {
-    mode: 'default',              // 'default' | 'image'
-    anim: 'deslizar',             // 'deslizar' | 'aparecer'
-    position: 'abajo-izq', size: 100,
-    colors: { bg: '#0a3156', accent: '#c7ae6e', text: '#ffffff', tagText: '#061f38' },
-    font: 'inter', tagFont: 'cinzel',
-    image: null,                  // { url, w, h, x, y, width }
-    tag:   { show: true, x: 160, y: 868, w: 420, size: 30, color: '#ffffff', font: 'cinzel', weight: 800, align: 'left', upper: true },
-    title: { show: true, x: 160, y: 910, w: 1100, size: 54, color: '#ffffff', font: 'inter', weight: 600, align: 'left', upper: false }
-  },
+  // Cantos, citas y tema: arriba a la derecha, abajo del logo de la iglesia.
+  banner: lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
+    tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } }),
+  // Nombre del expositor: abajo a la izquierda, encima de la imagen central.
+  speaker: lowerThird({ position: 'abajo-izq', margin: { x: 70, y: 210 },
+    tag: { x: 120, y: 720, w: 500 }, title: { x: 120, y: 762, w: 900 } }),
+  // Imágenes que siempre están encima de la transmisión.
+  layers: { izq: null, der: null, centro: null },  // cada una: { url, w, h, x, y, width }
   screen: {
     bg: 'default',                // 'default' | 'color' | 'image'
     color: '#0a3156', image: null, dim: 45,
@@ -34,6 +50,13 @@ export const DEFAULT_DESIGN = {
     version: true
   }
 };
+
+// Dónde se coloca una imagen fija la primera vez que se sube.
+export function placeLayer(slot, w, h) {
+  if (slot === 'centro') { const width = 1920; return { x: 0, y: Math.max(0, 1080 - Math.round(width * h / w)), width }; }
+  const width = Math.min(320, w);
+  return { x: slot === 'izq' ? 40 : 1920 - 40 - width, y: 30, width };
+}
 
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 export function mergeDesign(saved) {
@@ -45,35 +68,38 @@ export function mergeDesign(saved) {
   return merge(DEFAULT_DESIGN, isObj(saved) ? saved : {});
 }
 
-// ---------- Letrero ----------
-// stage: un div de 1920x1080. Devuelve { show(tag, title), hide() }.
-export function createBanner(stage) {
+// ---------- Letreros ----------
+// stage: un div de 1920x1080. kind: 'banner' (cantos, citas, tema) o 'speaker' (expositor).
+export function createBanner(stage, { kind = 'banner' } = {}) {
   const root = document.createElement('div');
   root.className = 'lt';
   stage.append(root);
-  let design = mergeDesign().banner, current = null, swapTimer;
+  let design = mergeDesign()[kind], current = null, swapTimer;
+  const base = () => 'lt lt-' + kind;
 
   function build() {
     root.replaceChildren();
     root.dataset.anim = design.anim;
     if (design.mode === 'image' && design.image?.url) {
-      root.className = 'lt lt-imagen';
+      root.className = base() + ' lt-imagen';
+      root.removeAttribute('style');
       const img = document.createElement('img');
-      img.src = design.image.url; img.alt = ''; img.draggable = false;
+      img.src = design.image.url; img.alt = ''; img.draggable = false; img.dataset.drag = kind + '.image';
       Object.assign(img.style, { left: design.image.x + 'px', top: design.image.y + 'px', width: design.image.width + 'px' });
       root.append(img);
       for (const key of ['tag', 'title']) {
         const t = design[key];
         const box = document.createElement('div');
-        box.className = 'lt-txt lt-' + key; box.dataset.key = key;
+        box.className = 'lt-txt lt-' + key; box.dataset.key = key; box.dataset.drag = kind + '.' + key;
         Object.assign(box.style, { left: t.x + 'px', top: t.y + 'px', width: t.w + 'px', fontSize: t.size + 'px', color: t.color,
           fontFamily: fontCss(t.font), fontWeight: t.weight, textAlign: t.align, textTransform: t.upper ? 'uppercase' : 'none' });
         box.hidden = !t.show;
         root.append(box);
       }
     } else {
-      root.className = 'lt lt-normal pos-' + design.position;
+      root.className = base() + ' lt-normal pos-' + design.position;
       const c = design.colors;
+      root.style.setProperty('--x', (design.margin?.x ?? 70) + 'px'); root.style.setProperty('--y', (design.margin?.y ?? 110) + 'px');
       root.style.setProperty('--lt-bg', c.bg); root.style.setProperty('--lt-accent', c.accent);
       root.style.setProperty('--lt-text', c.text); root.style.setProperty('--lt-tag-text', c.tagText);
       root.style.setProperty('--lt-scale', design.size / 100);
@@ -94,7 +120,7 @@ export function createBanner(stage) {
   }
 
   return {
-    setDesign(d) { design = mergeDesign({ banner: d }).banner; build(); },
+    setDesign(d) { design = mergeDesign({ [kind]: d })[kind]; build(); },
     show(tag, title, { instant = false } = {}) {
       clearTimeout(swapTimer);
       const next = { tag, title };
@@ -117,6 +143,27 @@ export function shrinkToWidth(box, max) {
   box.style.fontSize = size + 'px';
   box.style.whiteSpace = 'nowrap';
   while (box.scrollWidth > box.clientWidth + 1 && size > 12) { size -= 2; box.style.fontSize = size + 'px'; }
+}
+
+// ---------- Imágenes fijas (logos) ----------
+export function createLayers(stage) {
+  const root = document.createElement('div');
+  root.className = 'capas';
+  stage.prepend(root);
+  return {
+    setDesign(layers) {
+      root.replaceChildren();
+      for (const slot of Object.keys(LAYER_SLOTS)) {
+        const l = layers?.[slot];
+        if (!l?.url) continue;
+        const img = document.createElement('img');
+        img.src = l.url; img.alt = ''; img.draggable = false; img.dataset.drag = 'layers.' + slot;
+        Object.assign(img.style, { left: l.x + 'px', top: l.y + 'px', width: l.width + 'px' });
+        root.append(img);
+      }
+    },
+    root
+  };
 }
 
 // ---------- Pantallas (TVs) ----------

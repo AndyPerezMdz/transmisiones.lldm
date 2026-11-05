@@ -31,8 +31,7 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .txt-opc { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 
 /* Arrastrar sobre la vista previa */
-.editando .lt { pointer-events: auto; }
-.editando .lt-imagen img, .editando .lt-imagen .lt-txt { cursor: move; touch-action: none; }
+.editando.edit-banner .lt-banner.lt-imagen :is(img, .lt-txt), .editando.edit-speaker .lt-speaker.lt-imagen :is(img, .lt-txt) { pointer-events: auto; cursor: move; touch-action: none; }
 .editando .lt-imagen .lt-txt { outline: 3px dashed rgb(220 203 152 / .75); outline-offset: 4px; }
 .editando .lt-imagen .sel { outline: 4px solid #dccb98; }
 .editando .lt-imagen img.sel { outline-offset: 0; }
@@ -48,3 +47,17 @@ input[type=range] { width: 100%; margin-top: 8px; }
   .editor-grid { grid-template-columns: 1fr; }
   .vista { position: static; }
 }
+
+.capa-fila { display: grid; grid-template-columns: 64px 1fr; gap: 6px 12px; align-items: center; padding: 12px; border: 1px solid var(--borde); border-radius: 14px; }
+.capa-fila + .capa-fila { margin-top: 10px; }
+.capa-mini { width: 64px; height: 44px; border-radius: 8px; background: repeating-conic-gradient(#2a2f38 0 25%, #20242b 0 50%) 0 0 / 12px 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.capa-mini img { max-width: 100%; max-height: 100%; }
+.capa-fila b { color: var(--titulo); font-size: 14px; }
+.capa-fila .chico { display: block; }
+.capa-fila .acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.capa-fila input[type=range] { grid-column: 1 / -1; margin: 0; }
+.editando .capas { pointer-events: none; }
+.editando.edit-layers .capas img { pointer-events: auto; cursor: move; touch-action: none; outline: 3px dashed rgb(220 203 152 / .7); outline-offset: -3px; }
+.editando .lt { pointer-events: none; }
+.editando.edit-banner .lt-speaker .lt-txt, .editando.edit-speaker .lt-banner .lt-txt { outline: none; }
+.editando .capas img.sel { outline: 4px solid #dccb98; }

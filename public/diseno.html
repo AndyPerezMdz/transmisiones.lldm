@@ -16,21 +16,23 @@
   <div class="pagina-cabeza">
     <div>
       <h1>Diseño</h1>
-      <p class="ayuda">Cambia cómo se ven el letrero de la transmisión y las TVs. Lo ves aquí al momento; se aplica cuando presionas <b>Guardar cambios</b>.</p>
+      <p class="ayuda">Así se arman los gráficos que van encima de la transmisión (y que también ven las TVs). Lo ves aquí al momento; se aplica cuando presionas <b>Guardar cambios</b>.</p>
     </div>
     <div class="tabs" id="tabs" role="tablist">
-      <button type="button" class="btn btn-sec activo" data-tab="banner" role="tab">📺 Letrero de la transmisión</button>
-      <button type="button" class="btn btn-sec" data-tab="screen" role="tab">🖥 Pantallas del templo</button>
+      <button type="button" class="btn btn-sec activo" data-tab="banner" role="tab">📺 Letrero (cantos, citas, tema)</button>
+      <button type="button" class="btn btn-sec" data-tab="speaker" role="tab">🎤 Nombre del expositor</button>
+      <button type="button" class="btn btn-sec" data-tab="layers" role="tab">🖼 Logos fijos</button>
+      <button type="button" class="btn btn-sec" data-tab="screen" role="tab">📄 Letra completa</button>
     </div>
   </div>
 
   <!-- ================= Letrero ================= -->
-  <section class="editor-grid" id="tab-banner">
+  <section class="editor-grid" id="tab-tx">
     <div class="vista">
       <div class="lienzo" id="bannerBox"><div class="lienzo-stage" id="bannerStage"></div>
         <div class="lienzo-vacio" id="bannerEmpty" hidden>Sube la imagen de su letrero para empezar →</div></div>
       <div class="vista-pie">
-        <div class="fila envuelve"><span class="chico">Probar con:</span>
+        <div class="fila envuelve" id="samples"><span class="chico">Probar con:</span>
           <button type="button" class="chip activo" data-sample="0">Cita</button>
           <button type="button" class="chip" data-sample="1">Himno</button>
           <button type="button" class="chip" data-sample="2">Tema</button>
@@ -38,11 +40,12 @@
         </div>
         <label class="fila chico"><input type="checkbox" id="fakeCam" checked> Ver sobre una imagen de ejemplo</label>
       </div>
-      <p class="chico" id="dragHint" hidden>✋ Arrastra la imagen y los textos sobre la vista previa para acomodarlos.</p>
+      <p class="chico" id="dragHint" hidden>✋ Arrastra sobre la vista previa para acomodar. Con las flechas del teclado lo mueves de a poquito (Shift = más rápido).</p>
     </div>
 
-    <aside class="panel tarjeta">
-      <h2>¿Qué letrero quieres usar?</h2>
+    <aside class="panel tarjeta" id="pLetrero">
+      <p class="ayuda" id="ltIntro"></p>
+      <h2>¿Qué diseño quieres usar?</h2>
       <div class="opciones" id="bannerMode">
         <label class="opcion"><input type="radio" name="bmode" value="default"><span><b>El de la cabina</b><small>Escoges colores, letra y posición.</small></span></label>
         <label class="opcion"><input type="radio" name="bmode" value="image"><span><b>Su propio diseño</b><small>Suben la imagen que ya tienen y acomodan los textos encima.</small></span></label>
@@ -53,6 +56,10 @@
           <select class="campo" data-b="position"></select></label>
         <label class="etiqueta">Tamaño <span class="valor" data-show="size"></span>
           <input type="range" min="60" max="160" step="5" data-b="size"></label>
+        <div class="dos">
+          <label class="etiqueta">Separación del lado <span class="valor" data-show="margin.x"></span><input type="range" min="0" max="600" step="5" data-b="margin.x"></label>
+          <label class="etiqueta">Separación arriba/abajo <span class="valor" data-show="margin.y"></span><input type="range" min="0" max="700" step="5" data-b="margin.y"></label>
+        </div>
         <div class="dos">
           <label class="etiqueta">Fondo <input class="campo" type="color" data-b="colors.bg"></label>
           <label class="etiqueta">Detalle <input class="campo" type="color" data-b="colors.accent"></label>
@@ -71,8 +78,8 @@
           <label class="etiqueta">Tamaño de la imagen <span class="valor" data-show="image.width"></span>
             <input type="range" min="200" max="1920" step="10" data-b="image.width"></label>
           <div class="segmento" id="txtPick">
-            <button type="button" class="activo" data-k="tag">Etiqueta <small>(“Lectura”)</small></button>
-            <button type="button" data-k="title">Título <small>(“Juan 3:16”)</small></button>
+            <button type="button" class="activo" data-k="tag"><span id="tagName">Etiqueta</span> <small id="tagEx">(“Lectura”)</small></button>
+            <button type="button" data-k="title"><span id="titleName">Título</span> <small id="titleEx">(“Juan 3:16”)</small></button>
           </div>
           <div class="txt-opc" id="txtOpc">
             <label class="fila etiqueta"><input type="checkbox" data-t="show"> Mostrar este texto</label>
@@ -95,12 +102,18 @@
 
       <label class="etiqueta">Cómo entra
         <select class="campo" data-b="anim"><option value="deslizar">Se desliza</option><option value="aparecer">Aparece suave</option></select></label>
-      <button type="button" class="btn btn-mini" id="resetBanner">Volver al letrero original</button>
+      <button type="button" class="btn btn-mini" id="resetBanner">Volver al diseño original</button>
+    </aside>
+
+    <aside class="panel tarjeta" id="pLayers" hidden>
+      <p class="ayuda">Estas imágenes se quedan <b>siempre</b> encima de la transmisión. Si ya las tienen puestas en OBS, pueden dejarlas allá y no subir nada aquí; pero subirlas ayuda a acomodar los letreros sin que se encimen.</p>
+      <div id="layerRows"></div>
     </aside>
   </section>
 
   <!-- ================= Pantallas ================= -->
   <section class="editor-grid" id="tab-screen" hidden>
+    <p class="ayuda" style="grid-column:1/-1">Opcional. Es una página con la letra completa de cantos y versículos. Si la quieren mostrar, agréguenla en OBS como otra fuente de <b>Navegador</b> (por ejemplo, en una escena “Letra”). El enlace está en ⚙ Ajustes de la cabina.</p>
     <div class="vista">
       <div class="lienzo" id="screenBox"><div class="tv lienzo-stage" id="screenStage"></div></div>
       <div class="vista-pie">

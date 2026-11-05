@@ -37,8 +37,12 @@
   .paso-fila b { color: var(--titulo); font-weight: 650; }
   .paso-fila .ayuda { grid-column: 2; font-size: 13.5px; }
   .paso-fila .acciones { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-  .enlace-obs { grid-column: 2; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .enlace-obs { grid-column: 2; min-width: 0; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
   .enlace-obs code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 10px; border-radius: 10px; }
+  .opcional { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); }
+  .opcional summary { cursor: pointer; font-weight: 600; color: var(--titulo); font-size: 14px; }
+  .opcional .ayuda { margin: 8px 0 4px; font-size: 13.5px; }
+  .opcional .enlace-obs { margin-top: 6px; }
   .sala-pie { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--borde); }
   .nueva { display: flex; gap: 10px; flex-wrap: wrap; }
   .nueva .campo { margin: 0; flex: 1; min-width: 220px; }

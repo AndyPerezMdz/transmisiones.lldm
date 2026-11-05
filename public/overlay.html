@@ -2,13 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Letrero de la transmisión · Cabina en Vivo</title>
+<title>Gráficos de la transmisión · Cabina en Vivo</title>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/stage.css">
 <style>
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; min-height: 0; }
   #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
   body.preview { background: repeating-conic-gradient(#2a2f38 0 25%, #20242b 0 50%) 0 0 / 40px 40px; }
+  body.camara { background: #000 url(/img/templo.webp) center / cover; }
 </style>
 </head>
 <body>
@@ -16,27 +17,34 @@
 <script type="module">
 import { subscribe } from '/js/live.js';
 import { roomId, qs } from '/js/db.js';
-import { createBanner, fitStage } from '/js/render.js';
+import { createBanner, createLayers, fitStage } from '/js/render.js';
 
-if (qs.has('preview')) document.body.classList.add('preview');
+if (qs.has('preview')) document.body.classList.add(qs.get('preview') === 'cam' ? 'camara' : 'preview');
 const stage = document.getElementById('stage');
-fitStage(stage, document.documentElement, { center: false });
-const banner = createBanner(stage);
-let seq = -1, hideTimer, last = null;
+fitStage(stage, document.documentElement, { center: qs.get('preview') === 'cam' });
+const layers = createLayers(stage);
+const letreros = { overlay: createBanner(stage, { kind: 'banner' }), speaker: createBanner(stage, { kind: 'speaker' }) };
+const seq = { overlay: -1, speaker: -1 }, timers = {};
+let last = null;
 
+// Cada letrero se muestra mientras esté visible y no haya pasado su tiempo.
 function show(state) {
-  const o = state.overlay || {};
-  clearTimeout(hideTimer);
-  const left = o.until ? o.until - Date.now() : Infinity;
-  if (!o.visible || left <= 0) return banner.hide();
-  if (o.seq !== seq) { seq = o.seq; banner.show(o.tag, o.title); }
-  if (left !== Infinity) hideTimer = setTimeout(banner.hide, left);
+  for (const key of ['overlay', 'speaker']) {
+    const o = state[key] || {}, b = letreros[key];
+    clearTimeout(timers[key]);
+    const left = o.until ? o.until - Date.now() : Infinity;
+    if (!o.visible || left <= 0) { b.hide(); continue; }
+    if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title); }
+    if (left !== Infinity) timers[key] = setTimeout(b.hide, left);
+  }
 }
 subscribe(roomId(), state => { last = state; show(state); }, design => {
-  banner.setDesign(design.banner || {});
-  if (last) { seq = -1; show(last); }
+  layers.setDesign(design.layers || {});
+  letreros.overlay.setDesign(design.banner || {});
+  letreros.speaker.setDesign(design.speaker || {});
+  if (last) { seq.overlay = seq.speaker = -1; show(last); }
 });
-banner.setDesign({});
+letreros.overlay.setDesign({}); letreros.speaker.setDesign({});
 </script>
 </body>
 </html>

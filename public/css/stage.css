@@ -1,6 +1,10 @@
 /* Lienzos de 1920×1080: letrero de la transmisión y pantallas del templo. */
 
-/* ---------- Letrero ---------- */
+/* ---------- Imágenes fijas ---------- */
+.capas { position: absolute; inset: 0; pointer-events: none; }
+.capas img { position: absolute; display: block; user-select: none; }
+
+/* ---------- Letreros ---------- */
 .lt { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
 .lt[data-anim="deslizar"] { transform: translateX(-60px); }
 .lt.on { opacity: 1; transform: none; }
@@ -17,7 +21,7 @@
   background: linear-gradient(135deg, color-mix(in srgb, var(--lt-bg) 92%, white), var(--lt-bg)); box-shadow: 0 18px 40px -12px rgb(0 0 0 / .55), inset 0 -4px 0 var(--lt-accent); }
 .lt-normal .lt-tag[hidden] + .lt-title { border-radius: 14px; }
 /* Posiciones: la etiqueta va encima del título */
-.lt-normal { --x: 110px; --y: 110px; }
+.lt-normal { --x: 70px; --y: 110px; }
 .lt-normal .lt-title, .lt-normal .lt-tag { transform: scale(var(--lt-scale)); }
 .pos-abajo-izq .lt-title { left: var(--x); bottom: var(--y); transform-origin: left bottom; }
 .pos-abajo-izq .lt-tag { left: var(--x); bottom: calc(var(--y) + 96px * var(--lt-scale)); transform-origin: left bottom; }
@@ -25,11 +29,11 @@
 .pos-abajo-der .lt-tag { right: var(--x); bottom: calc(var(--y) + 96px * var(--lt-scale)); transform-origin: right bottom; }
 .pos-abajo-centro .lt-title { left: 50%; bottom: var(--y); transform: translateX(-50%) scale(var(--lt-scale)); transform-origin: center bottom; border-radius: 14px; }
 .pos-abajo-centro .lt-tag { left: 50%; bottom: calc(var(--y) + 96px * var(--lt-scale)); transform: translateX(-50%) scale(var(--lt-scale)); transform-origin: center bottom; }
-.pos-arriba-izq .lt-tag { left: var(--x); top: 80px; transform-origin: left top; }
-.pos-arriba-izq .lt-title { left: var(--x); top: calc(80px + 52px * var(--lt-scale)); transform-origin: left top; }
-.pos-arriba-der .lt-tag { right: var(--x); top: 80px; transform-origin: right top; }
-.pos-arriba-der .lt-title { right: var(--x); top: calc(80px + 52px * var(--lt-scale)); transform-origin: right top; border-radius: 14px 0 14px 14px; }
-.pos-arriba-izq .lt-tag[hidden] + .lt-title, .pos-arriba-der .lt-tag[hidden] + .lt-title { top: 80px; }
+.pos-arriba-izq .lt-tag { left: var(--x); top: var(--y); transform-origin: left top; }
+.pos-arriba-izq .lt-title { left: var(--x); top: calc(var(--y) + 52px * var(--lt-scale)); transform-origin: left top; }
+.pos-arriba-der .lt-tag { right: var(--x); top: var(--y); transform-origin: right top; border-radius: 10px 10px 0 0; }
+.pos-arriba-der .lt-title { right: var(--x); top: calc(var(--y) + 52px * var(--lt-scale)); transform-origin: right top; border-radius: 14px 0 14px 14px; }
+.pos-arriba-izq .lt-tag[hidden] + .lt-title, .pos-arriba-der .lt-tag[hidden] + .lt-title { top: var(--y); }
 
 .lt-imagen img { position: absolute; display: block; user-select: none; }
 .lt-imagen .lt-txt { position: absolute; line-height: 1.15; overflow: hidden; white-space: nowrap; }

@@ -7,7 +7,7 @@ import { $, toast, mountNav, absolute, withDemo } from './ui.js';
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const ICON = { bible: '📖', hymn: '🎵', coro: '🎶', theme: '📌' };
 const KIND = { bible: 'Cita', hymn: 'Himno', coro: 'Coro', theme: 'Tema' };
-const DEFAULT_SETTINGS = { bannerSeconds: 25, location: '', showBanner: true, voiceLang: 'es-MX' };
+const DEFAULT_SETTINGS = { bannerSeconds: 25, speakerSeconds: 0, location: '', showBanner: true, voiceLang: 'es-MX' };
 
 const room = roomId();
 let catalog = null, ctx = {};
@@ -15,6 +15,7 @@ let suggestions = [];
 const seen = new Map();
 let results = [], sel = 0;
 let state = { rev: 0, item: null, index: 0, blank: false, theme: '', overlay: { visible: false, tag: '', title: '', seq: 0, until: 0 },
+  speaker: { visible: false, tag: '', title: '', seq: 0, until: 0 }, speakers: [],
   settings: { ...DEFAULT_SETTINGS }, history: [] };
 
 // ---------- utilidades ----------
@@ -47,6 +48,17 @@ function showOverlay(tag, title) {
   if (secs > 0) overlayTimer = setTimeout(() => { state.overlay = { ...state.overlay, visible: false }; commit(); }, secs * 1000);
 }
 function hideOverlay() { clearTimeout(overlayTimer); state.overlay = { ...state.overlay, visible: false }; }
+
+let speakerTimer;
+function showSpeaker(name, role) {
+  clearTimeout(speakerTimer);
+  const secs = Number(state.settings.speakerSeconds) || 0;
+  state.speaker = { visible: true, tag: role, title: name, seq: state.speaker.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
+  state.speakers = [{ name, role }, ...state.speakers.filter(p => p.name !== name)].slice(0, 6);
+  if (secs > 0) speakerTimer = setTimeout(() => { state.speaker = { ...state.speaker, visible: false }; commit(); }, secs * 1000);
+  commit();
+}
+function hideSpeaker() { clearTimeout(speakerTimer); state.speaker = { ...state.speaker, visible: false }; commit(); }
 
 const actions = {
   air(ref) {
@@ -110,6 +122,18 @@ function render() {
     : state.settings.showBanner ? 'Letrero de la transmisión: oculto' : 'Letrero de la transmisión: apagado en Ajustes';
   os.classList.toggle('on', state.overlay.visible);
   if (document.activeElement !== $('theme')) $('theme').value = state.theme || '';
+
+  const sp = state.speaker;
+  $('btnSpeaker').textContent = sp.visible ? 'Ocultar nombre' : 'Mostrar nombre';
+  $('btnSpeaker').className = 'btn ' + (sp.visible ? 'btn-sec activo' : 'btn-oro');
+  if (sp.visible && document.activeElement !== $('spName') && document.activeElement !== $('spRole')) { $('spName').value = sp.title; $('spRole').value = sp.tag || ''; }
+  const rec = $('spRecent'); rec.replaceChildren();
+  for (const p of state.speakers) {
+    const chip = el('button', 'chip', p.name + (p.role ? ' · ' + p.role : '')); chip.type = 'button';
+    chip.title = 'Poner este nombre';
+    chip.onclick = () => { $('spName').value = p.name; $('spRole').value = p.role || ''; showSpeaker(p.name, p.role || ''); };
+    rec.append(chip);
+  }
 
   const list = $('slides'); list.replaceChildren();
   if (item && item.slides.length > 1) {
@@ -305,10 +329,25 @@ document.addEventListener('keydown', e => {
     ArrowLeft: actions.prev, PageUp: actions.prev, ArrowUp: actions.prev,
     Escape: actions.clear,
     b: actions.blank, o: () => $('btnBanner').click(), u: actions.location, m: () => micBtn.click(),
+    n: () => state.speaker.visible ? hideSpeaker() : $('spForm').requestSubmit(),
     '/': () => { search.focus(); search.select(); }
   };
   const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
   if (fn) { e.preventDefault(); fn(); }
+});
+
+// ---------- expositor ----------
+$('spForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('spName').value.trim(), role = $('spRole').value.trim();
+  if (state.speaker.visible && (!name || (name === state.speaker.title && role === (state.speaker.tag || '')))) return hideSpeaker();
+  if (!name) { $('spName').focus(); return toast('Escribe el nombre de quien expone.', 'info'); }
+  showSpeaker(name, role);
+  document.activeElement?.blur();
+});
+for (const id of ['spName', 'spRole']) $(id).addEventListener('input', () => {
+  const changedName = state.speaker.visible && ($('spName').value.trim() !== state.speaker.title || $('spRole').value.trim() !== (state.speaker.tag || ''));
+  $('btnSpeaker').textContent = changedName ? 'Cambiar nombre' : state.speaker.visible ? 'Ocultar nombre' : 'Mostrar nombre';
 });
 
 // ---------- ajustes ----------
@@ -319,6 +358,7 @@ $('btnSettings').onclick = () => {
   form.bannerSeconds.value = s.bannerSeconds ?? 25;
   form.showBanner.checked = s.showBanner !== false;
   form.voiceLang.value = s.voiceLang || 'es-MX';
+  form.speakerSeconds.value = s.speakerSeconds ?? 0;
   $('urlTv').textContent = absolute('/pantalla', { sala: room });
   $('urlObs').textContent = absolute('/overlay', { sala: room });
   dlg.showModal();
@@ -326,7 +366,8 @@ $('btnSettings').onclick = () => {
 dlg.addEventListener('close', () => {
   if (dlg.returnValue !== 'save') return;
   const secs = Math.max(0, Math.min(3600, parseInt(form.bannerSeconds.value, 10) || 0));
-  state.settings = { ...state.settings, location: form.location.value.trim().slice(0, 120), bannerSeconds: secs,
+  const spSecs = Math.max(0, Math.min(3600, parseInt(form.speakerSeconds.value, 10) || 0));
+  state.settings = { ...state.settings, location: form.location.value.trim().slice(0, 120), bannerSeconds: secs, speakerSeconds: spSecs,
     showBanner: form.showBanner.checked, voiceLang: form.voiceLang.value };
   if (!state.settings.showBanner) hideOverlay();
   commit();
@@ -353,7 +394,7 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
   await requireSession();
   mountNav('cabina');
   setupGuide();
-  $('monitor').src = withDemo('/pantalla', { sala: room });
+  $('monitor').src = withDemo('/overlay', { sala: room, preview: 'cam' });
   if (demo) toast('Modo de prueba: no se guarda nada y solo funciona en esta computadora.', 'info');
   try {
     const saved = demo ? null : await loadRoom(room);
@@ -361,6 +402,9 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
     if (saved?.state?.rev) {
       state = { ...state, ...saved.state, settings: { ...DEFAULT_SETTINGS, ...saved.state.settings } };
       state.overlay = { ...state.overlay, visible: state.overlay.visible && (!state.overlay.until || state.overlay.until > Date.now()) };
+      state.speaker = { visible: false, tag: '', title: '', seq: 0, until: 0, ...state.speaker };
+      state.speaker.visible = state.speaker.visible && (!state.speaker.until || state.speaker.until > Date.now());
+      state.speakers ??= [];
     }
     document.title = (saved?.name ? saved.name + ' · ' : '') + 'Cabina en Vivo';
     if ($('navSala')) $('navSala').textContent = saved?.name || 'Sala de prueba';

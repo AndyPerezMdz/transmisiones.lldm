@@ -6,7 +6,7 @@
 
 /* ----- Lo que se ve ahora ----- */
 .ahora { display: grid; grid-template-columns: minmax(260px, 420px) 1fr; gap: 20px; padding: 18px; }
-.monitor { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; box-shadow: inset 0 0 0 1px var(--borde); }
+.monitor { position: relative; align-self: start; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; box-shadow: inset 0 0 0 1px var(--borde); }
 .monitor iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
 .monitor-tag { position: absolute; right: 8px; bottom: 8px; font-size: 11px; font-weight: 600; color: #fff; background: rgb(0 0 0 / .45); padding: 3px 8px; border-radius: 999px; }
 .ahora-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -27,6 +27,11 @@
 .letrero-estado { font-size: 13.5px; color: var(--suave); }
 .letrero-estado.on { color: var(--titulo); font-weight: 600; }
 .letrero-estado.on::before { content: "● "; color: var(--rojo); }
+.expositor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--borde); }
+.expositor-tit { font-weight: 650; color: var(--titulo); font-size: 14px; }
+.expositor .campo { margin: 0; flex: 1 1 180px; padding: 9px 12px; }
+.recientes { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+.recientes:empty { display: none; }
 .partes { grid-column: 1 / -1; display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin: 0; list-style: none; scrollbar-width: thin; }
 .partes:empty { display: none; }
 .partes li { flex: none; width: 190px; padding: 9px 12px; border-radius: 12px; background: var(--campo); border: 1px solid var(--borde); cursor: pointer; font-size: 13px; transition: .15s; }

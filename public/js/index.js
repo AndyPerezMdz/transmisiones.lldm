@@ -2,13 +2,16 @@
 import { demo, supa, qs } from './db.js';
 import { $, el, toast, mountNav, themeButton, withDemo, absolute } from './ui.js';
 
-function roomCard(room, sb) {
-  const obs = absolute('/overlay', { sala: room.id });
+function copyBox(url) {
   const copy = el('button', { class: 'btn btn-sec', type: 'button', text: 'Copiar' });
   copy.onclick = async () => {
-    try { await navigator.clipboard.writeText(obs); toast('Enlace copiado. Pégalo en OBS.', 'ok'); }
+    try { await navigator.clipboard.writeText(url); toast('Enlace copiado. Pégalo en OBS.', 'ok'); }
     catch { toast('No se pudo copiar. Selecciona el enlace y cópialo a mano.'); }
   };
+  return el('div', { class: 'enlace-obs' }, el('code', { text: url, title: url }), copy);
+}
+
+function roomCard(room, sb) {
   const rename = el('button', { class: 'btn btn-mini', type: 'button', text: 'Cambiar nombre' });
   rename.onclick = async () => {
     const name = prompt('Nuevo nombre de la sala', room.name)?.trim();
@@ -21,19 +24,22 @@ function roomCard(room, sb) {
     el('h2', { text: room.name }),
     el('div', { class: 'pasos' },
       el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '1' }), el('b', { text: 'Abre la cabina en esta laptop' }),
-        el('p', { class: 'ayuda', text: 'Desde ahí pones citas, himnos y el tema. Usa Chrome o Edge para que funcione el micrófono.' }),
+        el('span', { class: 'paso', text: '1' }), el('b', { text: 'Pon los gráficos en OBS (una sola vez)' }),
+        el('p', { class: 'ayuda', text: 'En OBS: Fuentes → + → Navegador → pega este enlace, ancho 1920 y alto 1080. Ponla arriba de las cámaras. Trae los logos, el letrero y el nombre del expositor; como las TVs muestran lo de OBS, también salen ahí.' }),
+        copyBox(absolute('/overlay', { sala: room.id }))),
+      el('div', { class: 'paso-fila' },
+        el('span', { class: 'paso', text: '2' }), el('b', { text: 'Abre la cabina en esta laptop' }),
+        el('p', { class: 'ayuda', text: 'Desde ahí pones citas, himnos, el tema y el nombre del expositor. Usa Chrome o Edge para que funcione el micrófono.' }),
         el('div', { class: 'acciones' }, el('a', { class: 'btn btn-primario', href: withDemo('/control', { sala: room.id }), text: 'Abrir la cabina' }))),
       el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '2' }), el('b', { text: 'Abre lo que se ve en las TVs' }),
-        el('p', { class: 'ayuda', text: 'Se abre en otra ventana: arrástrala a la pantalla de las TVs y presiona F11.' }),
-        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/pantalla', { sala: room.id }), target: '_blank', text: 'Abrir pantallas del templo ↗' }))),
-      el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '3' }), el('b', { text: 'Pon el letrero en la transmisión' }),
-        el('p', { class: 'ayuda', text: 'En OBS: + (Fuentes) → Navegador → pega este enlace, con ancho 1920 y alto 1080.' }),
-        el('div', { class: 'enlace-obs' }, el('code', { text: obs, title: obs }), copy))),
+        el('span', { class: 'paso', text: '3' }), el('b', { text: 'Ajusta el diseño a su letrero' }),
+        el('p', { class: 'ayuda', text: 'Sube sus logos y su letrero, y acomoda los textos para que todo quede en su lugar.' }),
+        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/diseno', { sala: room.id }), text: '🎨 Abrir Diseño' })))),
+    el('details', { class: 'opcional' },
+      el('summary', { text: 'Opcional: letra completa de cantos y versículos' }),
+      el('p', { class: 'ayuda', text: 'Si quieren mostrar la letra completa, agreguen este enlace en OBS como otra fuente de Navegador (por ejemplo, en una escena “Letra”).' }),
+      copyBox(absolute('/pantalla', { sala: room.id }))),
     el('div', { class: 'sala-pie' },
-      el('a', { class: 'btn btn-mini', href: withDemo('/diseno', { sala: room.id }), text: '🎨 Diseño del letrero y las TVs' }),
       el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: '🎵 Cantos' }),
       demo ? null : rename));
 }

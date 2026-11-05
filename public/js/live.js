@@ -1,10 +1,11 @@
-// Sincroniza lo que está al aire.
+// Sincroniza lo que está al aire y el diseño de cada sala.
 // - Misma computadora (cabina → TVs): BroadcastChannel, instantáneo y sin internet.
 // - Otras ventanas o programas (OBS, otra compu): Supabase Realtime.
 // Cada estado lleva "rev"; se aplica solo el más nuevo, venga de donde venga.
 import { demo, supa } from './db.js';
 
 const channelName = room => 'cabina-en-vivo:' + room;
+const DEMO_DESIGN_KEY = room => 'cabina-diseno:' + room;
 
 export function createPublisher(room, { getState, onSyncChange = () => {} }) {
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel(channelName(room)) : null;
@@ -43,30 +44,58 @@ export function createPublisher(room, { getState, onSyncChange = () => {} }) {
 }
 
 export async function loadRoom(room) {
-  if (demo) return null;
+  if (demo) {
+    let design = {};
+    try { design = JSON.parse(localStorage.getItem(DEMO_DESIGN_KEY(room)) || '{}'); } catch {}
+    return { id: room, name: 'Sala demo', state: {}, design };
+  }
   const sb = await supa();
-  const { data, error } = await sb.from('rooms').select('id, name, state').eq('id', room).maybeSingle();
+  const { data, error } = await sb.from('rooms').select('id, name, state, design').eq('id', room).maybeSingle();
   if (error) throw new Error(error.message);
   return data;
 }
 
-export function subscribe(room, onState) {
-  let rev = -1;
+export async function saveDesign(room, design) {
+  if ('BroadcastChannel' in window) new BroadcastChannel(channelName(room)).postMessage({ type: 'design', design });
+  if (demo) {
+    try { localStorage.setItem(DEMO_DESIGN_KEY(room), JSON.stringify(design)); }
+    catch { throw new Error('En modo demo las imágenes muy pesadas no caben en el navegador.'); }
+    return;
+  }
+  const sb = await supa();
+  const { error } = await sb.from('rooms').update({ design }).eq('id', room);
+  if (error) throw new Error(error.message);
+}
+
+export function subscribe(room, onState, onDesign = () => {}) {
+  let rev = -1, designJson = null;
   const apply = state => {
     if (!state || typeof state.rev !== 'number' || state.rev <= rev) return;
     rev = state.rev;
     onState(state);
   };
+  const applyDesign = design => {
+    const json = JSON.stringify(design || {});
+    if (json === designJson) return;
+    designJson = json;
+    onDesign(design || {});
+  };
   if ('BroadcastChannel' in window) {
     const bc = new BroadcastChannel(channelName(room));
-    bc.addEventListener('message', e => { if (e.data?.type === 'state') apply(e.data.state); });
+    bc.addEventListener('message', e => {
+      if (e.data?.type === 'state') apply(e.data.state);
+      else if (e.data?.type === 'design') applyDesign(e.data.design);
+    });
     bc.postMessage({ type: 'hello' });
   }
+  const refresh = () => loadRoom(room).then(r => { if (r) { applyDesign(r.design); apply(r.state); } }).catch(() => {});
+  refresh();
   if (!demo) {
-    const refresh = () => loadRoom(room).then(r => r && apply(r.state)).catch(() => {});
-    refresh();
     supa().then(sb => sb.channel('sala-' + room)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + room }, p => apply(p.new?.state))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + room }, p => {
+        if (p.new?.design) applyDesign(p.new.design);
+        apply(p.new?.state);
+      })
       .subscribe(status => { if (status === 'SUBSCRIBED') refresh(); }));
     // Red de seguridad por si se cae el realtime un rato.
     setInterval(refresh, 15000);

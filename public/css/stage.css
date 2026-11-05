@@ -1,0 +1,70 @@
+/* Lienzos de 1920×1080: letrero de la transmisión y pantallas del templo. */
+
+/* ---------- Letrero ---------- */
+.lt { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
+.lt[data-anim="deslizar"] { transform: translateX(-60px); }
+.lt.on { opacity: 1; transform: none; }
+.lt.sin-anim { transition: none; }
+
+.lt-normal { --lt-scale: 1; font-family: var(--lt-font); }
+.lt-normal::before { content: none; }
+.lt-normal .lt-tag, .lt-normal .lt-title { position: absolute; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 1500px; }
+.lt-normal { display: block; }
+.lt-normal > .lt-tag, .lt-normal > .lt-title { left: auto; }
+.lt-normal .lt-tag { font: 800 28px/1 var(--lt-tag-font); letter-spacing: .12em; text-transform: uppercase; color: var(--lt-tag-text);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--lt-accent) 85%, white), var(--lt-accent)); padding: 13px 26px 11px; border-radius: 10px 10px 0 0; }
+.lt-normal .lt-title { font: 650 50px/1.1 var(--lt-font); color: var(--lt-text); padding: 22px 40px 24px; border-radius: 0 14px 14px 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--lt-bg) 92%, white), var(--lt-bg)); box-shadow: 0 18px 40px -12px rgb(0 0 0 / .55), inset 0 -4px 0 var(--lt-accent); }
+.lt-normal .lt-tag[hidden] + .lt-title { border-radius: 14px; }
+/* Posiciones: la etiqueta va encima del título */
+.lt-normal { --x: 110px; --y: 110px; }
+.lt-normal .lt-title, .lt-normal .lt-tag { transform: scale(var(--lt-scale)); }
+.pos-abajo-izq .lt-title { left: var(--x); bottom: var(--y); transform-origin: left bottom; }
+.pos-abajo-izq .lt-tag { left: var(--x); bottom: calc(var(--y) + 96px * var(--lt-scale)); transform-origin: left bottom; }
+.pos-abajo-der .lt-title { right: var(--x); bottom: var(--y); transform-origin: right bottom; border-radius: 14px 0 14px 14px; }
+.pos-abajo-der .lt-tag { right: var(--x); bottom: calc(var(--y) + 96px * var(--lt-scale)); transform-origin: right bottom; }
+.pos-abajo-centro .lt-title { left: 50%; bottom: var(--y); transform: translateX(-50%) scale(var(--lt-scale)); transform-origin: center bottom; border-radius: 14px; }
+.pos-abajo-centro .lt-tag { left: 50%; bottom: calc(var(--y) + 96px * var(--lt-scale)); transform: translateX(-50%) scale(var(--lt-scale)); transform-origin: center bottom; }
+.pos-arriba-izq .lt-tag { left: var(--x); top: 80px; transform-origin: left top; }
+.pos-arriba-izq .lt-title { left: var(--x); top: calc(80px + 52px * var(--lt-scale)); transform-origin: left top; }
+.pos-arriba-der .lt-tag { right: var(--x); top: 80px; transform-origin: right top; }
+.pos-arriba-der .lt-title { right: var(--x); top: calc(80px + 52px * var(--lt-scale)); transform-origin: right top; border-radius: 14px 0 14px 14px; }
+.pos-arriba-izq .lt-tag[hidden] + .lt-title, .pos-arriba-der .lt-tag[hidden] + .lt-title { top: 80px; }
+
+.lt-imagen img { position: absolute; display: block; user-select: none; }
+.lt-imagen .lt-txt { position: absolute; line-height: 1.15; overflow: hidden; white-space: nowrap; }
+
+/* ---------- Pantallas del templo ---------- */
+.tv { --tv-font: "Inter Variable", system-ui, sans-serif; --tv-title-font: "Cinzel Variable", serif;
+  --tv-text: #f7f3eb; --tv-accent: #dccb98; --tv-color: #0a3156; --tv-image: none; --tv-dim: .45;
+  position: absolute; width: 1920px; height: 1080px; overflow: hidden; color: var(--tv-text); font-family: var(--tv-font);
+  background: radial-gradient(120% 90% at 50% 0%, #134574 0%, #0a3156 45%, #061f38 100%); }
+.tv[data-bg="color"] { background: var(--tv-color); }
+.tv[data-bg="image"] { background: #000 var(--tv-image) center / cover no-repeat; }
+.tv::before { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.tv[data-bg="default"]::before { background-image: repeating-conic-gradient(from 90deg at 50% -35%, rgb(220 203 152 / .10) 0deg .5deg, transparent .5deg 6deg);
+  -webkit-mask-image: linear-gradient(to bottom, black 10%, transparent 80%); mask-image: linear-gradient(to bottom, black 10%, transparent 80%); }
+.tv[data-bg="image"]::before { background: rgb(0 0 0 / var(--tv-dim)); }
+.tv::after { content: ""; position: absolute; left: 180px; right: 180px; bottom: 64px; height: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tv-accent) 70%, transparent), transparent); }
+.tv[data-bg="image"]::after { display: none; }
+.tv-logo { position: absolute; z-index: 2; height: auto; filter: drop-shadow(0 6px 16px rgb(0 0 0 / .35)); }
+.tv-logo[data-pos="arriba-der"] { top: 50px; right: 60px; }
+.tv-logo[data-pos="arriba-izq"] { top: 50px; left: 60px; }
+.tv-logo[data-pos="abajo-der"] { bottom: 50px; right: 60px; }
+.tv-logo[data-pos="abajo-izq"] { bottom: 50px; left: 60px; }
+.tv-logo[data-pos="abajo-centro"] { bottom: 40px; left: 50%; transform: translateX(-50%); }
+
+.slide { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; padding: 90px 150px 110px; opacity: 0; transition: opacity .35s ease; }
+.slide.on { opacity: 1; }
+.slide .head { font: 600 40px/1.2 var(--tv-font); letter-spacing: .04em; color: var(--tv-accent); min-height: 52px; }
+.slide .body { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.slide .fit { text-align: center; line-height: 1.28; font-weight: 600; text-wrap: balance; text-shadow: 0 3px 14px rgb(0 0 0 / .45); }
+.slide .fit .line { display: block; }
+.slide .foot { font-size: 30px; color: color-mix(in srgb, var(--tv-text) 70%, transparent); text-align: center; min-height: 40px; letter-spacing: .03em; }
+.tv[data-version="no"] .slide.bible .foot { visibility: hidden; }
+.slide.cover .fit { font-family: var(--tv-title-font); font-weight: 600; letter-spacing: .02em; }
+.slide.cover .kicker { display: block; font: 700 .34em/1 var(--tv-font); color: var(--tv-accent); letter-spacing: .16em; text-transform: uppercase; margin-bottom: .55em; }
+.slide.bible .fit { font-weight: 500; line-height: 1.38; text-align: left; }
+.slide.bible .verse { color: var(--tv-accent); font-size: .55em; vertical-align: .55em; margin-right: .25em; font-weight: 700; }
+.slide.chorus .fit { font-style: italic; }

@@ -1,96 +1,145 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cabina en Vivo</title>
+<meta name="theme-color" content="#0a3156">
+<title>Cabina · Cabina en Vivo</title>
+<link rel="icon" href="/img/icon.png">
+<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/control.css">
-<link rel="icon" href="/favicon.svg">
 </head>
 <body>
-<header class="top">
-  <div class="brand"><span class="dot" id="conn" title="Sincronización"></span> <a href="/" class="home">Cabina en Vivo</a></div>
-  <div class="onair" id="onair"><span class="pill">Al aire</span> <span id="onairLabel">Nada</span></div>
-  <div class="actions">
-    <button id="btnBanner" title="Mostrar u ocultar banner de OBS (O)">Banner OBS <kbd>O</kbd></button>
-    <button id="btnLocation" title="Mostrar ubicación en OBS (U)">Ubicación <kbd>U</kbd></button>
-    <button id="btnBlank" title="Fondo sin texto (B)">Fondo <kbd>B</kbd></button>
-    <button id="btnClear" class="danger" title="Quitar todo (Esc)">Limpiar <kbd>Esc</kbd></button>
-    <a id="lnkSongs" class="btn" href="/cantos">Cantos</a>
-    <button id="btnSettings" class="icon" title="Ajustes">⚙</button>
+<main class="cab">
+  <div class="primera" id="primeraVez" hidden>
+    <div><b>¿Primera vez aquí?</b> Mira en un minuto cómo se usa la cabina.</div>
+    <div class="fila"><button class="btn btn-oro" id="verGuia" type="button">Ver cómo se usa</button><button class="btn btn-mini" id="cerrarPrimera" type="button">Ya sé</button></div>
   </div>
-</header>
 
-<main class="grid">
-  <section class="panel" id="voicePanel">
-    <div class="panel-head">
-      <h2>Escucha</h2>
-      <button id="btnMic" class="mic">🎙 Escuchar <kbd>M</kbd></button>
-    </div>
-    <p class="hint" id="micStatus">Apagado. Conecta el micrófono y presiona Escuchar.</p>
-    <div class="transcript" id="transcript" aria-live="polite"></div>
-    <h3>Sugerencias <small><kbd>Enter</kbd> al aire · <kbd>Supr</kbd> descartar</small></h3>
-    <ol class="cards" id="suggestions"></ol>
-    <p class="empty" id="noSuggestions">Cuando el expositor diga una cita, un himno, un coro o el tema, aparecerá aquí.</p>
-  </section>
-
-  <section class="panel" id="searchPanel">
-    <div class="panel-head"><h2>Buscar</h2><small><kbd>/</kbd> para escribir</small></div>
-    <input id="search" type="search" autocomplete="off" spellcheck="false"
-      placeholder="jn 3 16 · h246 · c7 · t: tema · o un pedazo de letra">
-    <ol class="results" id="results"></ol>
-    <div class="theme-box">
-      <label for="theme">Tema del culto</label>
-      <div class="row">
-        <input id="theme" type="text" maxlength="200" placeholder="Escribe o díctalo y presiona Enter">
-        <button id="btnTheme">Proyectar</button>
+  <!-- Lo que se ve ahora -->
+  <section class="tarjeta ahora" id="ahora">
+    <div class="monitor"><iframe id="monitor" title="Vista de las TVs" tabindex="-1"></iframe><span class="monitor-tag">Así se ve en las TVs</span></div>
+    <div class="ahora-info">
+      <div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div>
+      <div class="ahora-titulo" id="onairLabel">Las TVs muestran el fondo</div>
+      <div class="ahora-sub" id="onairSub">Cuando pongas algo, aparecerá aquí.</div>
+      <div class="controles">
+        <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←"><span class="icono">◀</span> Anterior</button>
+        <button class="btn btn-primario btn-grande" id="btnNext" type="button" title="Tecla → o Espacio">Siguiente <span class="icono">▶</span></button>
+        <button class="btn btn-sec btn-grande" id="btnBlank" type="button" title="Tecla B">Ocultar texto</button>
+        <button class="btn btn-peligro btn-grande" id="btnClear" type="button" title="Tecla Esc">Quitar todo</button>
+      </div>
+      <div class="letrero">
+        <span class="letrero-estado" id="overlayStatus">Letrero de la transmisión: oculto</span>
+        <span class="crece"></span>
+        <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O">Mostrar letrero</button>
+        <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U">📍 Ubicación</button>
+        <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes">⚙ Ajustes</button>
       </div>
     </div>
-    <h3>Historial</h3>
-    <ol class="history" id="history"></ol>
+    <ol class="partes" id="slides" aria-label="Partes"></ol>
   </section>
 
-  <section class="panel" id="livePanel">
-    <div class="panel-head"><h2>En pantalla</h2><small><kbd>←</kbd> <kbd>→</kbd> cambiar</small></div>
-    <div class="monitor"><iframe id="monitor" title="Vista de las TVs" tabindex="-1"></iframe></div>
-    <div class="overlay-status" id="overlayStatus">Banner OBS: oculto</div>
-    <div class="nav">
-      <button id="btnPrev">← Anterior</button>
-      <span id="slidePos">–</span>
-      <button id="btnNext">Siguiente →</button>
-    </div>
-    <ol class="slides" id="slides"></ol>
-  </section>
+  <div class="cab-cols">
+    <!-- Voz -->
+    <section class="tarjeta" id="voicePanel">
+      <div class="tarjeta-cabeza">
+        <div class="fila"><span class="paso">1</span><h2>Escuchar al expositor</h2></div>
+        <button class="btn btn-primario mic" id="btnMic" type="button">🎙 Escuchar</button>
+      </div>
+      <p class="ayuda" id="micStatus">Presiona <b>Escuchar</b> y la cabina te irá sugiriendo las citas, himnos, coros y el tema que mencione.</p>
+      <ol class="cards" id="suggestions"></ol>
+      <div class="vacio" id="noSuggestions">Aquí aparecerán las sugerencias. Tú decides cuál se pone en pantalla con <b>Poner en pantalla</b>.</div>
+      <details class="oido">
+        <summary>Ver lo que se ha escuchado</summary>
+        <div class="transcript" id="transcript" aria-live="polite"></div>
+      </details>
+    </section>
+
+    <!-- Buscar -->
+    <section class="tarjeta" id="searchPanel">
+      <div class="tarjeta-cabeza"><div class="fila"><span class="paso">2</span><h2>O búscalo tú</h2></div><span class="chico">Tecla <kbd>/</kbd></span></div>
+      <input class="campo buscar" id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Escribe una cita, un número de himno o un pedazo de letra">
+      <div class="ejemplos" id="ejemplos">
+        <span class="chico">Por ejemplo:</span>
+        <button type="button" class="chip" data-q="Juan 3:16">Juan 3:16</button>
+        <button type="button" class="chip" data-q="Salmo 23">Salmo 23</button>
+        <button type="button" class="chip" data-q="himno 1">Himno 1</button>
+        <button type="button" class="chip" data-q="coro 1">Coro 1</button>
+      </div>
+      <ol class="results" id="results"></ol>
+
+      <div class="tema">
+        <label class="etiqueta" for="theme">📌 Tema del culto</label>
+        <div class="fila">
+          <input class="campo crece" id="theme" type="text" maxlength="200" placeholder="Escríbelo aquí; si lo dicen por el micrófono, se llena solo">
+          <button class="btn btn-oro" id="btnTheme" type="button" style="margin-top:6px">Poner</button>
+        </div>
+      </div>
+
+      <h3 style="margin-top:22px">Lo último que pusiste</h3>
+      <ol class="history" id="history"></ol>
+      <div class="vacio chico" id="noHistory">Todavía nada.</div>
+    </section>
+  </div>
 </main>
 
 <dialog id="settings">
-  <form method="dialog" id="settingsForm">
-    <h2>Ajustes</h2>
-    <label>Ubicación para el banner de OBS
-      <input name="location" maxlength="120" placeholder="Colonia, ciudad">
+  <form method="dialog" class="dialogo" id="settingsForm">
+    <h2 class="titulo" style="font-size:22px">Ajustes de la sala</h2>
+    <label class="etiqueta">Ubicación (sale en el letrero con el botón 📍)
+      <input class="campo" name="location" maxlength="120" placeholder="Colonia, ciudad">
     </label>
-    <label>Segundos que dura el banner (0 = hasta ocultarlo a mano)
-      <input name="bannerSeconds" type="number" min="0" max="3600" step="1">
+    <label class="etiqueta">¿Cuántos segundos se queda el letrero?
+      <input class="campo" name="bannerSeconds" type="number" min="0" max="3600" step="1">
+      <span class="chico">Pon 0 para que se quede hasta que lo quites tú.</span>
     </label>
-    <label class="check"><input name="showBanner" type="checkbox"> Mostrar banners en OBS</label>
-    <label>Acento del reconocimiento de voz
-      <select name="voiceLang">
-        <option value="es-MX">Español (México)</option>
-        <option value="es-US">Español (Estados Unidos)</option>
-        <option value="es-GT">Español (Guatemala)</option>
-        <option value="es-CO">Español (Colombia)</option>
-        <option value="es-ES">Español (España)</option>
+    <label class="fila etiqueta"><input name="showBanner" type="checkbox"> Mostrar el letrero en la transmisión cada vez que pongas algo</label>
+    <label class="etiqueta">Acento del micrófono
+      <select class="campo" name="voiceLang">
+        <option value="es-MX">Español de México</option>
+        <option value="es-US">Español de Estados Unidos</option>
+        <option value="es-GT">Español de Guatemala</option>
+        <option value="es-CO">Español de Colombia</option>
+        <option value="es-ES">Español de España</option>
       </select>
     </label>
-    <p class="hint">TVs: <code id="urlTv"></code><br>OBS: <code id="urlObs"></code></p>
-    <div class="row end">
-      <button value="cancel" formnovalidate>Cancelar</button>
-      <button value="save" class="primary">Guardar</button>
+    <div class="enlaces">
+      <span class="chico">Enlace para las TVs</span><code id="urlTv"></code>
+      <span class="chico">Enlace para OBS</span><code id="urlObs"></code>
+    </div>
+    <div class="dialogo-pie">
+      <button class="btn btn-sec" value="cancel" formnovalidate>Cancelar</button>
+      <button class="btn btn-primario" value="save">Guardar</button>
     </div>
   </form>
 </dialog>
 
-<div class="toast" id="toast" role="status"></div>
+<dialog id="guia">
+  <div class="dialogo">
+    <h2 class="titulo" style="font-size:22px">Cómo se usa la cabina</h2>
+    <ol class="guia">
+      <li><span class="paso">1</span><div><b>Presiona “Escuchar”.</b> La cabina oye al expositor por el micrófono. Cuando diga una cita (“Juan capítulo 3, versículo 16”), un himno, un coro o el tema, aparece una tarjeta.</div></li>
+      <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en las TVs y, si está activado, en el letrero de la transmisión. Nada sale solo.</div></li>
+      <li><span class="paso">3</span><div><b>Avanza con “Siguiente”</b> para pasar de versículo o de estrofa. <b>Quitar todo</b> deja las TVs con el fondo (y el tema, si hay).</div></li>
+      <li><span class="paso">✎</span><div><b>¿No lo detectó?</b> Escríbelo en “O búscalo tú”: <code>Juan 3:16</code>, <code>himno 25</code>, <code>coro 7</code> o un pedazo de la letra, y presiona Enter.</div></li>
+    </ol>
+    <h3>Teclas rápidas</h3>
+    <div class="teclas">
+      <span><kbd>Enter</kbd> poner la primera sugerencia</span>
+      <span><kbd>Supr</kbd> descartar la sugerencia</span>
+      <span><kbd>→</kbd> <kbd>Espacio</kbd> siguiente</span>
+      <span><kbd>←</kbd> anterior</span>
+      <span><kbd>Esc</kbd> quitar todo</span>
+      <span><kbd>B</kbd> ocultar texto</span>
+      <span><kbd>O</kbd> letrero</span>
+      <span><kbd>M</kbd> micrófono</span>
+      <span><kbd>/</kbd> buscar</span>
+    </div>
+    <div class="dialogo-pie"><button class="btn btn-primario" type="button" id="cerrarGuia">Entendido</button></div>
+  </div>
+</dialog>
 <script type="module" src="/js/control.js"></script>
 </body>
 </html>

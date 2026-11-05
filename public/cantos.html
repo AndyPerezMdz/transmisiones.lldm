@@ -1,69 +1,76 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a3156">
 <title>Cantos · Cabina en Vivo</title>
-<link rel="icon" href="/favicon.svg">
-<link rel="stylesheet" href="/css/control.css">
+<link rel="icon" href="/img/icon.png">
+<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<link rel="stylesheet" href="/css/base.css">
 <style>
-  .grid { grid-template-columns: minmax(260px, 1fr) 2fr; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
-  .tabs button.on { border-color: var(--gold); color: var(--gold); }
-  #list li .n { width: 38px; color: var(--soft); text-align: right; font-variant-numeric: tabular-nums; }
-  #list li.sel { background: var(--ctrl); border-color: var(--gold); }
-  form.editor { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
-  form.editor label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--soft); }
-  .fields { display: grid; grid-template-columns: 140px 110px 1fr; gap: 10px; }
-  textarea { flex: 1; min-height: 280px; width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px 12px; color: var(--text); font: 15px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
-  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .bar .grow { flex: 1; }
-  .count { color: var(--soft); font-size: 12px; }
-  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } .fields { grid-template-columns: 1fr 1fr; } .fields label:last-child { grid-column: span 2; } }
+  .cantos { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 16px; align-items: start; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .lista { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 62vh; overflow: auto; }
+  .lista li { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }
+  .lista li:hover { background: var(--oro-suave); }
+  .lista li.sel { background: var(--oro-suave); border-color: var(--oro); }
+  .lista .n { width: 40px; text-align: right; color: var(--suave); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .lista .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--titulo); font-weight: 550; }
+  .editor { display: flex; flex-direction: column; gap: 14px; }
+  .campos { display: grid; grid-template-columns: 150px 120px 1fr; gap: 12px; }
+  textarea.campo { min-height: 340px; resize: vertical; font: 15px/1.55 ui-monospace, Consolas, monospace; }
+  .formato { font-size: 13px; color: var(--suave); background: var(--campo); border: 1px solid var(--borde); border-radius: 12px; padding: 10px 12px; }
+  .importar { margin-top: 16px; }
+  @media (max-width: 860px) { .cantos { grid-template-columns: 1fr; } .campos { grid-template-columns: 1fr 1fr; } .campos label:last-child { grid-column: span 2; } }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand"><a href="/" class="home">Cabina en Vivo</a> · Cantos</div>
-  <div class="onair"></div>
-  <div class="actions">
-    <label class="btn" for="importFile" title="Subir archivo JSON o TXT">Importar…</label>
-    <input id="importFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
-    <a class="btn" id="back" href="/">Volver</a>
-  </div>
-</header>
-<main class="grid">
-  <section class="panel">
-    <div class="tabs" id="tabs">
-      <button data-kind="hymn" class="on">Himnario</button>
-      <button data-kind="coro">Coros</button>
+<main class="pagina">
+  <div class="pagina-cabeza">
+    <div>
+      <h1>Cantos</h1>
+      <p class="ayuda">Aquí se guardan el himnario y los coros. Lo que agregues aparece al instante en el buscador de la cabina.</p>
     </div>
-    <input id="filter" type="search" placeholder="Buscar por número, título o letra">
-    <p class="count" id="count"></p>
-    <ol class="results" id="list"></ol>
-  </section>
-  <section class="panel">
-    <form class="editor" id="editor">
-      <div class="bar"><h2 id="editTitle">Canto nuevo</h2><span class="grow"></span><button type="button" id="btnNew">+ Nuevo</button></div>
-      <div class="fields">
-        <label>Tipo
-          <select name="kind"><option value="hymn">Himno</option><option value="coro">Coro</option></select>
-        </label>
-        <label>Número <input name="number" type="number" min="1" max="9999"></label>
-        <label>Título <input name="title" maxlength="200" required></label>
+  </div>
+  <div class="cantos">
+    <section class="tarjeta">
+      <div class="tabs" id="tabs">
+        <button type="button" class="btn btn-sec activo" data-kind="hymn">Himnario</button>
+        <button type="button" class="btn btn-sec" data-kind="coro">Coros</button>
       </div>
-      <label for="lyrics">Letra · separa las estrofas con una línea en blanco; la etiqueta va entre corchetes, como <code>[Coro]</code></label>
-      <textarea id="lyrics" name="lyrics" spellcheck="false" placeholder="[Estrofa 1]&#10;Primera línea&#10;Segunda línea&#10;&#10;[Coro]&#10;Línea del coro"></textarea>
-      <div class="bar">
-        <button class="primary">Guardar</button>
-        <span class="grow"></span>
-        <button type="button" id="btnDelete" class="danger" hidden>Borrar</button>
+      <input class="campo" id="filter" type="search" placeholder="Buscar por número, título o letra">
+      <p class="chico" id="count" style="margin-top:8px"></p>
+      <ol class="lista" id="list"></ol>
+      <div class="importar">
+        <label class="btn btn-sec btn-bloque" for="importFile">⬆ Importar muchos cantos (archivo)</label>
+        <input id="importFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+        <p class="chico" style="margin-top:6px">Acepta .txt o .json. Se agregan a la pestaña que tengas abierta.</p>
       </div>
-    </form>
-  </section>
+    </section>
+    <section class="tarjeta">
+      <form class="editor" id="editor">
+        <div class="tarjeta-cabeza" style="margin:0"><h2 id="editTitle" class="titulo" style="font-size:20px">Canto nuevo</h2>
+          <button type="button" class="btn btn-sec" id="btnNew">+ Canto nuevo</button></div>
+        <div class="campos">
+          <label class="etiqueta">Es un
+            <select class="campo" name="kind"><option value="hymn">Himno</option><option value="coro">Coro</option></select>
+          </label>
+          <label class="etiqueta">Número <input class="campo" name="number" type="number" min="1" max="9999" placeholder="Ej. 25"></label>
+          <label class="etiqueta">Título <input class="campo" name="title" maxlength="200" required placeholder="Ej. Cristo es mi pastor"></label>
+        </div>
+        <label class="etiqueta" for="lyrics">Letra</label>
+        <p class="formato">Escribe o pega la letra. <b>Deja una línea en blanco</b> entre cada estrofa. Si quieres ponerle nombre a una parte, escríbelo entre corchetes en su primera línea, por ejemplo <code>[Coro]</code>.</p>
+        <textarea class="campo" id="lyrics" name="lyrics" spellcheck="false" placeholder="[Estrofa 1]&#10;Primera línea&#10;Segunda línea&#10;&#10;[Coro]&#10;Línea del coro"></textarea>
+        <div class="fila">
+          <button class="btn btn-primario">Guardar canto</button>
+          <span class="crece"></span>
+          <button type="button" id="btnDelete" class="btn btn-peligro" hidden>Borrar</button>
+        </div>
+      </form>
+    </section>
+  </div>
 </main>
-<div class="toast" id="toast" role="status"></div>
 <script type="module" src="/js/cantos.js"></script>
 </body>
 </html>

@@ -1,54 +1,88 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cabina en Vivo</title>
-<link rel="icon" href="/favicon.svg">
-<link rel="stylesheet" href="/css/control.css">
+<meta name="theme-color" content="#0a3156">
+<title>Cabina en Vivo · La Luz del Mundo</title>
+<link rel="icon" href="/img/icon.png">
+<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<link rel="stylesheet" href="/css/base.css">
 <style>
-  body { align-items: center; overflow: auto; }
-  .wrap { width: min(560px, 100%); padding: 40px 16px; display: flex; flex-direction: column; gap: 16px; }
-  .panel { overflow: visible; }
-  h1 { font-size: 24px; margin: 0; } h1 span { color: var(--gold); }
-  form, .rooms { display: flex; flex-direction: column; gap: 10px; }
-  label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--soft); }
-  .room { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-  .room .name { font-weight: 700; font-size: 16px; }
-  .room .links { display: flex; flex-wrap: wrap; gap: 6px; }
-  .room .url { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--soft); }
-  .room .url code { flex: 1; min-width: 0; }
-  .room .url button { padding: 3px 9px; font-size: 12px; }
-  [hidden] { display: none !important; }
-  .muted { color: var(--soft); font-size: 13px; margin: 0; }
+  /* ----- Entrada: el templo con blur + logo, igual que el Itinerario ----- */
+  .auth { position: relative; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; padding: 40px 16px; isolation: isolate; }
+  .auth-foto { position: absolute; inset: 0; z-index: -3; background: url(/img/templo.webp) center / cover no-repeat; transform: scale(1.1); filter: blur(6px); }
+  .auth-velo { position: absolute; inset: 0; z-index: -2;
+    background: linear-gradient(to bottom, rgb(6 31 56 / .75), rgb(10 49 86 / .55), rgb(6 31 56 / .95)); }
+  .auth .rayos { position: absolute; inset: 0; z-index: -1; opacity: .8; }
+  .auth-tema { position: absolute; top: 16px; right: 16px; background: rgb(255 255 255 / .1); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2); backdrop-filter: blur(6px); }
+  .auth-logo { width: 240px; height: auto; margin-bottom: 32px; filter: drop-shadow(0 10px 20px rgb(0 0 0 / .35)); }
+  .auth-caja { position: relative; width: 100%; max-width: 384px; overflow: hidden; border-radius: 24px; padding: 30px 28px;
+    background: color-mix(in srgb, var(--superficie) 95%, transparent); box-shadow: 0 25px 50px -12px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(255 255 255 / .4); backdrop-filter: blur(6px); }
+  .auth-caja::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(to right, transparent, var(--oro-vivo), transparent); }
+  .auth-caja h1 { text-align: center; }
+  .auth-caja .sub { text-align: center; color: var(--suave); font-size: 14px; margin: 6px 0 26px; }
+  .auth-caja form { display: flex; flex-direction: column; gap: 16px; }
+  .auth-error { border-radius: 12px; background: var(--rojo-suave); color: var(--rojo-texto); padding: 8px 12px; font-size: 14px; }
+  .auth-pie { margin-top: 32px; text-align: center; font-size: 12px; letter-spacing: .04em; color: rgb(255 255 255 / .7); }
+  .auth-pie a { color: var(--oro-claro); }
+
+  /* ----- Salas ----- */
+  .salas { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
+  .sala h2 { font: 600 22px/1.2 var(--display); letter-spacing: .02em; }
+  .pasos { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+  .paso-fila { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; }
+  .paso-fila .paso { margin-top: 2px; }
+  .paso-fila b { color: var(--titulo); font-weight: 650; }
+  .paso-fila .ayuda { grid-column: 2; font-size: 13.5px; }
+  .paso-fila .acciones { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .enlace-obs { grid-column: 2; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .enlace-obs code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 10px; border-radius: 10px; }
+  .sala-pie { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--borde); }
+  .nueva { display: flex; gap: 10px; flex-wrap: wrap; }
+  .nueva .campo { margin: 0; flex: 1; min-width: 220px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Cabina <span>en Vivo</span></h1>
-  <p class="muted">Proyección para el templo: TVs, banners de OBS y sugerencias por voz.</p>
-
-  <section class="panel" id="login" hidden>
+<main class="auth" id="login" hidden>
+  <div class="auth-foto"></div><div class="auth-velo"></div><div class="rayos"></div>
+  <span id="temaLogin"></span>
+  <img class="auth-logo" src="/img/logo-claro.png" alt="La Luz del Mundo">
+  <div class="auth-caja">
+    <h1>Cabina en Vivo</h1>
+    <p class="sub">Proyección y transmisión del templo</p>
     <form id="loginForm">
-      <h2>Iniciar sesión</h2>
-      <label>Correo <input name="email" type="email" autocomplete="username" required></label>
-      <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="primary">Entrar</button>
-      <p class="muted" id="loginMsg"></p>
+      <label class="etiqueta">Correo
+        <input class="campo" name="email" type="email" required autocomplete="email" placeholder="tucorreo@ejemplo.com">
+      </label>
+      <label class="etiqueta">Contraseña
+        <input class="campo" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      </label>
+      <p class="auth-error" id="loginMsg" hidden></p>
+      <button class="btn btn-primario btn-bloque" id="loginBtn">Entrar</button>
     </form>
-  </section>
+  </div>
+  <p class="auth-pie">Colonia Sambulá · Mérida, Yucatán</p>
+</main>
 
-  <section class="panel" id="home" hidden>
-    <div class="panel-head"><h2>Tus salas</h2><button id="logout">Salir</button></div>
-    <div class="rooms" id="rooms"></div>
-    <form id="newRoom" class="row">
-      <input name="name" maxlength="80" placeholder="Nombre de la sala nueva (ej. Templo principal)">
-      <button>Crear</button>
+<main class="pagina" id="home" hidden>
+  <div class="pagina-cabeza">
+    <div>
+      <h1>Tus salas</h1>
+      <p class="ayuda">Una sala es un lugar donde se proyecta (por ejemplo, el templo principal). Sigue los pasos en orden.</p>
+    </div>
+  </div>
+  <div class="salas" id="rooms"></div>
+  <section class="tarjeta" id="newRoomBox" style="margin-top:20px">
+    <h2>Agregar una sala</h2>
+    <p class="ayuda" style="margin:4px 0 12px">Solo necesitas una por cada lugar donde haya pantallas.</p>
+    <form class="nueva" id="newRoom">
+      <input class="campo" name="name" maxlength="80" placeholder="Nombre, por ejemplo: Templo principal" required>
+      <button class="btn btn-oro">Crear sala</button>
     </form>
-    <p class="muted">Abre <b>Pantalla</b> en la ventana que va a las TVs y pega la dirección de <b>OBS</b> en una fuente de Navegador (1920 × 1080).</p>
   </section>
-</div>
-<div class="toast" id="toast" role="status"></div>
+</main>
 <script type="module" src="/js/index.js"></script>
 </body>
 </html>

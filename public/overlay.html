@@ -2,50 +2,41 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Banner OBS · Cabina en Vivo</title>
+<title>Letrero de la transmisión · Cabina en Vivo</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/stage.css">
 <style>
-  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
-  body { font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
-  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
-  .banner { position: absolute; left: 90px; bottom: 90px; display: flex; align-items: stretch; max-width: 1300px;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,.4)); transform: translateX(-120%); opacity: 0;
-    transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
-  .banner.on { transform: none; opacity: 1; }
-  .tag { background: #e3c077; color: #14213a; font-weight: 800; font-size: 30px; letter-spacing: .08em;
-    text-transform: uppercase; padding: 0 30px; display: flex; align-items: center; }
-  .title { background: rgba(13,22,38,.94); color: #fff; font-weight: 600; font-size: 46px; padding: 22px 40px;
-    border-right: 6px solid #e3c077; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; min-height: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
   body.preview { background: repeating-conic-gradient(#2a2f38 0 25%, #20242b 0 50%) 0 0 / 40px 40px; }
 </style>
 </head>
 <body>
-<div id="stage"><div class="banner" id="banner"><div class="tag" id="tag"></div><div class="title" id="title"></div></div></div>
+<div id="stage"></div>
 <script type="module">
 import { subscribe } from '/js/live.js';
-import { roomId } from '/js/db.js';
-if (new URLSearchParams(location.search).has('preview')) document.body.classList.add('preview');
+import { roomId, qs } from '/js/db.js';
+import { createBanner, fitStage } from '/js/render.js';
+
+if (qs.has('preview')) document.body.classList.add('preview');
 const stage = document.getElementById('stage');
-const scale = () => stage.style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`;
-addEventListener('resize', scale); scale();
-const banner = document.getElementById('banner');
-let seq = -1, hideTimer;
-function hide() { banner.classList.remove('on'); }
-subscribe(roomId(), state => {
+fitStage(stage, document.documentElement, { center: false });
+const banner = createBanner(stage);
+let seq = -1, hideTimer, last = null;
+
+function show(state) {
   const o = state.overlay || {};
   clearTimeout(hideTimer);
   const left = o.until ? o.until - Date.now() : Infinity;
-  if (!o.visible || left <= 0) return hide();
-  if (o.seq !== seq) {
-    seq = o.seq;
-    const swap = () => {
-      document.getElementById('tag').textContent = o.tag;
-      document.getElementById('title').textContent = o.title;
-      banner.classList.add('on');
-    };
-    if (banner.classList.contains('on')) { hide(); setTimeout(swap, 450); } else swap();
-  }
-  if (left !== Infinity) hideTimer = setTimeout(hide, left);
+  if (!o.visible || left <= 0) return banner.hide();
+  if (o.seq !== seq) { seq = o.seq; banner.show(o.tag, o.title); }
+  if (left !== Infinity) hideTimer = setTimeout(banner.hide, left);
+}
+subscribe(roomId(), state => { last = state; show(state); }, design => {
+  banner.setDesign(design.banner || {});
+  if (last) { seq = -1; show(last); }
 });
+banner.setDesign({});
 </script>
 </body>
 </html>

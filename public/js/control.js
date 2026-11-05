@@ -2,8 +2,8 @@
 import { demo, requireSession, loadSongs, loadBible, roomId } from './db.js';
 import { createCatalog } from './catalog.js';
 import { createPublisher, loadRoom } from './live.js';
+import { $, toast, mountNav, absolute, withDemo } from './ui.js';
 
-const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const ICON = { bible: '📖', hymn: '🎵', coro: '🎶', theme: '📌' };
 const KIND = { bible: 'Cita', hymn: 'Himno', coro: 'Coro', theme: 'Tema' };
@@ -18,23 +18,17 @@ let state = { rev: 0, item: null, index: 0, blank: false, theme: '', overlay: { 
   settings: { ...DEFAULT_SETTINGS }, history: [] };
 
 // ---------- utilidades ----------
-let toastTimer;
-function toast(text, kind = 'error') {
-  const t = $('toast');
-  t.textContent = text; t.className = 'toast show ' + kind;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 3500);
-}
-const ago = t => { const s = Math.round((Date.now() - t) / 1000); return s < 60 ? 'ahora' : Math.round(s / 60) + ' min'; };
-const withRoom = path => `${location.origin}${path}?sala=${encodeURIComponent(room)}${demo ? '&demo' : ''}`;
+const ago = t => { const s = Math.round((Date.now() - t) / 1000); return s < 60 ? 'ahora' : 'hace ' + Math.round(s / 60) + ' min'; };
 
 // ---------- estado y acciones ----------
 const publisher = createPublisher(room, {
   getState: () => state,
   onSyncChange(status, message) {
-    const dot = $('conn');
-    dot.className = 'dot ' + (status === 'ok' ? 'ok' : status === 'demo' ? 'warn' : '');
-    dot.title = status === 'ok' ? 'Sincronizado con Supabase' : status === 'demo' ? 'Modo demo: solo esta computadora'
-      : 'Sin conexión con Supabase. Las TVs de esta computadora siguen funcionando. ' + (message || '');
+    const s = $('navSala');
+    if (!s) return;
+    s.dataset.sync = status;
+    s.title = status === 'ok' ? 'Conectado: la transmisión recibe los cambios' : status === 'demo' ? 'Modo de prueba: solo esta computadora'
+      : 'Sin internet: las TVs de esta laptop siguen funcionando, pero OBS no recibe cambios. ' + (message || '');
   }
 });
 
@@ -88,36 +82,54 @@ const actions = {
 };
 
 // ---------- pintar ----------
+const KIND_LONG = { bible: 'Lectura', hymn: 'Himno', coro: 'Coro', theme: 'Tema del culto' };
 function render() {
   const item = state.item;
-  $('onairLabel').textContent = item ? item.label + (state.blank ? ' (en fondo)' : '') : state.theme ? 'Fondo con tema: ' + state.theme : 'Nada';
-  $('onair').classList.toggle('live', !!item && !state.blank);
-  $('btnBlank').classList.toggle('on', state.blank);
-  $('btnBanner').classList.toggle('on', state.overlay.visible);
+  const est = $('estado');
+  est.className = 'estado' + (item && !state.blank ? ' vivo' : item ? ' pausa' : '');
+  $('estadoTxt').textContent = item && !state.blank ? 'En pantalla' : item ? 'Texto oculto' : 'Nada en pantalla';
+  if (item) {
+    $('onairLabel').textContent = item.label;
+    const slide = item.slides[state.index];
+    const part = item.slides.length > 1 ? `Parte ${state.index + 1} de ${item.slides.length}` : KIND_LONG[item.kind];
+    const name = item.kind === 'bible' ? slide?.header : slide?.lines?.length ? slide.label : item.slides.length > 1 ? 'Portada' : '';
+    $('onairSub').textContent = [part, name].filter(Boolean).join(' · ') + (state.blank ? ' · las TVs muestran solo el fondo' : '');
+  } else {
+    $('onairLabel').textContent = state.theme ? 'Fondo con el tema' : 'Las TVs muestran el fondo';
+    $('onairSub').textContent = state.theme ? state.theme : 'Cuando pongas algo, aparecerá aquí.';
+  }
+  $('btnPrev').disabled = !item || state.index === 0;
+  $('btnNext').disabled = !item || state.index >= item.slides.length - 1;
+  $('btnBlank').disabled = !item;
+  $('btnBlank').textContent = state.blank ? 'Mostrar texto' : 'Ocultar texto';
+  $('btnBlank').classList.toggle('activo', state.blank);
+  $('btnBanner').textContent = state.overlay.visible ? 'Ocultar letrero' : 'Mostrar letrero';
+  $('btnBanner').classList.toggle('activo', state.overlay.visible);
   const os = $('overlayStatus');
-  os.textContent = state.overlay.visible ? 'Banner OBS: ' + state.overlay.tag + ' — ' + state.overlay.title
-    : state.settings.showBanner ? 'Banner OBS: oculto' : 'Banner OBS: desactivado en Ajustes';
+  os.textContent = state.overlay.visible ? 'En la transmisión: ' + state.overlay.tag + ' · ' + state.overlay.title
+    : state.settings.showBanner ? 'Letrero de la transmisión: oculto' : 'Letrero de la transmisión: apagado en Ajustes';
   os.classList.toggle('on', state.overlay.visible);
   if (document.activeElement !== $('theme')) $('theme').value = state.theme || '';
 
   const list = $('slides'); list.replaceChildren();
-  if (item) {
+  if (item && item.slides.length > 1) {
     item.slides.forEach((s, i) => {
       const li = el('li', i === state.index ? 'cur' : '');
-      li.append(el('b', '', item.kind === 'bible' ? s.header : s.lines?.length ? (s.label || '') : 'Portada'),
+      li.append(el('b', '', item.kind === 'bible' ? s.header : s.lines?.length ? (s.label || 'Parte ' + (i + 1)) : 'Portada'),
         el('span', '', s.text || (s.lines?.length ? s.lines.join(' / ') : s.title)));
       li.onclick = () => actions.go(i);
+      li.title = 'Poner esta parte';
       list.append(li);
     });
-    $('slidePos').textContent = (state.index + 1) + ' / ' + item.slides.length;
-    list.children[state.index]?.scrollIntoView({ block: 'nearest' });
-  } else $('slidePos').textContent = '–';
+    list.children[state.index]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
 
   const h = $('history'); h.replaceChildren();
-  for (const entry of state.history) {
+  $('noHistory').hidden = state.history.length > 0;
+  for (const entry of state.history.slice(0, 12)) {
     const li = el('li');
     li.append(el('span', 'k', ICON[entry.ref.kind] || '•'), el('span', 't', entry.label), el('span', 'when', ago(entry.at)));
-    li.title = 'Volver a poner al aire';
+    li.title = 'Volver a ponerlo en pantalla';
     li.onclick = () => actions.air(entry.ref);
     h.append(li);
   }
@@ -162,15 +174,16 @@ function renderSuggestions() {
     li.dataset.sid = s.id;
     const label = el('div', 'label');
     if (s.item.kind === 'theme') {
-      const input = el('input'); input.value = s.item.text; input.maxLength = 200;
+      const input = el('input', 'campo'); input.value = s.item.text; input.maxLength = 200; input.title = 'Puedes corregirlo antes de ponerlo';
       input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); accept(s); } };
       label.append(input);
     } else label.textContent = s.item.label;
-    const meta = el('div', 'meta');
-    const go = el('button', 'primary', i === 0 ? 'Al aire ⏎' : 'Al aire'); go.onclick = () => accept(s);
-    const no = el('button', '', '✕'); no.title = 'Descartar'; no.onclick = () => dismiss(s);
-    meta.append(el('span', '', KIND[s.item.kind] + ' · ' + ago(s.at)), el('span', 'grow'), go, no);
-    li.append(el('span', 'kind', ICON[s.item.kind]), label, meta);
+    const go = el('button', 'btn btn-primario', 'Poner en pantalla'); go.type = 'button'; go.onclick = () => accept(s);
+    if (i === 0) go.title = 'Tecla Enter';
+    const no = el('button', 'btn btn-mini', '✕'); no.type = 'button'; no.title = 'Descartar (Supr)'; no.onclick = () => dismiss(s);
+    const acc = el('div', 'acc'); acc.append(go, no);
+    li.append(el('span', 'kind', ICON[s.item.kind]), label, acc,
+      el('div', 'meta', KIND[s.item.kind] + ' · se dijo ' + ago(s.at) + (s.item.kind === 'theme' ? ' · puedes corregirlo' : '')));
     ol.append(li);
   });
 }
@@ -185,7 +198,7 @@ $('transcript').append(interimEl, finalsEl);
 
 function setMic(on, text) {
   micBtn.classList.toggle('on', on);
-  micBtn.firstChild.textContent = on ? '⏹ Dejar de escuchar ' : '🎙 Escuchar ';
+  micBtn.textContent = on ? '⏹ Dejar de escuchar' : '🎙 Escuchar';
   if (text) micStatus.textContent = text;
 }
 function startListening() {
@@ -196,7 +209,7 @@ function startListening() {
   rec.lang = state.settings.voiceLang || 'es-MX';
   rec.continuous = true;
   rec.interimResults = true;
-  rec.onstart = () => { restartDelay = 250; setMic(true, 'Escuchando… (usa el micrófono predeterminado del navegador)'); };
+  rec.onstart = () => { restartDelay = 250; setMic(true, 'Escuchando… Habla cerca del micrófono para probar: di “Juan tres dieciséis”.'); };
   rec.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -218,11 +231,11 @@ function startListening() {
   };
   rec.onend = () => {
     if (listening) setTimeout(() => { if (listening) try { rec.start(); } catch {} }, restartDelay);
-    else setMic(false, 'Apagado.');
+    else setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.');
   };
   try { rec.start(); } catch (err) { toast('No se pudo iniciar el micrófono: ' + err.message); }
 }
-function stopListening() { listening = false; try { rec?.stop(); } catch {} setMic(false, 'Apagado.'); interimEl.textContent = ''; }
+function stopListening() { listening = false; try { rec?.stop(); } catch {} setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.'); interimEl.textContent = ''; }
 micBtn.onclick = () => listening ? stopListening() : startListening();
 if (!SR) { micBtn.disabled = true; micStatus.textContent = 'Abre la cabina en Google Chrome o Edge para usar la voz. El buscador funciona igual.'; }
 
@@ -257,7 +270,8 @@ function renderResults() {
   results.forEach((r, i) => {
     const li = el('li', i === sel ? 'sel' : '');
     li.append(el('span', 'k', ICON[r.kind]), el('span', 't', r.label));
-    if (i === sel) li.append(el('kbd', '', 'Enter'));
+    if (i === sel) li.append(el('span', 'hint', 'Enter para poner'));
+    li.title = 'Poner en pantalla';
     li.onclick = () => actions.air(r);
     ol.append(li);
   });
@@ -281,7 +295,7 @@ $('btnLocation').onclick = actions.location;
 document.addEventListener('click', e => { const b = e.target.closest('button'); if (b && e.detail > 0) b.blur(); });
 
 document.addEventListener('keydown', e => {
-  if ($('settings').open || e.target.closest('input, select, textarea')) return;
+  if (document.querySelector('dialog[open]') || e.target.closest('input, select, textarea')) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const map = {
     Enter: () => suggestions[0] && accept(suggestions[0]),
@@ -305,8 +319,8 @@ $('btnSettings').onclick = () => {
   form.bannerSeconds.value = s.bannerSeconds ?? 25;
   form.showBanner.checked = s.showBanner !== false;
   form.voiceLang.value = s.voiceLang || 'es-MX';
-  $('urlTv').textContent = withRoom('/pantalla');
-  $('urlObs').textContent = withRoom('/overlay');
+  $('urlTv').textContent = absolute('/pantalla', { sala: room });
+  $('urlObs').textContent = absolute('/overlay', { sala: room });
   dlg.showModal();
 };
 dlg.addEventListener('close', () => {
@@ -319,12 +333,28 @@ dlg.addEventListener('close', () => {
   if (listening) { stopListening(); setTimeout(startListening, 400); }
 });
 
+// ---------- ayuda ----------
+function setupGuide() {
+  const guia = $('guia');
+  const open = () => { guia.showModal(); try { localStorage.setItem('cabina-guia-vista', '1'); } catch {} $('primeraVez').hidden = true; };
+  $('cerrarGuia').onclick = () => guia.close();
+  $('verGuia').onclick = open;
+  $('cerrarPrimera').onclick = () => { $('primeraVez').hidden = true; try { localStorage.setItem('cabina-guia-vista', '1'); } catch {} };
+  const help = $('navAyuda'); if (help) { help.hidden = false; help.onclick = open; }
+  let seen = false; try { seen = !!localStorage.getItem('cabina-guia-vista'); } catch {}
+  $('primeraVez').hidden = seen;
+}
+for (const chip of document.querySelectorAll('#ejemplos .chip')) {
+  chip.onclick = () => { search.value = chip.dataset.q; search.dispatchEvent(new Event('input')); search.focus(); };
+}
+
 // ---------- arranque ----------
 (async () => {
   await requireSession();
-  $('monitor').src = withRoom('/pantalla');
-  $('lnkSongs').href = '/cantos' + (demo ? '?demo' : '');
-  if (demo) toast('Modo demo: sin base de datos, solo funciona en esta computadora.', 'info');
+  mountNav('cabina');
+  setupGuide();
+  $('monitor').src = withDemo('/pantalla', { sala: room });
+  if (demo) toast('Modo de prueba: no se guarda nada y solo funciona en esta computadora.', 'info');
   try {
     const saved = demo ? null : await loadRoom(room);
     if (!demo && !saved) { toast('Esa sala no existe. Elige una desde el inicio.'); setTimeout(() => location.href = '/', 2500); return; }
@@ -333,9 +363,10 @@ dlg.addEventListener('close', () => {
       state.overlay = { ...state.overlay, visible: state.overlay.visible && (!state.overlay.until || state.overlay.until > Date.now()) };
     }
     document.title = (saved?.name ? saved.name + ' · ' : '') + 'Cabina en Vivo';
+    if ($('navSala')) $('navSala').textContent = saved?.name || 'Sala de prueba';
     const [songs, bible] = await Promise.all([loadSongs(), loadBible()]);
     catalog = createCatalog({ songs, bible });
-    if (!catalog.counts.songs) toast('Aún no tienes cantos. Agrégalos en la página Cantos.', 'info');
+    if (!catalog.counts.songs) toast('Aún no hay cantos. Agrégalos en la pestaña Cantos (arriba).', 'info');
     commit();
   } catch (err) { toast(err.message); }
 })();

@@ -1,46 +1,63 @@
+// Inicio: entrar y elegir sala, con pasos guiados.
 import { demo, supa, qs } from './db.js';
+import { $, el, toast, mountNav, themeButton, withDemo, absolute } from './ui.js';
 
-const $ = id => document.getElementById(id);
-const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-function toast(text, kind = 'error') {
-  const t = $('toast'); t.textContent = text; t.className = 'toast show ' + kind;
-  setTimeout(() => t.className = 'toast', 3500);
-}
-const link = (path, id) => `${location.origin}${path}?sala=${encodeURIComponent(id)}${demo ? '&demo' : ''}`;
-
-function roomCard(room) {
-  const card = el('div', 'room');
-  const links = el('div', 'links');
-  const open = el('a', 'btn', 'Abrir cabina'); open.href = link('/control', room.id); open.classList.add('primary');
-  const tv = el('a', 'btn', 'Pantalla (TVs)'); tv.href = link('/pantalla', room.id); tv.target = '_blank';
-  const songs = el('a', 'btn', 'Cantos'); songs.href = '/cantos' + (demo ? '?demo' : '');
-  links.append(open, tv, songs);
-  const url = el('div', 'url');
-  const obs = link('/overlay', room.id);
-  const copy = el('button', '', 'Copiar');
-  copy.onclick = async () => { try { await navigator.clipboard.writeText(obs); toast('Dirección de OBS copiada', 'info'); } catch { toast('No se pudo copiar; selecciónala a mano.'); } };
-  url.append(el('span', '', 'OBS:'), el('code', '', obs), copy);
-  card.append(el('div', 'name', room.name), links, url);
-  return card;
+function roomCard(room, sb) {
+  const obs = absolute('/overlay', { sala: room.id });
+  const copy = el('button', { class: 'btn btn-sec', type: 'button', text: 'Copiar' });
+  copy.onclick = async () => {
+    try { await navigator.clipboard.writeText(obs); toast('Enlace copiado. Pégalo en OBS.', 'ok'); }
+    catch { toast('No se pudo copiar. Selecciona el enlace y cópialo a mano.'); }
+  };
+  const rename = el('button', { class: 'btn btn-mini', type: 'button', text: 'Cambiar nombre' });
+  rename.onclick = async () => {
+    const name = prompt('Nuevo nombre de la sala', room.name)?.trim();
+    if (!name || name === room.name || demo) return;
+    const { error } = await sb.from('rooms').update({ name: name.slice(0, 80) }).eq('id', room.id);
+    if (error) return toast(error.message);
+    showHome(sb);
+  };
+  return el('section', { class: 'tarjeta sala' },
+    el('h2', { text: room.name }),
+    el('div', { class: 'pasos' },
+      el('div', { class: 'paso-fila' },
+        el('span', { class: 'paso', text: '1' }), el('b', { text: 'Abre la cabina en esta laptop' }),
+        el('p', { class: 'ayuda', text: 'Desde ahí pones citas, himnos y el tema. Usa Chrome o Edge para que funcione el micrófono.' }),
+        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-primario', href: withDemo('/control', { sala: room.id }), text: 'Abrir la cabina' }))),
+      el('div', { class: 'paso-fila' },
+        el('span', { class: 'paso', text: '2' }), el('b', { text: 'Abre lo que se ve en las TVs' }),
+        el('p', { class: 'ayuda', text: 'Se abre en otra ventana: arrástrala a la pantalla de las TVs y presiona F11.' }),
+        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/pantalla', { sala: room.id }), target: '_blank', text: 'Abrir pantallas del templo ↗' }))),
+      el('div', { class: 'paso-fila' },
+        el('span', { class: 'paso', text: '3' }), el('b', { text: 'Pon el letrero en la transmisión' }),
+        el('p', { class: 'ayuda', text: 'En OBS: + (Fuentes) → Navegador → pega este enlace, con ancho 1920 y alto 1080.' }),
+        el('div', { class: 'enlace-obs' }, el('code', { text: obs, title: obs }), copy))),
+    el('div', { class: 'sala-pie' },
+      el('a', { class: 'btn btn-mini', href: withDemo('/diseno', { sala: room.id }), text: '🎨 Diseño del letrero y las TVs' }),
+      el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: '🎵 Cantos' }),
+      demo ? null : rename));
 }
 
 async function showHome(sb) {
   $('login').hidden = true; $('home').hidden = false;
+  if (!document.querySelector('.nav')) mountNav('salas');
   const list = $('rooms'); list.replaceChildren();
   if (demo) {
-    list.append(roomCard({ id: 'demo', name: 'Sala demo (sin base de datos)' }));
-    $('newRoom').hidden = true; $('logout').hidden = true;
+    list.append(roomCard({ id: 'demo', name: 'Sala de prueba' }, sb));
+    $('newRoomBox').hidden = true;
     return;
   }
-  const { data, error } = await sb.from('rooms').select('id, name').eq('owner', (await sb.auth.getUser()).data.user.id).order('created_at');
+  const { data: { user } } = await sb.auth.getUser();
+  const { data, error } = await sb.from('rooms').select('id, name').eq('owner', user.id).order('created_at');
   if (error) return toast(error.message);
-  if (!data.length) list.append(el('p', 'muted', 'Todavía no tienes salas. Crea la primera abajo.'));
-  data.forEach(r => list.append(roomCard(r)));
+  if (!data.length) list.append(el('div', { class: 'vacio', text: 'Todavía no tienes salas. Crea la primera aquí abajo.' }));
+  data.forEach(r => list.append(roomCard(r, sb)));
 }
 
 (async () => {
   const sb = await supa();
   if (demo) return showHome(null);
+  $('temaLogin').replaceWith(themeButton('auth-tema'));
   const { data } = await sb.auth.getSession();
   const after = () => {
     const back = qs.get('volver');
@@ -50,19 +67,21 @@ async function showHome(sb) {
 
   $('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const f = e.target;
-    $('loginMsg').textContent = 'Entrando…';
+    const f = e.target, msg = $('loginMsg'), btn = $('loginBtn');
+    btn.disabled = true; btn.textContent = 'Entrando…'; msg.hidden = true;
     const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
-    if (error) { $('loginMsg').textContent = 'No se pudo entrar: ' + error.message; return; }
-    $('loginMsg').textContent = '';
+    btn.disabled = false; btn.textContent = 'Entrar';
+    if (error) {
+      msg.textContent = /invalid/i.test(error.message) ? 'Correo o contraseña incorrectos.' : 'No se pudo entrar: ' + error.message;
+      msg.hidden = false; return;
+    }
     after();
   });
-  $('logout').onclick = async () => { await sb.auth.signOut(); location.href = '/'; };
   $('newRoom').addEventListener('submit', async e => {
     e.preventDefault();
     const name = e.target.name.value.trim() || 'Templo';
     const { error } = await sb.from('rooms').insert({ name });
     if (error) return toast(error.message);
-    e.target.reset(); showHome(sb);
+    e.target.reset(); toast('Sala creada', 'ok'); showHome(sb);
   });
 })();

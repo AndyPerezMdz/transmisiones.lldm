@@ -3,94 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pantalla · Cabina en Vivo</title>
-<link rel="icon" href="/favicon.svg">
+<title>Pantallas del templo · Cabina en Vivo</title>
+<link rel="icon" href="/img/icon.png">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/stage.css">
 <style>
-  :root { --gold: #e3c077; --ink: #f4f1ea; --soft: #b9c3d3; }
-  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; cursor: none; }
-  body { font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--ink); }
-  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center;
-    background: radial-gradient(120% 90% at 50% 10%, #1b2c47 0%, #0d1626 55%, #070b14 100%); overflow: hidden; }
-  #stage::after { content: ""; position: absolute; left: 160px; right: 160px; bottom: 70px; height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(227,192,119,.55), transparent); }
-  .slide { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 90px 140px 110px;
-    box-sizing: border-box; opacity: 0; transition: opacity .35s ease; }
-  .slide.on { opacity: 1; }
-  .head { font-size: 40px; font-weight: 600; letter-spacing: .04em; color: var(--gold); min-height: 52px; }
-  .body { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .fit { text-align: center; line-height: 1.28; font-weight: 600; text-wrap: balance; text-shadow: 0 3px 14px rgba(0,0,0,.45); }
-  .fit .line { display: block; }
-  .foot { font-size: 30px; color: var(--soft); text-align: center; min-height: 40px; letter-spacing: .03em; }
-  .cover .fit { font-weight: 700; }
-  .cover .kicker { display: block; font-size: .38em; font-weight: 600; color: var(--gold); letter-spacing: .12em;
-    text-transform: uppercase; margin-bottom: .45em; }
-  .bible .fit { font-weight: 500; line-height: 1.38; text-align: left; }
-  .bible .verse { color: var(--gold); font-size: .55em; vertical-align: .55em; margin-right: .25em; font-weight: 700; }
-  .chorus .fit { font-style: italic; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; min-height: 0; }
+  body.oculta-cursor { cursor: none; }
+  .aviso { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9; background: rgb(6 31 56 / .92); color: #fff;
+    border: 1px solid rgb(220 203 152 / .4); border-radius: 14px; padding: 12px 18px; font: 500 15px/1.4 var(--sans); text-align: center; transition: opacity .4s; }
+  .aviso b { color: #dccb98; }
 </style>
 </head>
 <body>
-<div id="stage"></div>
+<div class="tv" id="stage"></div>
+<div class="aviso" id="aviso">Arrastra esta ventana a la TV y presiona <b>F11</b> para pantalla completa.</div>
 <script type="module">
-import { subscribe, fitText } from '/js/live.js';
+import { subscribe } from '/js/live.js';
 import { roomId } from '/js/db.js';
+import { createScreen, applyScreenDesign, fitStage } from '/js/render.js';
+
 const stage = document.getElementById('stage');
-function scale() {
-  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
-  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
-}
-addEventListener('resize', scale); scale();
+fitStage(stage);
+const screen = createScreen(stage);
+const embedded = window.self !== window.top;
+const aviso = document.getElementById('aviso');
+if (embedded) aviso.remove();
+// El aviso y el cursor se esconden solos.
+let idle;
+const wake = () => { document.body.classList.remove('oculta-cursor'); clearTimeout(idle); idle = setTimeout(() => { document.body.classList.add('oculta-cursor'); aviso?.style.setProperty('opacity', '0'); }, 4000); };
+addEventListener('mousemove', wake); wake();
 
-const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-let lastKey = null;
-
-function build(state) {
-  const { item, index, blank, theme } = state;
-  const slide = !blank && item ? item.slides[index] : null;
-  const wrap = el('div', 'slide');
-  const head = el('div', 'head'), body = el('div', 'body'), fit = el('div', 'fit'), foot = el('div', 'foot');
-  body.append(fit); wrap.append(head, body, foot);
-
-  if (!slide) {
-    if (theme) {
-      wrap.classList.add('cover');
-      fit.append(el('span', 'kicker', 'Tema'), document.createTextNode(theme));
-    }
-  } else if (item.kind === 'bible') {
-    wrap.classList.add('bible');
-    head.textContent = slide.header;
-    fit.append(el('span', 'verse', String(slide.verse)), document.createTextNode(slide.text));
-    foot.textContent = item.version || '';
-  } else if (slide.lines && slide.lines.length) {
-    if (slide.chorus) wrap.classList.add('chorus');
-    head.textContent = slide.label || '';
-    for (const l of slide.lines) fit.append(el('span', 'line', l));
-    foot.textContent = slide.header || '';
-  } else if (slide.title) {
-    wrap.classList.add('cover');
-    fit.append(el('span', 'kicker', slide.header || ''), document.createTextNode(slide.title));
-  } else {
-    fit.textContent = slide.text || '';
-  }
-  return wrap;
-}
-
-function render(state) {
-  const key = JSON.stringify([state.blank, state.item?.key, state.index, state.item ? '' : state.theme]);
-  if (key === lastKey) return;
-  lastKey = key;
-  const next = build(state);
-  stage.append(next);
-  const fit = next.querySelector('.fit');
-  fitText(fit, { min: 28, max: next.classList.contains('cover') ? 120 : 96 });
-  requestAnimationFrame(() => next.classList.add('on'));
-  for (const old of [...stage.querySelectorAll('.slide')].slice(0, -1)) {
-    old.classList.remove('on');
-    setTimeout(() => old.remove(), 400);
-  }
-}
-subscribe(roomId(), render);
-render({ item: null, index: 0, blank: false, theme: '' });
+subscribe(roomId(), state => screen.render(state), design => { applyScreenDesign(stage, design.screen); screen.refit(); });
+screen.render({ item: null, index: 0, blank: false, theme: '' });
 </script>
 </body>
 </html>

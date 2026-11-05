@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a3156">
+<title>Diseño · Cabina en Vivo</title>
+<link rel="icon" href="/img/icon.png">
+<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/stage.css">
+<link rel="stylesheet" href="/css/diseno.css">
+</head>
+<body>
+<main class="pagina">
+  <div class="pagina-cabeza">
+    <div>
+      <h1>Diseño</h1>
+      <p class="ayuda">Cambia cómo se ven el letrero de la transmisión y las TVs. Lo ves aquí al momento; se aplica cuando presionas <b>Guardar cambios</b>.</p>
+    </div>
+    <div class="tabs" id="tabs" role="tablist">
+      <button type="button" class="btn btn-sec activo" data-tab="banner" role="tab">📺 Letrero de la transmisión</button>
+      <button type="button" class="btn btn-sec" data-tab="screen" role="tab">🖥 Pantallas del templo</button>
+    </div>
+  </div>
+
+  <!-- ================= Letrero ================= -->
+  <section class="editor-grid" id="tab-banner">
+    <div class="vista">
+      <div class="lienzo" id="bannerBox"><div class="lienzo-stage" id="bannerStage"></div>
+        <div class="lienzo-vacio" id="bannerEmpty" hidden>Sube la imagen de su letrero para empezar →</div></div>
+      <div class="vista-pie">
+        <div class="fila envuelve"><span class="chico">Probar con:</span>
+          <button type="button" class="chip activo" data-sample="0">Cita</button>
+          <button type="button" class="chip" data-sample="1">Himno</button>
+          <button type="button" class="chip" data-sample="2">Tema</button>
+          <button type="button" class="chip" data-sample="3">Ubicación</button>
+        </div>
+        <label class="fila chico"><input type="checkbox" id="fakeCam" checked> Ver sobre una imagen de ejemplo</label>
+      </div>
+      <p class="chico" id="dragHint" hidden>✋ Arrastra la imagen y los textos sobre la vista previa para acomodarlos.</p>
+    </div>
+
+    <aside class="panel tarjeta">
+      <h2>¿Qué letrero quieres usar?</h2>
+      <div class="opciones" id="bannerMode">
+        <label class="opcion"><input type="radio" name="bmode" value="default"><span><b>El de la cabina</b><small>Escoges colores, letra y posición.</small></span></label>
+        <label class="opcion"><input type="radio" name="bmode" value="image"><span><b>Su propio diseño</b><small>Suben la imagen que ya tienen y acomodan los textos encima.</small></span></label>
+      </div>
+
+      <div id="bDefault">
+        <label class="etiqueta">Dónde aparece
+          <select class="campo" data-b="position"></select></label>
+        <label class="etiqueta">Tamaño <span class="valor" data-show="size"></span>
+          <input type="range" min="60" max="160" step="5" data-b="size"></label>
+        <div class="dos">
+          <label class="etiqueta">Fondo <input class="campo" type="color" data-b="colors.bg"></label>
+          <label class="etiqueta">Detalle <input class="campo" type="color" data-b="colors.accent"></label>
+          <label class="etiqueta">Texto <input class="campo" type="color" data-b="colors.text"></label>
+          <label class="etiqueta">Texto de la etiqueta <input class="campo" type="color" data-b="colors.tagText"></label>
+        </div>
+        <label class="etiqueta">Letra del título <select class="campo fuentes" data-b="font"></select></label>
+        <label class="etiqueta">Letra de la etiqueta <select class="campo fuentes" data-b="tagFont"></select></label>
+      </div>
+
+      <div id="bImage" hidden>
+        <label class="btn btn-oro btn-bloque" for="bannerFile">⬆ Subir imagen del letrero</label>
+        <input type="file" id="bannerFile" accept="image/png,image/jpeg,image/webp" hidden>
+        <p class="chico">Mejor en <b>PNG con fondo transparente</b>. Puede ser solo el letrero o una imagen completa de 1920 × 1080.</p>
+        <div id="bImageCtl" hidden>
+          <label class="etiqueta">Tamaño de la imagen <span class="valor" data-show="image.width"></span>
+            <input type="range" min="200" max="1920" step="10" data-b="image.width"></label>
+          <div class="segmento" id="txtPick">
+            <button type="button" class="activo" data-k="tag">Etiqueta <small>(“Lectura”)</small></button>
+            <button type="button" data-k="title">Título <small>(“Juan 3:16”)</small></button>
+          </div>
+          <div class="txt-opc" id="txtOpc">
+            <label class="fila etiqueta"><input type="checkbox" data-t="show"> Mostrar este texto</label>
+            <label class="etiqueta">Letra <select class="campo fuentes" data-t="font"></select></label>
+            <div class="dos">
+              <label class="etiqueta">Tamaño <span class="valor" data-tshow="size"></span><input type="range" min="16" max="140" step="1" data-t="size"></label>
+              <label class="etiqueta">Ancho <span class="valor" data-tshow="w"></span><input type="range" min="100" max="1900" step="10" data-t="w"></label>
+              <label class="etiqueta">Color <input class="campo" type="color" data-t="color"></label>
+              <label class="etiqueta">Grosor
+                <select class="campo" data-t="weight"><option value="400">Normal</option><option value="600">Seminegrita</option><option value="800">Negrita</option></select></label>
+            </div>
+            <div class="dos">
+              <label class="etiqueta">Alineación
+                <select class="campo" data-t="align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
+              <label class="fila etiqueta" style="align-self:end;padding-bottom:12px"><input type="checkbox" data-t="upper"> MAYÚSCULAS</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <label class="etiqueta">Cómo entra
+        <select class="campo" data-b="anim"><option value="deslizar">Se desliza</option><option value="aparecer">Aparece suave</option></select></label>
+      <button type="button" class="btn btn-mini" id="resetBanner">Volver al letrero original</button>
+    </aside>
+  </section>
+
+  <!-- ================= Pantallas ================= -->
+  <section class="editor-grid" id="tab-screen" hidden>
+    <div class="vista">
+      <div class="lienzo" id="screenBox"><div class="tv lienzo-stage" id="screenStage"></div></div>
+      <div class="vista-pie">
+        <div class="fila envuelve"><span class="chico">Probar con:</span>
+          <button type="button" class="chip activo" data-ssample="0">Versículo</button>
+          <button type="button" class="chip" data-ssample="1">Estrofa</button>
+          <button type="button" class="chip" data-ssample="2">Portada</button>
+          <button type="button" class="chip" data-ssample="3">Tema</button>
+        </div>
+      </div>
+    </div>
+    <aside class="panel tarjeta">
+      <h2>Fondo</h2>
+      <div class="opciones">
+        <label class="opcion"><input type="radio" name="sbg" value="default"><span><b>Azul con rayos</b><small>El de la cabina.</small></span></label>
+        <label class="opcion"><input type="radio" name="sbg" value="color"><span><b>Un color</b><small>Liso, del color que elijas.</small></span></label>
+        <label class="opcion"><input type="radio" name="sbg" value="image"><span><b>Imagen propia</b><small>Una foto o fondo que ya tengan.</small></span></label>
+      </div>
+      <label class="etiqueta" id="sColorBox">Color del fondo <input class="campo" type="color" data-s="color"></label>
+      <div id="sImageBox">
+        <label class="btn btn-oro btn-bloque" for="screenFile">⬆ Subir imagen de fondo</label>
+        <input type="file" id="screenFile" accept="image/png,image/jpeg,image/webp" hidden>
+        <label class="etiqueta" style="margin-top:10px">Oscurecer la imagen (para que se lea la letra) <span class="valor" data-sshow="dim"></span>
+          <input type="range" min="0" max="90" step="5" data-s="dim"></label>
+      </div>
+
+      <h2 style="margin-top:8px">Letra</h2>
+      <label class="etiqueta">Letra de cantos y versículos <select class="campo fuentes" data-s="font"></select></label>
+      <label class="etiqueta">Letra de portadas y tema <select class="campo fuentes" data-s="titleFont"></select></label>
+      <div class="dos">
+        <label class="etiqueta">Color del texto <input class="campo" type="color" data-s="text"></label>
+        <label class="etiqueta">Color de detalles <input class="campo" type="color" data-s="accent"></label>
+      </div>
+      <label class="fila etiqueta"><input type="checkbox" data-s="version"> Mostrar “Reina-Valera 1909” abajo de los versículos</label>
+
+      <h2 style="margin-top:8px">Logo</h2>
+      <label class="fila etiqueta"><input type="checkbox" data-s="logo.show"> Mostrar logo en las TVs</label>
+      <div id="sLogoBox">
+        <div class="dos" style="grid-template-columns:1fr">
+          <label class="etiqueta">Dónde <select class="campo" data-s="logo.position">
+            <option value="arriba-der">Arriba a la derecha</option><option value="arriba-izq">Arriba a la izquierda</option>
+            <option value="abajo-der">Abajo a la derecha</option><option value="abajo-izq">Abajo a la izquierda</option><option value="abajo-centro">Abajo al centro</option></select></label>
+          <label class="etiqueta">Tamaño <span class="valor" data-sshow="logo.size"></span><input type="range" min="80" max="500" step="10" data-s="logo.size"></label>
+        </div>
+        <div class="fila envuelve">
+          <label class="btn btn-sec" for="logoFile">Usar otro logo</label>
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" hidden>
+          <button type="button" class="btn btn-mini" id="logoChurch">Usar el de la iglesia</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-mini" id="resetScreen">Volver al diseño original</button>
+    </aside>
+  </section>
+</main>
+
+<div class="barra-guardar" id="saveBar">
+  <span id="saveMsg" class="chico">Sin cambios</span>
+  <span class="crece"></span>
+  <button type="button" class="btn btn-sec" id="btnDiscard" disabled>Descartar</button>
+  <button type="button" class="btn btn-primario" id="btnSave" disabled>Guardar cambios</button>
+</div>
+<script type="module" src="/js/diseno.js"></script>
+</body>
+</html>

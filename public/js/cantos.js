@@ -3,12 +3,9 @@ import { demo, supa, requireSession, loadSongs } from './db.js';
 import { norm } from './detector.js';
 import { parseSongText, songToText, parseSongBook, normalizeSong } from './song-text.js';
 
-const $ = id => document.getElementById(id);
+import { $, toast, mountNav } from './ui.js';
+
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-function toast(text, kind = 'error') {
-  const t = $('toast'); t.textContent = text; t.className = 'toast show ' + kind;
-  clearTimeout(toast.t); toast.t = setTimeout(() => t.className = 'toast', 4000);
-}
 
 let songs = [], kind = 'hymn', current = null, sb = null;
 const form = $('editor');
@@ -34,7 +31,7 @@ function edit(s) {
   form.number.value = s?.number ?? '';
   form.title.value = s?.title || '';
   form.lyrics.value = s ? songToText(s.sections) : '';
-  $('editTitle').textContent = s ? 'Editar canto' : 'Canto nuevo';
+  $('editTitle').textContent = s ? 'Editando: ' + s.title : 'Canto nuevo';
   $('btnDelete').hidden = !s;
   renderList();
 }
@@ -56,7 +53,7 @@ form.addEventListener('submit', async e => {
   if (error) return toast('No se guardó: ' + error.message);
   songs = current ? songs.map(s => s.id === data.id ? data : s) : [...songs, data];
   sortSongs(); kind = data.kind; setTab(); edit(data);
-  toast('Guardado', 'info');
+  toast('Canto guardado', 'ok');
 });
 
 $('btnDelete').onclick = async () => {
@@ -71,7 +68,7 @@ $('btnDelete').onclick = async () => {
 $('btnNew').onclick = () => { edit(null); form.title.focus(); };
 $('filter').addEventListener('input', renderList);
 
-function setTab() { for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.kind === kind); }
+function setTab() { for (const b of $('tabs').children) b.classList.toggle('activo', b.dataset.kind === kind); }
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   kind = b.dataset.kind; setTab(); edit(null);
@@ -115,15 +112,15 @@ $('importFile').addEventListener('change', async e => {
       if (error) throw error;
       done += Math.min(200, loose.length - i);
     }
-    toast(`Listo: ${done} cantos importados.`, 'info');
+    toast(`Listo: ${done} cantos importados.`, 'ok');
   } catch (err) { toast(`Se importaron ${done}; falló el resto: ${err.message}`); }
   songs = await loadSongs(); renderList();
 });
 
 (async () => {
   await requireSession();
+  mountNav('cantos');
   sb = await supa();
-  if (demo) { $('back').href = '/?demo'; document.querySelector('.brand a').href = '/?demo'; }
   try { songs = await loadSongs(); } catch (err) { toast(err.message); }
   sortSongs(); edit(null);
 })();

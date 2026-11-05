@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabina en Vivo</title>
+<link rel="stylesheet" href="/css/control.css">
+<link rel="icon" href="/favicon.svg">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot" id="conn" title="Sincronización"></span> <a href="/" class="home">Cabina en Vivo</a></div>
+  <div class="onair" id="onair"><span class="pill">Al aire</span> <span id="onairLabel">Nada</span></div>
+  <div class="actions">
+    <button id="btnBanner" title="Mostrar u ocultar banner de OBS (O)">Banner OBS <kbd>O</kbd></button>
+    <button id="btnLocation" title="Mostrar ubicación en OBS (U)">Ubicación <kbd>U</kbd></button>
+    <button id="btnBlank" title="Fondo sin texto (B)">Fondo <kbd>B</kbd></button>
+    <button id="btnClear" class="danger" title="Quitar todo (Esc)">Limpiar <kbd>Esc</kbd></button>
+    <a id="lnkSongs" class="btn" href="/cantos">Cantos</a>
+    <button id="btnSettings" class="icon" title="Ajustes">⚙</button>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="panel" id="voicePanel">
+    <div class="panel-head">
+      <h2>Escucha</h2>
+      <button id="btnMic" class="mic">🎙 Escuchar <kbd>M</kbd></button>
+    </div>
+    <p class="hint" id="micStatus">Apagado. Conecta el micrófono y presiona Escuchar.</p>
+    <div class="transcript" id="transcript" aria-live="polite"></div>
+    <h3>Sugerencias <small><kbd>Enter</kbd> al aire · <kbd>Supr</kbd> descartar</small></h3>
+    <ol class="cards" id="suggestions"></ol>
+    <p class="empty" id="noSuggestions">Cuando el expositor diga una cita, un himno, un coro o el tema, aparecerá aquí.</p>
+  </section>
+
+  <section class="panel" id="searchPanel">
+    <div class="panel-head"><h2>Buscar</h2><small><kbd>/</kbd> para escribir</small></div>
+    <input id="search" type="search" autocomplete="off" spellcheck="false"
+      placeholder="jn 3 16 · h246 · c7 · t: tema · o un pedazo de letra">
+    <ol class="results" id="results"></ol>
+    <div class="theme-box">
+      <label for="theme">Tema del culto</label>
+      <div class="row">
+        <input id="theme" type="text" maxlength="200" placeholder="Escribe o díctalo y presiona Enter">
+        <button id="btnTheme">Proyectar</button>
+      </div>
+    </div>
+    <h3>Historial</h3>
+    <ol class="history" id="history"></ol>
+  </section>
+
+  <section class="panel" id="livePanel">
+    <div class="panel-head"><h2>En pantalla</h2><small><kbd>←</kbd> <kbd>→</kbd> cambiar</small></div>
+    <div class="monitor"><iframe id="monitor" title="Vista de las TVs" tabindex="-1"></iframe></div>
+    <div class="overlay-status" id="overlayStatus">Banner OBS: oculto</div>
+    <div class="nav">
+      <button id="btnPrev">← Anterior</button>
+      <span id="slidePos">–</span>
+      <button id="btnNext">Siguiente →</button>
+    </div>
+    <ol class="slides" id="slides"></ol>
+  </section>
+</main>
+
+<dialog id="settings">
+  <form method="dialog" id="settingsForm">
+    <h2>Ajustes</h2>
+    <label>Ubicación para el banner de OBS
+      <input name="location" maxlength="120" placeholder="Colonia, ciudad">
+    </label>
+    <label>Segundos que dura el banner (0 = hasta ocultarlo a mano)
+      <input name="bannerSeconds" type="number" min="0" max="3600" step="1">
+    </label>
+    <label class="check"><input name="showBanner" type="checkbox"> Mostrar banners en OBS</label>
+    <label>Acento del reconocimiento de voz
+      <select name="voiceLang">
+        <option value="es-MX">Español (México)</option>
+        <option value="es-US">Español (Estados Unidos)</option>
+        <option value="es-GT">Español (Guatemala)</option>
+        <option value="es-CO">Español (Colombia)</option>
+        <option value="es-ES">Español (España)</option>
+      </select>
+    </label>
+    <p class="hint">TVs: <code id="urlTv"></code><br>OBS: <code id="urlObs"></code></p>
+    <div class="row end">
+      <button value="cancel" formnovalidate>Cancelar</button>
+      <button value="save" class="primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="/js/control.js"></script>
+</body>
+</html>

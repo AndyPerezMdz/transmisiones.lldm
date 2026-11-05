@@ -1,0 +1,19 @@
+{
+  "name": "cabina-en-vivo",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Proyección para el templo con sugerencias por voz, TVs y banners de OBS. Supabase + Vercel.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test tests/*.test.js",
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "esbuild": "0.24.0"
+  }
+}

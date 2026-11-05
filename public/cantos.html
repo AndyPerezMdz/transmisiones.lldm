@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cantos · Cabina en Vivo</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/css/control.css">
+<style>
+  .grid { grid-template-columns: minmax(260px, 1fr) 2fr; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tabs button.on { border-color: var(--gold); color: var(--gold); }
+  #list li .n { width: 38px; color: var(--soft); text-align: right; font-variant-numeric: tabular-nums; }
+  #list li.sel { background: var(--ctrl); border-color: var(--gold); }
+  form.editor { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+  form.editor label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--soft); }
+  .fields { display: grid; grid-template-columns: 140px 110px 1fr; gap: 10px; }
+  textarea { flex: 1; min-height: 280px; width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); font: 15px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bar .grow { flex: 1; }
+  .count { color: var(--soft); font-size: 12px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } .fields { grid-template-columns: 1fr 1fr; } .fields label:last-child { grid-column: span 2; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><a href="/" class="home">Cabina en Vivo</a> · Cantos</div>
+  <div class="onair"></div>
+  <div class="actions">
+    <label class="btn" for="importFile" title="Subir archivo JSON o TXT">Importar…</label>
+    <input id="importFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+    <a class="btn" id="back" href="/">Volver</a>
+  </div>
+</header>
+<main class="grid">
+  <section class="panel">
+    <div class="tabs" id="tabs">
+      <button data-kind="hymn" class="on">Himnario</button>
+      <button data-kind="coro">Coros</button>
+    </div>
+    <input id="filter" type="search" placeholder="Buscar por número, título o letra">
+    <p class="count" id="count"></p>
+    <ol class="results" id="list"></ol>
+  </section>
+  <section class="panel">
+    <form class="editor" id="editor">
+      <div class="bar"><h2 id="editTitle">Canto nuevo</h2><span class="grow"></span><button type="button" id="btnNew">+ Nuevo</button></div>
+      <div class="fields">
+        <label>Tipo
+          <select name="kind"><option value="hymn">Himno</option><option value="coro">Coro</option></select>
+        </label>
+        <label>Número <input name="number" type="number" min="1" max="9999"></label>
+        <label>Título <input name="title" maxlength="200" required></label>
+      </div>
+      <label for="lyrics">Letra · separa las estrofas con una línea en blanco; la etiqueta va entre corchetes, como <code>[Coro]</code></label>
+      <textarea id="lyrics" name="lyrics" spellcheck="false" placeholder="[Estrofa 1]&#10;Primera línea&#10;Segunda línea&#10;&#10;[Coro]&#10;Línea del coro"></textarea>
+      <div class="bar">
+        <button class="primary">Guardar</button>
+        <span class="grow"></span>
+        <button type="button" id="btnDelete" class="danger" hidden>Borrar</button>
+      </div>
+    </form>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="/js/cantos.js"></script>
+</body>
+</html>

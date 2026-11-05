@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabina en Vivo</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/css/control.css">
+<style>
+  body { align-items: center; overflow: auto; }
+  .wrap { width: min(560px, 100%); padding: 40px 16px; display: flex; flex-direction: column; gap: 16px; }
+  .panel { overflow: visible; }
+  h1 { font-size: 24px; margin: 0; } h1 span { color: var(--gold); }
+  form, .rooms { display: flex; flex-direction: column; gap: 10px; }
+  label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--soft); }
+  .room { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .room .name { font-weight: 700; font-size: 16px; }
+  .room .links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .room .url { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--soft); }
+  .room .url code { flex: 1; min-width: 0; }
+  .room .url button { padding: 3px 9px; font-size: 12px; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--soft); font-size: 13px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cabina <span>en Vivo</span></h1>
+  <p class="muted">Proyección para el templo: TVs, banners de OBS y sugerencias por voz.</p>
+
+  <section class="panel" id="login" hidden>
+    <form id="loginForm">
+      <h2>Iniciar sesión</h2>
+      <label>Correo <input name="email" type="email" autocomplete="username" required></label>
+      <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="primary">Entrar</button>
+      <p class="muted" id="loginMsg"></p>
+    </form>
+  </section>
+
+  <section class="panel" id="home" hidden>
+    <div class="panel-head"><h2>Tus salas</h2><button id="logout">Salir</button></div>
+    <div class="rooms" id="rooms"></div>
+    <form id="newRoom" class="row">
+      <input name="name" maxlength="80" placeholder="Nombre de la sala nueva (ej. Templo principal)">
+      <button>Crear</button>
+    </form>
+    <p class="muted">Abre <b>Pantalla</b> en la ventana que va a las TVs y pega la dirección de <b>OBS</b> en una fuente de Navegador (1920 × 1080).</p>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="/js/index.js"></script>
+</body>
+</html>

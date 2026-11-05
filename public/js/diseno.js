@@ -1,7 +1,7 @@
 // Editor de diseño: letrero (cantos, citas, tema), nombre del expositor, logos fijos y letra completa.
 import { demo, supa, requireSession, roomId } from './db.js';
 import { loadRoom, saveDesign } from './live.js';
-import { $, el, toast, mountNav } from './ui.js';
+import { $, el, toast, mountNav, modal } from './ui.js';
 import { FONTS, POSITIONS, LAYER_SLOTS, DEFAULT_DESIGN, mergeDesign, placeLayer,
   createBanner, createLayers, createScreen, applyScreenDesign, fitStage } from './render.js';
 
@@ -64,7 +64,7 @@ function drawTx() {
   const k = editKind();
   const imgMode = k && lt().mode === 'image';
   $('bannerEmpty').hidden = !(imgMode && !lt().image?.url);
-  $('dragHint').hidden = !((imgMode && lt().image?.url) || (tab === 'layers' && Object.values(design.layers).some(Boolean)));
+  $('dragHint').hidden = !(k ? (!imgMode || lt().image?.url) : tab === 'layers' && Object.values(design.layers).some(Boolean));
   const selPath = k ? k + '.' + selected : tab === 'layers' ? 'layers.' + selectedLayer : '';
   for (const n of txStage.querySelectorAll('[data-drag]')) n.classList.toggle('sel', n.dataset.drag === selPath);
 }
@@ -85,8 +85,8 @@ txStage.addEventListener('pointerdown', e => {
   const path = target.dataset.drag;
   const owner = path.split('.')[0];
   if (owner !== tab) return;
-  if (owner !== 'layers' && design[owner].mode !== 'image') return;
   e.preventDefault();
+  if (path.endsWith('.free')) return startFreeDrag(owner, e);
   const obj = get(design, path);
   if (!obj) return;
   const part = path.split('.')[1];
@@ -97,7 +97,33 @@ txStage.addEventListener('pointerdown', e => {
   for (const n of txStage.querySelectorAll('.sel')) n.classList.remove('sel');
   target.classList.add('sel');
 });
+// Letrero con el diseño de la cabina: se pasa a posición libre y se arrastra completo.
+function toFree(kind) {
+  const d = design[kind];
+  if (d.position === 'libre') return;
+  const root = letreros[kind].root, scale = txBox.clientWidth / 1920, box = txStage.getBoundingClientRect();
+  const rects = [...root.querySelectorAll('.lt-tag:not([hidden]), .lt-title')].map(n => n.getBoundingClientRect());
+  d.free = { x: Math.round((Math.min(...rects.map(r => r.left)) - box.left) / scale), y: Math.round((Math.min(...rects.map(r => r.top)) - box.top) / scale) };
+  d.position = 'libre';
+  posSel.value = 'libre';
+  $('margins').hidden = true;
+  drawTx();
+}
+function startFreeDrag(kind, e) {
+  toFree(kind);
+  const root = letreros[kind].root;
+  drag = { free: true, root, obj: design[kind].free, startX: e.clientX, startY: e.clientY, x: design[kind].free.x, y: design[kind].free.y, scale: txBox.clientWidth / 1920 };
+  txStage.setPointerCapture(e.pointerId);
+}
+
 txStage.addEventListener('pointermove', e => {
+  if (drag?.free) {
+    drag.obj.x = Math.max(-200, Math.min(1900, Math.round(drag.x + (e.clientX - drag.startX) / drag.scale)));
+    drag.obj.y = Math.max(-50, Math.min(1060, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
+    drag.root.style.setProperty('--fx', drag.obj.x + 'px');
+    drag.root.style.setProperty('--fy', drag.obj.y + 'px');
+    return;
+  }
   if (!drag) return;
   drag.obj.x = Math.max(-1800, Math.min(1900, Math.round(drag.x + (e.clientX - drag.startX) / drag.scale)));
   drag.obj.y = Math.max(-1000, Math.min(1060, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
@@ -113,7 +139,8 @@ document.addEventListener('keydown', e => {
   if (tab === 'screen' || e.target.closest('input, select, textarea')) return;
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (!d) return;
-  const obj = tab === 'layers' ? design.layers[selectedLayer] : lt().mode === 'image' ? lt()[selected] : null;
+  if (editKind() && lt().mode === 'default') toFree(editKind());
+  const obj = tab === 'layers' ? design.layers[selectedLayer] : lt().mode === 'image' ? lt()[selected] : lt().free;
   if (!obj) return;
   e.preventDefault();
   const step = e.shiftKey ? 10 : 1;
@@ -134,6 +161,7 @@ function bindLetrero() {
   }
   for (const r of document.querySelectorAll('input[name=bmode]')) r.checked = r.value === d.mode;
   $('bDefault').hidden = d.mode !== 'default';
+  $('margins').hidden = d.position === 'libre';
   $('bImage').hidden = d.mode !== 'image';
   $('bImageCtl').hidden = !d.image?.url;
   syncTextPick();
@@ -166,6 +194,7 @@ document.querySelectorAll('[data-b]').forEach(input => input.addEventListener('i
   if (!editKind()) return;
   const raw = input.type === 'checkbox' ? input.checked : input.value;
   set(lt(), input.dataset.b, input.type === 'range' || input.type === 'number' ? Number(raw) : raw);
+  if (input.dataset.b === 'position') $('margins').hidden = raw === 'libre';
   changed();
 }));
 document.querySelectorAll('[data-t]').forEach(input => input.addEventListener('input', () => {
@@ -178,9 +207,9 @@ document.querySelectorAll('[data-t]').forEach(input => input.addEventListener('i
 }));
 document.querySelectorAll('input[name=bmode]').forEach(r => r.onchange = () => { lt().mode = r.value; bindLetrero(); changed(); });
 $('txtPick').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { selected = b.dataset.k; syncTextPick(); drawTx(); } });
-$('resetBanner').onclick = () => {
+$('resetBanner').onclick = async () => {
   const k = editKind();
-  if (!k || !confirm('¿Regresar este letrero al diseño original? Se quita su imagen y sus ajustes.')) return;
+  if (!k || !(await modal({ title: 'Volver al diseño original', text: 'Se quita la imagen y los ajustes de este letrero. Puedes descartarlo antes de guardar.', ok: 'Sí, regresar', danger: true }))) return;
   design[k] = clone(DEFAULT_DESIGN[k]); bindLetrero(); changed();
 };
 
@@ -307,8 +336,8 @@ document.querySelectorAll('input[name=sbg]').forEach(r => r.onchange = () => { d
 $('screenFile').onchange = e => handleFile(e.target, 'fondo', img => { design.screen.image = { url: img.url, w: img.w, h: img.h }; design.screen.bg = 'image'; bindScreenControls(); });
 $('logoFile').onchange = e => handleFile(e.target, 'logo', img => { design.screen.logo.url = img.url; design.screen.logo.show = true; bindScreenControls(); });
 $('logoChurch').onclick = () => { design.screen.logo.url = null; changed(); };
-$('resetScreen').onclick = () => {
-  if (!confirm('¿Regresar la letra completa al diseño original?')) return;
+$('resetScreen').onclick = async () => {
+  if (!(await modal({ title: 'Volver al diseño original', text: '¿Regresar la letra completa al diseño original?', ok: 'Sí, regresar', danger: true }))) return;
   design.screen = clone(DEFAULT_DESIGN.screen); bindScreenControls(); changed();
 };
 
@@ -339,6 +368,14 @@ $('btnDiscard').onclick = () => {
   bindLetrero(); bindScreenControls(); renderLayerRows(); changed();
 };
 addEventListener('beforeunload', e => { if (JSON.stringify(design) !== savedJson) { e.preventDefault(); e.returnValue = ''; } });
+// Al irse a otra página de la app con cambios pendientes, se pregunta con una ventana propia.
+document.addEventListener('click', async e => {
+  const link = e.target.closest('a[href]');
+  if (!link || link.target === '_blank' || JSON.stringify(design) === savedJson) return;
+  e.preventDefault();
+  const leave = await modal({ title: 'Tienes cambios sin guardar', text: 'Si te vas ahora, se pierden los cambios del diseño.', ok: 'Salir sin guardar', cancel: 'Quedarme', danger: true });
+  if (leave) { savedJson = JSON.stringify(design); location.href = link.href; }
+}, true);
 
 // ---------- Arranque ----------
 (async () => {

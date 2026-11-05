@@ -22,7 +22,7 @@
     <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1"></iframe><span class="monitor-tag">Así se ve en la transmisión</span></div>
     <div class="ahora-info">
       <div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div>
-      <div class="ahora-titulo" id="onairLabel">Las TVs muestran el fondo</div>
+      <div class="ahora-titulo" id="onairLabel">Nada al aire</div>
       <div class="ahora-sub" id="onairSub">Cuando pongas algo, aparecerá aquí.</div>
       <div class="controles">
         <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←"><span class="icono">◀</span> Anterior</button>
@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <h3 style="margin-top:22px">Lo último que pusiste</h3>
+      <div class="hist-cabeza"><h3>Lo último que pusiste</h3><button type="button" class="btn btn-mini" id="clearHistory" hidden>Borrar todo</button></div>
       <ol class="history" id="history"></ol>
       <div class="vacio chico" id="noHistory">Todavía nada.</div>
     </section>

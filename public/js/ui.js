@@ -84,3 +84,28 @@ export function mountNav(active, { roomName = '' } = {}) {
 
 // Evita que Enter o Espacio repitan el último botón que se presionó con el mouse.
 document.addEventListener('click', e => { const b = e.target.closest?.('button'); if (b && e.detail > 0) b.blur(); });
+
+// ---------- Ventanas propias (en lugar de confirm/prompt del navegador) ----------
+// Devuelve true/false, o el texto escrito si se pide un campo (null si cancelan).
+export function modal({ title, text = '', ok = 'Aceptar', cancel = 'Cancelar', danger = false, input = null }) {
+  return new Promise(resolve => {
+    const field = input ? el('input', { class: 'campo', value: input.value ?? '', placeholder: input.placeholder || '', maxlength: input.maxLength || 200 }) : null;
+    const okBtn = el('button', { class: 'btn ' + (danger ? 'btn-rojo' : 'btn-primario'), value: 'ok', text: ok });
+    const form = el('form', { method: 'dialog', class: 'dialogo' },
+      el('h2', { class: 'titulo', style: 'font-size:21px', text: title }),
+      text ? el('p', { class: 'ayuda', style: 'font-size:15px', text }) : null,
+      field ? el('label', { class: 'etiqueta' }, input.label || '', field) : null,
+      el('div', { class: 'dialogo-pie' },
+        cancel ? el('button', { class: 'btn btn-sec', value: 'cancel', formnovalidate: true, text: cancel }) : null, okBtn));
+    const dlg = el('dialog', {}, form);
+    document.body.append(dlg);
+    dlg.addEventListener('close', () => {
+      const yes = dlg.returnValue === 'ok';
+      dlg.remove();
+      resolve(field ? (yes ? field.value.trim() : null) : yes);
+    });
+    dlg.showModal();
+    (field || okBtn).focus();
+    if (field) field.select();
+  });
+}

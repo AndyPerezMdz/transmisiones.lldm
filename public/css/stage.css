@@ -34,6 +34,10 @@
 .pos-arriba-der .lt-tag { right: var(--x); top: var(--y); transform-origin: right top; border-radius: 10px 10px 0 0; }
 .pos-arriba-der .lt-title { right: var(--x); top: calc(var(--y) + 52px * var(--lt-scale)); transform-origin: right top; border-radius: 14px 0 14px 14px; }
 .pos-arriba-izq .lt-tag[hidden] + .lt-title, .pos-arriba-der .lt-tag[hidden] + .lt-title { top: var(--y); }
+/* Posición libre: la esquina de arriba a la izquierda del letrero va en (--fx, --fy) */
+.pos-libre .lt-tag { left: var(--fx); top: var(--fy); transform-origin: left top; }
+.pos-libre .lt-title { left: var(--fx); top: calc(var(--fy) + 52px * var(--lt-scale)); transform-origin: left top; }
+.pos-libre .lt-tag[hidden] + .lt-title { top: var(--fy); border-radius: 14px; }
 
 .lt-imagen img { position: absolute; display: block; user-select: none; }
 .lt-imagen .lt-txt { position: absolute; line-height: 1.15; overflow: hidden; white-space: nowrap; }

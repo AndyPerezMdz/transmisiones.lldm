@@ -1,6 +1,6 @@
 // Inicio: entrar y elegir sala, con pasos guiados.
 import { demo, supa, qs } from './db.js';
-import { $, el, toast, mountNav, themeButton, withDemo, absolute } from './ui.js';
+import { $, el, toast, mountNav, themeButton, withDemo, absolute, modal } from './ui.js';
 
 function copyBox(url) {
   const copy = el('button', { class: 'btn btn-sec', type: 'button', text: 'Copiar' });
@@ -14,7 +14,7 @@ function copyBox(url) {
 function roomCard(room, sb) {
   const rename = el('button', { class: 'btn btn-mini', type: 'button', text: 'Cambiar nombre' });
   rename.onclick = async () => {
-    const name = prompt('Nuevo nombre de la sala', room.name)?.trim();
+    const name = await modal({ title: 'Cambiar nombre', input: { label: 'Nombre de la sala', value: room.name, maxLength: 80 }, ok: 'Guardar' });
     if (!name || name === room.name || demo) return;
     const { error } = await sb.from('rooms').update({ name: name.slice(0, 80) }).eq('id', room.id);
     if (error) return toast(error.message);

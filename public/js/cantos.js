@@ -3,7 +3,7 @@ import { demo, supa, requireSession, loadSongs } from './db.js';
 import { norm } from './detector.js';
 import { parseSongText, songToText, parseSongBook, normalizeSong } from './song-text.js';
 
-import { $, toast, mountNav } from './ui.js';
+import { $, toast, mountNav, modal } from './ui.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
@@ -57,7 +57,7 @@ form.addEventListener('submit', async e => {
 });
 
 $('btnDelete').onclick = async () => {
-  if (!current || !confirm(`¿Borrar "${current.title}"?`)) return;
+  if (!current || !(await modal({ title: 'Borrar canto', text: `¿Seguro que quieres borrar "${current.title}"? No se puede deshacer.`, ok: 'Sí, borrar', danger: true }))) return;
   if (!demo) {
     const { error } = await sb.from('songs').delete().eq('id', current.id);
     if (error) return toast('No se borró: ' + error.message);
@@ -90,7 +90,7 @@ $('importFile').addEventListener('change', async e => {
   } catch (err) { return toast('No se pudo leer el archivo: ' + err.message); }
   if (!parsed.length) return toast('No encontré cantos en ese archivo. Revisa el formato en el LEEME.');
   const target = kind === 'hymn' ? 'Himnario' : 'Coros';
-  if (!confirm(`Se encontraron ${parsed.length} cantos. ¿Importarlos a "${target}"? Los que tengan el mismo número se reemplazan.`)) return;
+  if (!(await modal({ title: 'Importar cantos', text: `Se encontraron ${parsed.length} cantos. ¿Agregarlos a "${target}"? Los que tengan el mismo número se reemplazan.`, ok: 'Importar' }))) return;
   const rows = parsed.map(s => ({ ...s, kind }));
   if (demo) {
     songs = [...songs.filter(s => s.kind !== kind || !rows.some(r => r.number && r.number === s.number)),

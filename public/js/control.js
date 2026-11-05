@@ -2,7 +2,7 @@
 import { demo, requireSession, loadSongs, loadBible, roomId } from './db.js';
 import { createCatalog } from './catalog.js';
 import { createPublisher, loadRoom } from './live.js';
-import { $, toast, mountNav, absolute, withDemo } from './ui.js';
+import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const ICON = { bible: '📖', hymn: '🎵', coro: '🎶', theme: '📌' };
@@ -107,7 +107,7 @@ function render() {
     const name = item.kind === 'bible' ? slide?.header : slide?.lines?.length ? slide.label : item.slides.length > 1 ? 'Portada' : '';
     $('onairSub').textContent = [part, name].filter(Boolean).join(' · ') + (state.blank ? ' · las TVs muestran solo el fondo' : '');
   } else {
-    $('onairLabel').textContent = state.theme ? 'Fondo con el tema' : 'Las TVs muestran el fondo';
+    $('onairLabel').textContent = state.theme ? 'Solo el tema' : 'Nada al aire';
     $('onairSub').textContent = state.theme ? state.theme : 'Cuando pongas algo, aparecerá aquí.';
   }
   $('btnPrev').disabled = !item || state.index === 0;
@@ -129,9 +129,12 @@ function render() {
   if (sp.visible && document.activeElement !== $('spName') && document.activeElement !== $('spRole')) { $('spName').value = sp.title; $('spRole').value = sp.tag || ''; }
   const rec = $('spRecent'); rec.replaceChildren();
   for (const p of state.speakers) {
-    const chip = el('button', 'chip', p.name + (p.role ? ' · ' + p.role : '')); chip.type = 'button';
-    chip.title = 'Poner este nombre';
-    chip.onclick = () => { $('spName').value = p.name; $('spRole').value = p.role || ''; showSpeaker(p.name, p.role || ''); };
+    const chip = el('span', 'chip chip-nombre');
+    const use = el('button', 'usar', p.name + (p.role ? ' · ' + p.role : '')); use.type = 'button'; use.title = 'Poner este nombre';
+    use.onclick = () => { $('spName').value = p.name; $('spRole').value = p.role || ''; showSpeaker(p.name, p.role || ''); };
+    const del = el('button', 'quitar', '✕'); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar ' + p.name);
+    del.onclick = () => { state.speakers = state.speakers.filter(x => x.name !== p.name || x.role !== p.role); commit(); };
+    chip.append(use, del);
     rec.append(chip);
   }
 
@@ -150,9 +153,12 @@ function render() {
 
   const h = $('history'); h.replaceChildren();
   $('noHistory').hidden = state.history.length > 0;
+  $('clearHistory').hidden = !state.history.length;
   for (const entry of state.history.slice(0, 12)) {
     const li = el('li');
-    li.append(el('span', 'k', ICON[entry.ref.kind] || '•'), el('span', 't', entry.label), el('span', 'when', ago(entry.at)));
+    const del = el('button', 'quitar', '✕'); del.type = 'button'; del.title = 'Quitar de la lista';
+    del.onclick = e => { e.stopPropagation(); state.history = state.history.filter(x => x !== entry); commit(); };
+    li.append(el('span', 'k', ICON[entry.ref.kind] || '•'), el('span', 't', entry.label), el('span', 'when', ago(entry.at)), del);
     li.title = 'Volver a ponerlo en pantalla';
     li.onclick = () => actions.air(entry.ref);
     h.append(li);
@@ -335,6 +341,10 @@ document.addEventListener('keydown', e => {
   const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
   if (fn) { e.preventDefault(); fn(); }
 });
+
+$('clearHistory').onclick = async () => {
+  if (await modal({ title: 'Borrar lo último que pusiste', text: 'Se borra la lista. Lo que está en pantalla no cambia.', ok: 'Sí, borrar', danger: true })) { state.history = []; commit(); }
+};
 
 // ---------- expositor ----------
 $('spForm').addEventListener('submit', e => {

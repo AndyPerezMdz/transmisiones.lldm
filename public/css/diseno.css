@@ -31,7 +31,8 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .txt-opc { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 
 /* Arrastrar sobre la vista previa */
-.editando.edit-banner .lt-banner.lt-imagen :is(img, .lt-txt), .editando.edit-speaker .lt-speaker.lt-imagen :is(img, .lt-txt) { pointer-events: auto; cursor: move; touch-action: none; }
+.editando.edit-banner .lt-banner :is(img, .lt-txt), .editando.edit-speaker .lt-speaker :is(img, .lt-txt) { pointer-events: auto; cursor: move; touch-action: none; }
+.editando.edit-banner .lt-banner.lt-normal .lt-txt:hover, .editando.edit-speaker .lt-speaker.lt-normal .lt-txt:hover { filter: brightness(1.15); }
 .editando .lt-imagen .lt-txt { outline: 3px dashed rgb(220 203 152 / .75); outline-offset: 4px; }
 .editando .lt-imagen .sel { outline: 4px solid #dccb98; }
 .editando .lt-imagen img.sel { outline-offset: 0; }

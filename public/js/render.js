@@ -12,7 +12,8 @@ export const fontCss = id => (FONTS[id] || FONTS.inter).css;
 
 export const POSITIONS = {
   'abajo-izq': 'Abajo a la izquierda', 'abajo-centro': 'Abajo al centro', 'abajo-der': 'Abajo a la derecha',
-  'arriba-izq': 'Arriba a la izquierda', 'arriba-der': 'Arriba a la derecha'
+  'arriba-izq': 'Arriba a la izquierda', 'arriba-der': 'Arriba a la derecha',
+  'libre': 'Libre (donde lo arrastres)'
 };
 
 // Plantilla de un letrero (se usa para el de cantos/citas/tema y para el del expositor).
@@ -20,6 +21,7 @@ const lowerThird = ({ position, margin, tag, title }) => ({
   mode: 'default',              // 'default' | 'image'
   anim: 'deslizar',             // 'deslizar' | 'aparecer'
   position, size: 100, margin,  // margin: distancia al borde en px (x horizontal, y vertical)
+  free: { x: 100, y: 100 },     // esquina de arriba a la izquierda cuando position = 'libre'
   colors: { bg: '#0a3156', accent: '#c7ae6e', text: '#ffffff', tagText: '#061f38' },
   font: 'inter', tagFont: 'cinzel',
   image: null,                  // { url, w, h, x, y, width }
@@ -100,12 +102,13 @@ export function createBanner(stage, { kind = 'banner' } = {}) {
       root.className = base() + ' lt-normal pos-' + design.position;
       const c = design.colors;
       root.style.setProperty('--x', (design.margin?.x ?? 70) + 'px'); root.style.setProperty('--y', (design.margin?.y ?? 110) + 'px');
+      root.style.setProperty('--fx', (design.free?.x ?? 100) + 'px'); root.style.setProperty('--fy', (design.free?.y ?? 100) + 'px');
       root.style.setProperty('--lt-bg', c.bg); root.style.setProperty('--lt-accent', c.accent);
       root.style.setProperty('--lt-text', c.text); root.style.setProperty('--lt-tag-text', c.tagText);
       root.style.setProperty('--lt-scale', design.size / 100);
       root.style.setProperty('--lt-font', fontCss(design.font)); root.style.setProperty('--lt-tag-font', fontCss(design.tagFont));
-      const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag';
-      const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title';
+      const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag'; tag.dataset.drag = kind + '.free';
+      const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = kind + '.free';
       root.append(tag, title);
     }
     if (current) fill(current);

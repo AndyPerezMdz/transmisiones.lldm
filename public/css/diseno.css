@@ -4,7 +4,7 @@
 .lienzo { position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: 16px; overflow: hidden; background: #111;
   box-shadow: var(--sombra), inset 0 0 0 1px var(--borde); }
 .lienzo.cuadros { background: repeating-conic-gradient(#2a2f38 0 25%, #20242b 0 50%) 0 0 / 24px 24px; }
-.lienzo.camara { background: #000 url(/img/templo.webp) center / cover; }
+.lienzo.camara { background: #000 var(--foto-prueba, url(/img/ejemplo-camara.jpg)) center / cover; }
 .lienzo-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
 .lienzo-vacio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;
   background: rgb(14 23 20 / .55); font-size: 15px; text-align: center; padding: 20px; }

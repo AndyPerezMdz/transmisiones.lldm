@@ -89,7 +89,7 @@ async function showNoTeam(sb) {
   const check = el('button', { class: 'btn btn-primario', type: 'button', text: 'Ya me invitaron, revisar' });
   check.onclick = () => showHome(sb);
   const form = el('form', { class: 'fila' },
-    el('input', { class: 'campo crece', name: 'name', maxlength: 80, required: true, placeholder: 'Nombre del equipo, ej. Colonia Sambulá' }),
+    el('input', { class: 'campo crece', name: 'name', maxlength: 80, required: true, placeholder: 'Nombre del equipo, ej. Templo Central' }),
     el('button', { class: 'btn btn-sec', text: 'Crear equipo' }));
   form.onsubmit = async e => {
     e.preventDefault();

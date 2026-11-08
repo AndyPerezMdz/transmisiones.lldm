@@ -51,7 +51,7 @@ const posSel = document.querySelector('[data-b="position"]');
 for (const [id, n] of Object.entries(POSITIONS)) posSel.append(new Option(n, id));
 
 // ---------- Vista previa de la transmisión (logos + letrero + expositor) ----------
-const SAMPLES = [['Lectura', 'Juan 3:16'], ['Himno 25', 'Un título de himno algo largo para probar'], ['Tema', 'La fe que vence al mundo'], ['Transmitiendo desde', 'Colonia Sambulá · Mérida, Yucatán']];
+const SAMPLES = [['Lectura', 'Juan 3:16'], ['Himno 25', 'Un título de himno algo largo para probar'], ['Tema', 'La fe que vence al mundo'], ['Transmitiendo desde', 'Colonia, ciudad, estado']];
 let selected = 'tag';
 const txStage = $('bannerStage'), txBox = $('bannerBox');
 const fitTx = fitStage(txStage, txBox, { center: false });
@@ -127,6 +127,12 @@ tiposBox.append(el('button', { type: 'button', class: 'btn btn-mini', text: 'Cop
 } }));
 const camToggle = () => { txBox.classList.toggle('camara', $('fakeCam').checked); txBox.classList.toggle('cuadros', !$('fakeCam').checked); };
 $('fakeCam').onchange = camToggle; camToggle();
+// Foto de prueba solo para ver cómo quedan los letreros sobre su templo (no se sube ni se guarda).
+$('fotoPrueba').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  txBox.style.setProperty('--foto-prueba', `url("${URL.createObjectURL(f)}")`);
+  $('fakeCam').checked = true; camToggle();
+};
 
 // Arrastrar: solo lo que pertenece a la pestaña abierta
 let drag = null, selectedLayer = 'der';
@@ -524,6 +530,8 @@ function startTurno(me) {
     if ($('navSala')) $('navSala').textContent = saved.name || '';
     design = mergeDesign(saved.design);
     savedJson = JSON.stringify(design);
+    const lugar = saved.state?.settings?.location;
+    if (lugar) LETREROS.ubicacion.sample = ['Transmitiendo desde', lugar];
   } catch (err) { toast(err.message); }
   bindLetrero(); bindScreenControls(); renderLayerRows();
   fitTx(); fitScreen();

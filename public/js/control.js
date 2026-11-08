@@ -40,11 +40,12 @@ function commit() {
 }
 
 let overlayTimer;
-function showOverlay(tag, title) {
+const TYPE_OF = { bible: 'lectura', hymn: 'himno', coro: 'coro', theme: 'tema' };
+function showOverlay(tag, title, type = 'lectura') {
   clearTimeout(overlayTimer);
   if (!state.settings.showBanner || !title) { state.overlay = { ...state.overlay, visible: false }; return; }
   const secs = Number(state.settings.bannerSeconds);
-  state.overlay = { visible: true, tag, title, seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
+  state.overlay = { visible: true, tag, title, type, seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
   if (secs > 0) overlayTimer = setTimeout(() => { state.overlay = { ...state.overlay, visible: false }; commit(); }, secs * 1000);
 }
 function hideOverlay() { clearTimeout(overlayTimer); state.overlay = { ...state.overlay, visible: false }; }
@@ -66,7 +67,7 @@ const actions = {
     if (!item) return toast('No se encontró eso en el catálogo.');
     state.item = item; state.index = 0; state.blank = false;
     if (item.kind === 'theme') state.theme = item.banner.title;
-    showOverlay(item.banner.tag, item.banner.title);
+    showOverlay(item.banner.tag, item.banner.title, TYPE_OF[item.kind]);
     const clean = { ...ref }; delete clean.label;
     state.history = [{ ref: clean, label: item.label, at: Date.now() }, ...state.history.filter(h => h.label !== item.label)].slice(0, 30);
     dropWhere(s => s.item.key === item.key);
@@ -81,15 +82,15 @@ const actions = {
   clear() { state.item = null; state.index = 0; state.blank = false; hideOverlay(); commit(); },
   blank() { state.blank = !state.blank; commit(); },
   banner(show) {
-    if (show && state.item?.banner) showOverlay(state.item.banner.tag, state.item.banner.title);
-    else if (show && state.theme) showOverlay('Tema', state.theme);
-    else if (show && state.settings.location) showOverlay('Transmitiendo desde', state.settings.location);
+    if (show && state.item?.banner) showOverlay(state.item.banner.tag, state.item.banner.title, TYPE_OF[state.item.kind]);
+    else if (show && state.theme) showOverlay('Tema', state.theme, 'tema');
+    else if (show && state.settings.location) showOverlay('Transmitiendo desde', state.settings.location, 'ubicacion');
     else hideOverlay();
     commit();
   },
   location() {
     if (!state.settings.location) return toast('Primero escribe la ubicación en Ajustes ⚙', 'info');
-    showOverlay('Transmitiendo desde', state.settings.location); commit();
+    showOverlay('Transmitiendo desde', state.settings.location, 'ubicacion'); commit();
   }
 };
 

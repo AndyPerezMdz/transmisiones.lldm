@@ -2,7 +2,7 @@
 import { demo, supa, requireSession, roomId } from './db.js';
 import { loadRoom, saveDesign } from './live.js';
 import { $, el, toast, mountNav, modal } from './ui.js';
-import { FONTS, POSITIONS, LAYER_SLOTS, DEFAULT_DESIGN, mergeDesign, placeLayer,
+import { FONTS, POSITIONS, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
   createBanner, createLayers, createScreen, applyScreenDesign, fitStage } from './render.js';
 
 const room = roomId();
@@ -13,17 +13,19 @@ let sb = null, userId = 'demo';
 const clone = v => JSON.parse(JSON.stringify(v));
 const get = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj);
 const set = (obj, path, value) => { const ks = path.split('.'); const last = ks.pop(); ks.reduce((o, k) => (o[k] ??= {}), obj)[last] = value; };
+let tipo = 'lectura';   // qué letrero se está editando en la pestaña de letreros
 
 // Qué se edita en cada pestaña de la transmisión
 const KINDS = {
-  banner: { intro: 'Es el letrero que sale cuando ponen un canto, una cita o el tema. Todos usan el mismo diseño y salen en el mismo lugar.',
+  banner: { intro: 'Cada letrero (cita, himno, coro, tema, ubicación) puede tener su propio diseño, lugar y tamaño. Elige arriba de la vista previa cuál estás editando.',
     tag: ['Etiqueta', '(“Lectura”)'], title: ['Título', '(“Juan 3:16”)'] },
   speaker: { intro: 'Es el nombre de quien expone. Sale abajo a la izquierda, encima de la imagen central, y se queda hasta que lo ocultan desde la cabina.',
     tag: ['Cargo', '(“Ministro”)'], title: ['Nombre', '(“Hno. Juan Pérez”)'] }
 };
 let tab = 'banner';
 const editKind = () => (tab === 'banner' || tab === 'speaker' ? tab : null);
-const lt = () => design[editKind()];
+const editPath = () => (tab === 'banner' ? 'letreros.' + tipo : tab === 'speaker' ? 'speaker' : null);
+const lt = () => get(design, editPath());
 
 // ---------- Pestañas ----------
 $('tabs').addEventListener('click', e => {
@@ -48,32 +50,79 @@ for (const [id, n] of Object.entries(POSITIONS)) posSel.append(new Option(n, id)
 
 // ---------- Vista previa de la transmisión (logos + letrero + expositor) ----------
 const SAMPLES = [['Lectura', 'Juan 3:16'], ['Himno 25', 'Un título de himno algo largo para probar'], ['Tema', 'La fe que vence al mundo'], ['Transmitiendo desde', 'Colonia Sambulá · Mérida, Yucatán']];
-let sample = 0, selected = 'tag';
+let selected = 'tag';
 const txStage = $('bannerStage'), txBox = $('bannerBox');
 const fitTx = fitStage(txStage, txBox, { center: false });
 const layers = createLayers(txStage);
-const letreros = { banner: createBanner(txStage, { kind: 'banner' }), speaker: createBanner(txStage, { kind: 'speaker' }) };
+const tipos = Object.fromEntries(Object.keys(LETREROS).map(k => [k, createBanner(txStage, { kind: 'banner', path: 'letreros.' + k })]));
+const speakerLt = createBanner(txStage, { kind: 'speaker' });
+const instanceFor = path => (path === 'speaker' ? speakerLt : tipos[path.split('.')[1]]);
 txStage.classList.add('editando', 'edit-banner');
 
 function drawTx() {
   layers.setDesign(design.layers);
-  letreros.banner.setDesign(design.banner);
-  letreros.banner.show(...SAMPLES[sample], { instant: true });
-  letreros.speaker.setDesign(design.speaker);
-  letreros.speaker.show('Ministro', 'Hno. Juan Pérez', { instant: true });
+  for (const [k, b] of Object.entries(tipos)) {
+    b.setDesign(design.letreros[k]);
+    if (k === tipo) b.show(...LETREROS[k].sample, { instant: true }); else b.hide();
+  }
+  speakerLt.setDesign(design.speaker);
+  speakerLt.show('Ministro', 'Hno. Juan Pérez', { instant: true });
   const k = editKind();
   const imgMode = k && lt().mode === 'image';
   $('bannerEmpty').hidden = !(imgMode && !lt().image?.url);
   $('dragHint').hidden = !(k ? (!imgMode || lt().image?.url) : tab === 'layers' && Object.values(design.layers).some(Boolean));
-  const selPath = k ? k + '.' + selected : tab === 'layers' ? 'layers.' + selectedLayer : '';
+  const selPath = k ? editPath() + '.' + selected : tab === 'layers' ? 'layers.' + selectedLayer : '';
   for (const n of txStage.querySelectorAll('[data-drag]')) n.classList.toggle('sel', n.dataset.drag === selPath);
+  placeHandle();
 }
 
-document.querySelectorAll('[data-sample]').forEach(c => c.onclick = () => {
-  sample = Number(c.dataset.sample);
-  document.querySelectorAll('[data-sample]').forEach(x => x.classList.toggle('activo', x === c));
-  drawTx();
-});
+// ---------- Tirador para cambiar el tamaño ----------
+const handle = el('div', { class: 'tirador', title: 'Arrastra para cambiar el tamaño' });
+txStage.append(handle);
+function resizeTarget() {
+  if (tab === 'layers') {
+    const l = design.layers[selectedLayer];
+    return l ? { node: txStage.querySelector(`[data-drag="layers.${selectedLayer}"]`), obj: l, prop: 'width', min: 60, max: 1920 } : null;
+  }
+  if (!editKind()) return null;
+  const d = lt(), root = instanceFor(editPath()).root;
+  if (d.mode === 'image') return d.image?.url ? { node: root.querySelector('img'), obj: d.image, prop: 'width', min: 100, max: 1920 } : null;
+  return { nodes: [...root.querySelectorAll('.lt-tag:not([hidden]), .lt-title')], obj: d, prop: 'size', min: 40, max: 250 };
+}
+function placeHandle() {
+  const t = resizeTarget();
+  const nodes = t ? (t.nodes || [t.node]).filter(Boolean) : [];
+  handle.dataset.drag = (tab === 'layers' ? 'layers' : editPath() || 'x') + '.resize';
+  if (!nodes.length) { handle.hidden = true; return; }
+  const scale = txBox.clientWidth / 1920, box = txStage.getBoundingClientRect();
+  const rects = nodes.map(n => n.getBoundingClientRect());
+  const right = Math.max(...rects.map(r => r.right)), bottom = Math.max(...rects.map(r => r.bottom));
+  handle.hidden = false;
+  handle.style.left = ((right - box.left) / scale - 22) + 'px';
+  handle.style.top = ((bottom - box.top) / scale - 22) + 'px';
+}
+function startResize(e) {
+  const t = resizeTarget(); if (!t) return;
+  const nodes = (t.nodes || [t.node]).filter(Boolean);
+  const scale = txBox.clientWidth / 1920;
+  const rects = nodes.map(n => n.getBoundingClientRect());
+  const width = (Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left))) / scale;
+  drag = { resize: true, t, start: t.obj[t.prop], width, startX: e.clientX, scale };
+  txStage.setPointerCapture(e.pointerId);
+}
+
+// Elegir qué letrero se edita
+const tiposBox = $('samples');
+tiposBox.replaceChildren(el('span', { class: 'chico', text: 'Editando:' }));
+for (const [k, info] of Object.entries(LETREROS)) {
+  tiposBox.append(el('button', { type: 'button', class: 'chip' + (k === tipo ? ' activo' : ''), 'data-tipo': k, text: info.icon + ' ' + info.name,
+    onclick: () => { tipo = k; for (const c of tiposBox.querySelectorAll('[data-tipo]')) c.classList.toggle('activo', c.dataset.tipo === k); selected = 'tag'; bindLetrero(); drawTx(); } }));
+}
+tiposBox.append(el('button', { type: 'button', class: 'btn btn-mini', text: 'Copiar este diseño a los demás', onclick: async () => {
+  if (!(await modal({ title: 'Copiar a los demás letreros', text: `Los demás letreros quedarán igual que “${LETREROS[tipo].name}”: diseño, lugar y tamaño.`, ok: 'Copiar' }))) return;
+  for (const k of Object.keys(LETREROS)) if (k !== tipo) design.letreros[k] = clone(design.letreros[tipo]);
+  changed(); toast('Listo: todos quedaron igual. Ya puedes ajustar cada uno.', 'ok');
+} }));
 const camToggle = () => { txBox.classList.toggle('camara', $('fakeCam').checked); txBox.classList.toggle('cuadros', !$('fakeCam').checked); };
 $('fakeCam').onchange = camToggle; camToggle();
 
@@ -83,14 +132,15 @@ txStage.addEventListener('pointerdown', e => {
   const target = e.target.closest('[data-drag]');
   if (!target) return;
   const path = target.dataset.drag;
-  const owner = path.split('.')[0];
-  if (owner !== tab) return;
+  const prefix = tab === 'layers' ? 'layers' : editPath();
+  if (!prefix || !path.startsWith(prefix + '.')) return;
   e.preventDefault();
-  if (path.endsWith('.free')) return startFreeDrag(owner, e);
+  if (target.classList.contains('tirador')) return startResize(e);
+  if (path.endsWith('.free')) return startFreeDrag(prefix, e);
   const obj = get(design, path);
   if (!obj) return;
-  const part = path.split('.')[1];
-  if (owner === 'layers') { selectedLayer = part; renderLayerRows(); }
+  const part = path.split('.').pop();
+  if (prefix === 'layers') { selectedLayer = part; renderLayerRows(); }
   else if (part !== 'image') { selected = part; syncTextPick(); }
   drag = { target, obj, startX: e.clientX, startY: e.clientY, x: obj.x, y: obj.y, scale: txBox.clientWidth / 1920 };
   target.setPointerCapture(e.pointerId);
@@ -99,9 +149,9 @@ txStage.addEventListener('pointerdown', e => {
 });
 // Letrero con el diseño de la cabina: se pasa a posición libre y se arrastra completo.
 function toFree(kind) {
-  const d = design[kind];
+  const d = get(design, kind);
   if (d.position === 'libre') return;
-  const root = letreros[kind].root, scale = txBox.clientWidth / 1920, box = txStage.getBoundingClientRect();
+  const root = instanceFor(kind).root, scale = txBox.clientWidth / 1920, box = txStage.getBoundingClientRect();
   const rects = [...root.querySelectorAll('.lt-tag:not([hidden]), .lt-title')].map(n => n.getBoundingClientRect());
   d.free = { x: Math.round((Math.min(...rects.map(r => r.left)) - box.left) / scale), y: Math.round((Math.min(...rects.map(r => r.top)) - box.top) / scale) };
   d.position = 'libre';
@@ -111,15 +161,30 @@ function toFree(kind) {
 }
 function startFreeDrag(kind, e) {
   toFree(kind);
-  const root = letreros[kind].root;
-  drag = { free: true, root, obj: design[kind].free, startX: e.clientX, startY: e.clientY, x: design[kind].free.x, y: design[kind].free.y, scale: txBox.clientWidth / 1920 };
+  const root = instanceFor(kind).root, d = get(design, kind);
+  drag = { free: true, root, obj: d.free, startX: e.clientX, startY: e.clientY, x: d.free.x, y: d.free.y, scale: txBox.clientWidth / 1920 };
   txStage.setPointerCapture(e.pointerId);
 }
 
 txStage.addEventListener('pointermove', e => {
+  if (drag?.resize) {
+    const { t } = drag;
+    const factor = Math.max(0.1, (drag.width + (e.clientX - drag.startX) / drag.scale) / drag.width);
+    let v = Math.round(drag.start * factor);
+    if (t.prop === 'size') v = Math.round(v / 5) * 5;
+    const old = t.obj[t.prop];
+    t.obj[t.prop] = Math.max(t.min, Math.min(t.max, v));
+    // El logo de la derecha y la imagen de abajo crecen desde su esquina.
+    if (tab === 'layers' && selectedLayer === 'der') t.obj.x -= t.obj.width - old;
+    if (tab === 'layers' && selectedLayer === 'centro') t.obj.y -= Math.round((t.obj.width - old) * t.obj.h / t.obj.w);
+    if (t.prop === 'size') document.querySelector('[data-b=size]').value = t.obj.size;
+    if (t.prop === 'width' && tab !== 'layers') document.querySelector('[data-b="image.width"]').value = t.obj.width;
+    drawTx(); showValues();
+    return;
+  }
   if (drag?.free) {
-    drag.obj.x = Math.max(-200, Math.min(1900, Math.round(drag.x + (e.clientX - drag.startX) / drag.scale)));
-    drag.obj.y = Math.max(-50, Math.min(1060, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
+    drag.obj.x = Math.max(0, Math.min(1860, Math.round(drag.x + (e.clientX - drag.startX) / drag.scale)));
+    drag.obj.y = Math.max(-20, Math.min(1000, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
     drag.root.style.setProperty('--fx', drag.obj.x + 'px');
     drag.root.style.setProperty('--fy', drag.obj.y + 'px');
     return;
@@ -139,7 +204,7 @@ document.addEventListener('keydown', e => {
   if (tab === 'screen' || e.target.closest('input, select, textarea')) return;
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (!d) return;
-  if (editKind() && lt().mode === 'default') toFree(editKind());
+  if (editKind() && lt().mode === 'default') toFree(editPath());
   const obj = tab === 'layers' ? design.layers[selectedLayer] : lt().mode === 'image' ? lt()[selected] : lt().free;
   if (!obj) return;
   e.preventDefault();
@@ -210,7 +275,7 @@ $('txtPick').addEventListener('click', e => { const b = e.target.closest('button
 $('resetBanner').onclick = async () => {
   const k = editKind();
   if (!k || !(await modal({ title: 'Volver al diseño original', text: 'Se quita la imagen y los ajustes de este letrero. Puedes descartarlo antes de guardar.', ok: 'Sí, regresar', danger: true }))) return;
-  design[k] = clone(DEFAULT_DESIGN[k]); bindLetrero(); changed();
+  set(design, editPath(), clone(get(DEFAULT_DESIGN, editPath()))); bindLetrero(); changed();
 };
 
 // ---------- Subir imágenes ----------
@@ -243,17 +308,17 @@ async function handleFile(input, kind, fn) {
   catch (err) { toast(err.message); }
   finally { if (label) label.textContent = text; }
 }
-$('bannerFile').onchange = e => handleFile(e.target, editKind() || 'banner', img => {
+$('bannerFile').onchange = e => handleFile(e.target, tab === 'banner' ? 'letrero-' + tipo : 'expositor', img => {
   const d = lt();
   const full = img.w >= 1800 && img.h >= 1000;
-  const width = full ? 1920 : Math.min(img.w, editKind() === 'banner' ? 760 : 1100);
+  const width = full ? 1920 : Math.min(img.w, tab === 'banner' ? 760 : 1100);
   const height = Math.round(width * img.h / img.w);
   // Arranca donde le toca: el letrero arriba a la derecha, el expositor abajo a la izquierda.
-  const x = full ? 0 : editKind() === 'banner' ? 1920 - 70 - width : 70;
-  const y = full ? 0 : editKind() === 'banner' ? 230 : Math.max(0, 1080 - 210 - height);
+  const x = full ? 0 : tab === 'banner' ? 1920 - 70 - width : 70;
+  const y = full ? 0 : tab === 'banner' ? 230 : Math.max(0, 1080 - 210 - height);
   d.image = { url: img.url, w: img.w, h: img.h, x, y, width };
   if (!d._placed) {
-    const top = full ? (editKind() === 'banner' ? 230 : 760) : y, h = full ? 160 : height, left = full ? (editKind() === 'banner' ? 1180 : 120) : x;
+    const top = full ? (tab === 'banner' ? 230 : 760) : y, h = full ? 160 : height, left = full ? (tab === 'banner' ? 1180 : 120) : x;
     const w = full ? 640 : width;
     Object.assign(d.tag, { x: left + 40, y: top + Math.round(h * 0.1), w: Math.max(150, Math.min(500, w - 80)) });
     Object.assign(d.title, { x: left + 40, y: top + Math.round(h * 0.42), w: Math.max(200, w - 80), size: Math.max(28, Math.min(60, Math.round(h * 0.32))) });

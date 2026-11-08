@@ -17,34 +17,42 @@
 <script type="module">
 import { subscribe } from '/js/live.js';
 import { roomId, qs } from '/js/db.js';
-import { createBanner, createLayers, fitStage } from '/js/render.js';
+import { createBanner, createLayers, fitStage, LETREROS, mergeDesign } from '/js/render.js';
 
 if (qs.has('preview')) document.body.classList.add(qs.get('preview') === 'cam' ? 'camara' : 'preview');
 const stage = document.getElementById('stage');
 fitStage(stage, document.documentElement, { center: qs.get('preview') === 'cam' });
 const layers = createLayers(stage);
-const letreros = { overlay: createBanner(stage, { kind: 'banner' }), speaker: createBanner(stage, { kind: 'speaker' }) };
+// Un letrero por tipo (cita, himno, coro, tema, ubicación), cada uno con su diseño y su lugar.
+const tipos = Object.fromEntries(Object.keys(LETREROS).map(k => [k, createBanner(stage, { kind: 'banner', path: 'letreros.' + k })]));
+const speaker = createBanner(stage, { kind: 'speaker' });
 const seq = { overlay: -1, speaker: -1 }, timers = {};
+let shownType = null;
 let last = null;
 
 // Cada letrero se muestra mientras esté visible y no haya pasado su tiempo.
 function show(state) {
   for (const key of ['overlay', 'speaker']) {
-    const o = state[key] || {}, b = letreros[key];
+    const o = state[key] || {};
+    const type = LETREROS[o.type] ? o.type : 'lectura';
+    const b = key === 'speaker' ? speaker : tipos[type];
     clearTimeout(timers[key]);
+    if (key === 'overlay' && shownType && shownType !== type) tipos[shownType].hide();
     const left = o.until ? o.until - Date.now() : Infinity;
     if (!o.visible || left <= 0) { b.hide(); continue; }
+    if (key === 'overlay') shownType = type;
     if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title); }
     if (left !== Infinity) timers[key] = setTimeout(b.hide, left);
   }
 }
 subscribe(roomId(), state => { last = state; show(state); }, design => {
   layers.setDesign(design.layers || {});
-  letreros.overlay.setDesign(design.banner || {});
-  letreros.speaker.setDesign(design.speaker || {});
+  const merged = mergeDesign(design);
+  for (const [k, b] of Object.entries(tipos)) b.setDesign(merged.letreros[k]);
+  speaker.setDesign(merged.speaker);
   if (last) { seq.overlay = seq.speaker = -1; show(last); }
 });
-letreros.overlay.setDesign({}); letreros.speaker.setDesign({});
+
 </script>
 </body>
 </html>

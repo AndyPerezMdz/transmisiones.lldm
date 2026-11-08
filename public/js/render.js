@@ -35,10 +35,20 @@ export const LAYER_SLOTS = {
   centro: { name: 'Abajo, a todo lo ancho', hint: 'La imagen central de abajo' }
 };
 
+// Cada tipo de letrero tiene su propio diseño, lugar y tamaño.
+export const LETREROS = {
+  lectura:   { name: 'Cita bíblica', icon: '📖', sample: ['Lectura', 'Juan 3:16'] },
+  himno:     { name: 'Himno', icon: '🎵', sample: ['Himno 25', 'Un título de himno algo largo'] },
+  coro:      { name: 'Coro', icon: '🎶', sample: ['Coro', 'Alabemos con alegría'] },
+  tema:      { name: 'Tema', icon: '📌', sample: ['Tema', 'La fe que vence al mundo'] },
+  ubicacion: { name: 'Ubicación', icon: '📍', sample: ['Transmitiendo desde', 'Colonia Sambulá · Mérida, Yucatán'] }
+};
+const bannerDefault = () => lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
+  tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } });
+
 export const DEFAULT_DESIGN = {
-  // Cantos, citas y tema: arriba a la derecha, abajo del logo de la iglesia.
-  banner: lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
-    tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } }),
+  // Cantos, citas, tema y ubicación: de inicio arriba a la derecha, abajo del logo de la iglesia.
+  letreros: Object.fromEntries(Object.keys(LETREROS).map(k => [k, bannerDefault()])),
   // Nombre del expositor: abajo a la izquierda, encima de la imagen central.
   speaker: lowerThird({ position: 'abajo-izq', margin: { x: 70, y: 210 },
     tag: { x: 120, y: 720, w: 500 }, title: { x: 120, y: 762, w: 900 } }),
@@ -61,22 +71,31 @@ export function placeLayer(slot, w, h) {
 }
 
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+export const get = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj);
+export const set = (obj, path, value) => { const ks = path.split('.'); const last = ks.pop(); ks.reduce((o, k) => (o[k] ??= {}), obj)[last] = value; };
 export function mergeDesign(saved) {
   const merge = (a, b) => {
     const out = { ...a };
     for (const [k, v] of Object.entries(b || {})) out[k] = isObj(a[k]) && isObj(v) ? merge(a[k], v) : v;
     return out;
   };
-  return merge(DEFAULT_DESIGN, isObj(saved) ? saved : {});
+  const src = isObj(saved) ? saved : {};
+  const out = merge(DEFAULT_DESIGN, src);
+  // Diseños guardados antes tenían un solo letrero ("banner") para todo: sirve de base para cada tipo.
+  if (isObj(src.banner)) for (const k of Object.keys(LETREROS)) out.letreros[k] = merge(merge(bannerDefault(), src.banner), src.letreros?.[k] || {});
+  delete out.banner;
+  return out;
 }
 
 // ---------- Letreros ----------
 // stage: un div de 1920x1080. kind: 'banner' (cantos, citas, tema) o 'speaker' (expositor).
-export function createBanner(stage, { kind = 'banner' } = {}) {
+// kind: 'banner' o 'speaker' (para estilos). path: dónde vive su diseño, p. ej. 'letreros.himno'.
+export function createBanner(stage, { kind = 'banner', path = kind === 'speaker' ? 'speaker' : 'letreros.lectura' } = {}) {
   const root = document.createElement('div');
   root.className = 'lt';
+  root.dataset.path = path;
   stage.append(root);
-  let design = mergeDesign()[kind], current = null, swapTimer;
+  let design = get(mergeDesign(), path), current = null, swapTimer;
   const base = () => 'lt lt-' + kind;
 
   function build() {
@@ -86,13 +105,13 @@ export function createBanner(stage, { kind = 'banner' } = {}) {
       root.className = base() + ' lt-imagen';
       root.removeAttribute('style');
       const img = document.createElement('img');
-      img.src = design.image.url; img.alt = ''; img.draggable = false; img.dataset.drag = kind + '.image';
+      img.src = design.image.url; img.alt = ''; img.draggable = false; img.dataset.drag = path + '.image';
       Object.assign(img.style, { left: design.image.x + 'px', top: design.image.y + 'px', width: design.image.width + 'px' });
       root.append(img);
       for (const key of ['tag', 'title']) {
         const t = design[key];
         const box = document.createElement('div');
-        box.className = 'lt-txt lt-' + key; box.dataset.key = key; box.dataset.drag = kind + '.' + key;
+        box.className = 'lt-txt lt-' + key; box.dataset.key = key; box.dataset.drag = path + '.' + key;
         Object.assign(box.style, { left: t.x + 'px', top: t.y + 'px', width: t.w + 'px', fontSize: t.size + 'px', color: t.color,
           fontFamily: fontCss(t.font), fontWeight: t.weight, textAlign: t.align, textTransform: t.upper ? 'uppercase' : 'none' });
         box.hidden = !t.show;
@@ -107,8 +126,8 @@ export function createBanner(stage, { kind = 'banner' } = {}) {
       root.style.setProperty('--lt-text', c.text); root.style.setProperty('--lt-tag-text', c.tagText);
       root.style.setProperty('--lt-scale', design.size / 100);
       root.style.setProperty('--lt-font', fontCss(design.font)); root.style.setProperty('--lt-tag-font', fontCss(design.tagFont));
-      const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag'; tag.dataset.drag = kind + '.free';
-      const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = kind + '.free';
+      const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag'; tag.dataset.drag = path + '.free';
+      const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = path + '.free';
       root.append(tag, title);
     }
     if (current) fill(current);
@@ -123,7 +142,7 @@ export function createBanner(stage, { kind = 'banner' } = {}) {
   }
 
   return {
-    setDesign(d) { design = mergeDesign({ [kind]: d })[kind]; build(); },
+    setDesign(d) { const full = {}; set(full, path, d || {}); design = get(mergeDesign(full), path); build(); },
     show(tag, title, { instant = false } = {}) {
       clearTimeout(swapTimer);
       const next = { tag, title };

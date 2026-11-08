@@ -1,5 +1,7 @@
 // Piezas de interfaz compartidas: tema claro/oscuro, barra de navegación y avisos.
 import { demo, supa, qs, myTeams, pickTeam } from './db.js';
+import { icon, hydrateIcons } from './icons.js';
+export { icon };
 
 export const $ = id => document.getElementById(id);
 export function el(tag, attrs = {}, ...children) {
@@ -12,6 +14,7 @@ export function el(tag, attrs = {}, ...children) {
     else e.setAttribute(k, v === true ? '' : v);
   }
   for (const c of children.flat()) if (c != null && c !== false) e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  if (attrs?.['data-icon']) { e.prepend(icon(attrs['data-icon'], { size: Number(attrs['data-icon-size']) || 18 })); e.setAttribute('data-icon-ok', ''); }
   return e;
 }
 
@@ -90,7 +93,7 @@ export function mountNav(active, { roomName = '' } = {}) {
     links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null, text: l.n })));
   const salir = el('button', { type: 'button', class: 'nav-boton', text: 'Salir', title: 'Cerrar sesión' });
   salir.onclick = async () => { const sb = await supa(); await sb?.auth.signOut(); location.href = '/'; };
-  const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', text: '?' });
+  const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', 'aria-label': 'Cómo se usa' }, icon('ayuda', { size: 20 }));
   help.hidden = true;
   const header = el('header', { class: 'nav' },
     el('div', { class: 'nav-in' },
@@ -135,3 +138,7 @@ export function modal({ title, text = '', ok = 'Aceptar', cancel = 'Cancelar', d
     if (field) field.select();
   });
 }
+
+// Íconos declarados en el HTML con data-icon="nombre".
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => hydrateIcons());
+else hydrateIcons();

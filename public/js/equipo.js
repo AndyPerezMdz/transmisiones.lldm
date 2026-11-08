@@ -139,7 +139,7 @@ function setupTheme(t) {
 // ---------- Respaldo ----------
 const today = () => new Date().toISOString().slice(0, 10);
 $('backupDownload').onclick = async () => {
-  const btn = $('backupDownload'); btn.disabled = true; btn.textContent = 'Preparando…';
+  const btn = $('backupDownload'), html = btn.innerHTML; btn.disabled = true; btn.textContent = 'Preparando…';
   try {
     const songs = await loadSongs(team?.id);
     let rooms;
@@ -156,7 +156,7 @@ $('backupDownload').onclick = async () => {
     document.body.append(a); a.click(); a.remove();
     toast(`Respaldo listo: ${backup.cantos.length} cantos y ${rooms.length} sala(s).`, 'ok');
   } catch (err) { toast('No se pudo hacer el respaldo: ' + err.message); }
-  btn.disabled = false; btn.textContent = '⬇ Descargar respaldo';
+  btn.disabled = false; btn.innerHTML = html;
 };
 
 $('backupFile').addEventListener('change', async e => {

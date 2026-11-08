@@ -16,7 +16,7 @@
 <body>
 <main class="cab">
   <div class="acompanado" id="otrosBar" hidden>
-    <span>👀</span><span id="otrosTxt"></span>
+    <span data-icon="ojo"></span><span id="otrosTxt"></span>
   </div>
   <div class="primera" id="primeraVez" hidden>
     <div><b>¿Primera vez aquí?</b> Mira en un minuto cómo se usa la cabina.</div>
@@ -31,8 +31,8 @@
       <div class="ahora-titulo" id="onairLabel">Nada al aire</div>
       <div class="ahora-sub" id="onairSub">Cuando pongas algo, aparecerá aquí.</div>
       <div class="controles">
-        <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←"><span class="icono">◀</span> Anterior</button>
-        <button class="btn btn-primario btn-grande" id="btnNext" type="button" title="Tecla → o Espacio">Siguiente <span class="icono">▶</span></button>
+        <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←" data-icon="anterior">Anterior</button>
+        <button class="btn btn-primario btn-grande" id="btnNext" type="button" title="Tecla → o Espacio" data-icon="siguiente" data-icon-pos="end">Siguiente</button>
         <button class="btn btn-sec btn-grande" id="btnBlank" type="button" title="Tecla B">Ocultar texto</button>
         <button class="btn btn-peligro btn-grande" id="btnClear" type="button" title="Tecla Esc">Quitar todo</button>
       </div>
@@ -40,11 +40,11 @@
         <span class="letrero-estado" id="overlayStatus">Letrero de la transmisión: oculto</span>
         <span class="crece"></span>
         <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O">Mostrar letrero</button>
-        <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U">📍 Ubicación</button>
-        <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes">⚙ Ajustes</button>
+        <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U" data-icon="ubicacion">Ubicación</button>
+        <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes" data-icon="ajustes">Ajustes</button>
       </div>
       <form class="expositor" id="spForm" autocomplete="off">
-        <span class="expositor-tit">🎤 Quién expone</span>
+        <span class="expositor-tit" data-icon="usuario">Quién expone</span>
         <input class="campo" id="spName" maxlength="80" placeholder="Nombre, ej. Hno. Juan Pérez">
         <input class="campo" id="spRole" maxlength="60" placeholder="Cargo (opcional), ej. Ministro">
         <button class="btn btn-oro" id="btnSpeaker" type="submit" title="Tecla N">Mostrar nombre</button>
@@ -60,7 +60,7 @@
       <div class="tarjeta-cabeza">
         <div class="fila"><span class="paso">1</span><h2>Escuchar al expositor</h2></div>
         <div class="fila"><button class="btn btn-mini" id="btnMicTest" type="button">Probar micrófono</button>
-        <button class="btn btn-primario mic" id="btnMic" type="button">🎙 Escuchar</button></div>
+        <button class="btn btn-primario mic" id="btnMic" type="button">Escuchar</button></div>
       </div>
       <p class="ayuda" id="micStatus">Presiona <b>Escuchar</b> y la cabina te irá sugiriendo las citas, himnos, coros y el tema que mencione.</p>
       <ol class="cards" id="suggestions"></ol>
@@ -85,7 +85,7 @@
       <ol class="results" id="results"></ol>
 
       <div class="tema">
-        <label class="etiqueta" for="theme">📌 Tema del culto</label>
+        <label class="etiqueta con-icono" for="theme" data-icon="tema" data-icon-size="15">Tema del culto</label>
         <div class="fila">
           <input class="campo crece" id="theme" type="text" maxlength="200" placeholder="Escríbelo aquí; si lo dicen por el micrófono, se llena solo">
           <button class="btn btn-oro" id="btnTheme" type="button" style="margin-top:6px">Poner</button>
@@ -100,15 +100,15 @@
 </main>
 
 <nav class="barra-movil" aria-label="Controles rápidos">
-  <button class="btn btn-sec" id="mPrev" type="button">◀</button>
-  <button class="btn btn-primario" id="mNext" type="button">Siguiente ▶</button>
+  <button class="btn btn-sec" id="mPrev" type="button" aria-label="Anterior" data-icon="anterior" data-icon-size="22"></button>
+  <button class="btn btn-primario" id="mNext" type="button" data-icon="siguiente" data-icon-pos="end">Siguiente</button>
   <button class="btn btn-peligro" id="mClear" type="button">Quitar</button>
 </nav>
 
 <dialog id="settings">
   <form method="dialog" class="dialogo" id="settingsForm">
     <h2 class="titulo" style="font-size:22px">Ajustes de la sala</h2>
-    <label class="etiqueta">Ubicación (sale en el letrero con el botón 📍)
+    <label class="etiqueta">Ubicación (sale en el letrero con el botón Ubicación)
       <input class="campo" name="location" maxlength="120" placeholder="Colonia, ciudad">
     </label>
     <label class="etiqueta">¿Cuántos segundos se queda el letrero?
@@ -154,7 +154,7 @@
       <ol class="frases" id="micPhrases"></ol>
     </div>
     <div class="oido-prueba"><span class="chico">Lo último que se escuchó</span><p id="micHeard">—</p></div>
-    <p class="chico">Si el micrófono no es el que quieres (por ejemplo, el receptor DJI), elígelo en Windows → Configuración → Sonido → Entrada, o en el candado 🔒 de la barra de direcciones, y vuelve a abrir esta prueba.</p>
+    <p class="chico">Si el micrófono no es el que quieres (por ejemplo, el receptor DJI), elígelo en Windows → Configuración → Sonido → Entrada, o en el candado de la barra de direcciones, y vuelve a abrir esta prueba.</p>
     <div class="dialogo-pie"><button class="btn btn-primario" type="button" id="micTestClose">Terminar</button></div>
   </div>
 </dialog>
@@ -166,8 +166,8 @@
       <li><span class="paso">1</span><div><b>Presiona “Escuchar”.</b> La cabina oye al expositor por el micrófono. Cuando diga una cita (“Juan capítulo 3, versículo 16”), un himno, un coro o el tema, aparece una tarjeta.</div></li>
       <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en el letrero de la transmisión (y por lo tanto en las TVs). Nada sale solo.</div></li>
       <li><span class="paso">3</span><div><b>Avanza con “Siguiente”</b> para pasar de versículo o de estrofa. <b>Quitar todo</b> deja las TVs con el fondo (y el tema, si hay).</div></li>
-      <li><span class="paso">🎤</span><div><b>Nombre del expositor:</b> escríbelo arriba en “Quién expone” y presiona <b>Mostrar nombre</b>. Se queda abajo a la izquierda hasta que lo ocultes.</div></li>
-      <li><span class="paso">✎</span><div><b>¿No lo detectó?</b> Escríbelo en “O búscalo tú”: <code>Juan 3:16</code>, <code>himno 25</code>, <code>coro 7</code> o un pedazo de la letra, y presiona Enter.</div></li>
+      <li><span class="paso" data-icon="usuario" data-icon-size="14"></span><div><b>Nombre del expositor:</b> escríbelo arriba en “Quién expone” y presiona <b>Mostrar nombre</b>. Se queda abajo a la izquierda hasta que lo ocultes.</div></li>
+      <li><span class="paso" data-icon="editar" data-icon-size="14"></span><div><b>¿No lo detectó?</b> Escríbelo en “O búscalo tú”: <code>Juan 3:16</code>, <code>himno 25</code>, <code>coro 7</code> o un pedazo de la letra, y presiona Enter.</div></li>
     </ol>
     <h3>Teclas rápidas</h3>
     <div class="teclas">

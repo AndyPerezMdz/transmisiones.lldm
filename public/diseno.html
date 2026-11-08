@@ -16,7 +16,7 @@
 </head>
 <body>
 <div class="turno" id="turnoBar" hidden>
-  <span class="turno-icono">🔒</span>
+  <span class="turno-icono" data-icon="candado" data-icon-size="20"></span>
   <span id="turnoTxt"></span>
   <span class="crece"></span>
   <button type="button" class="btn btn-mini" id="turnoTomar">Entrar de todos modos</button>
@@ -28,10 +28,10 @@
       <p class="ayuda">Así se arman los gráficos que van encima de la transmisión (y que también ven las TVs). Lo ves aquí al momento; se aplica cuando presionas <b>Guardar cambios</b>.</p>
     </div>
     <div class="tabs" id="tabs" role="tablist">
-      <button type="button" class="btn btn-sec activo" data-tab="banner" role="tab">📺 Letrero (cantos, citas, tema)</button>
-      <button type="button" class="btn btn-sec" data-tab="speaker" role="tab">🎤 Nombre del expositor</button>
-      <button type="button" class="btn btn-sec" data-tab="layers" role="tab">🖼 Logos fijos</button>
-      <button type="button" class="btn btn-sec" data-tab="screen" role="tab">📄 Letra completa</button>
+      <button type="button" class="btn btn-sec activo" data-tab="banner" role="tab" data-icon="tv">Letrero (cantos, citas, tema)</button>
+      <button type="button" class="btn btn-sec" data-tab="speaker" role="tab" data-icon="usuario">Nombre del expositor</button>
+      <button type="button" class="btn btn-sec" data-tab="layers" role="tab" data-icon="imagen">Logos fijos</button>
+      <button type="button" class="btn btn-sec" data-tab="screen" role="tab" data-icon="texto">Letra completa</button>
     </div>
   </div>
 
@@ -48,10 +48,10 @@
           <button type="button" class="chip" data-sample="3">Ubicación</button>
         </div>
         <label class="fila chico"><input type="checkbox" id="fakeCam" checked> Ver sobre una imagen de ejemplo</label>
-        <label class="btn btn-mini" for="fotoPrueba" title="Solo para ver cómo queda; no se guarda">📷 Probar con una foto de tu templo</label>
+        <label class="btn btn-mini" for="fotoPrueba" title="Solo para ver cómo queda; no se guarda" data-icon="camara" data-icon-size="15">Probar con una foto de tu templo</label>
         <input type="file" id="fotoPrueba" accept="image/*" hidden>
       </div>
-      <p class="chico" id="dragHint" hidden>✋ Arrastra para mover. Jala el círculo dorado de la esquina para cambiar el tamaño. Con las flechas del teclado lo mueves de a poquito (Shift = más rápido).</p>
+      <p class="chico con-icono" id="dragHint" hidden data-icon="mover" data-icon-size="15">Arrastra para mover. Jala el círculo dorado de la esquina para cambiar el tamaño. Con las flechas del teclado lo mueves de a poquito (Shift = más rápido).</p>
     </div>
 
     <aside class="panel tarjeta" id="pLetrero">
@@ -69,12 +69,12 @@
           <select class="campo" data-b="position"></select></label>
         <label class="etiqueta">Tamaño <span class="valor" data-show="size"></span>
           <input type="range" min="40" max="250" step="5" data-b="size"></label>
-        <p class="chico">✋ También puedes <b>arrastrarlo</b> en la vista previa a donde quieras.</p>
+        <p class="chico con-icono" data-icon="mover" data-icon-size="15">También puedes <b>arrastrarlo</b> en la vista previa a donde quieras.</p>
         <div class="dos" id="margins">
           <label class="etiqueta">Separación del lado <span class="valor" data-show="margin.x"></span><input type="range" min="0" max="600" step="5" data-b="margin.x"></label>
           <label class="etiqueta">Separación arriba/abajo <span class="valor" data-show="margin.y"></span><input type="range" min="0" max="700" step="5" data-b="margin.y"></label>
         </div>
-        <button type="button" class="btn btn-mini" id="useTeamColors">🎨 Usar los colores del equipo</button>
+        <button type="button" class="btn btn-mini" id="useTeamColors" data-icon="paleta" data-icon-size="15">Usar los colores del equipo</button>
         <div class="dos">
           <label class="etiqueta">Fondo <input class="campo" type="color" data-b="colors.bg"></label>
           <label class="etiqueta">Detalle <input class="campo" type="color" data-b="colors.accent"></label>
@@ -86,7 +86,7 @@
       </div>
 
       <div id="bImage" hidden>
-        <label class="btn btn-oro btn-bloque" for="bannerFile">⬆ Subir imagen del letrero</label>
+        <label class="btn btn-oro btn-bloque" for="bannerFile" data-icon="subir">Subir imagen del letrero</label>
         <input type="file" id="bannerFile" accept="image/png,image/jpeg,image/webp" hidden>
         <p class="chico">Mejor en <b>PNG con fondo transparente</b>. Puede ser solo el letrero o una imagen completa de 1920 × 1080.</p>
         <div id="bImageCtl" hidden>
@@ -104,7 +104,7 @@
               <label class="etiqueta">Ancho <span class="valor" data-tshow="w"></span><input type="range" min="100" max="1900" step="10" data-t="w"></label>
               <label class="etiqueta">Color <input class="campo" type="color" data-t="color"></label>
               <label class="etiqueta">Grosor
-                <select class="campo" data-t="weight"><option value="400">Normal</option><option value="600">Seminegrita</option><option value="800">Negrita</option></select></label>
+                <select class="campo" data-t="weight"><option value="400">Normal</option><option value="500">Media</option><option value="600">Seminegrita</option><option value="700">Negrita</option><option value="800">Extranegrita</option></select></label>
             </div>
             <div class="dos">
               <label class="etiqueta">Alineación
@@ -119,7 +119,7 @@
         <select class="campo" data-b="anim"></select></label>
       <label class="etiqueta">Velocidad
         <select class="campo" data-b="speed"><option value="rapida">Rápida</option><option value="normal">Normal</option><option value="lenta">Lenta</option></select></label>
-      <button type="button" class="btn btn-sec" id="playAnim">▶ Ver cómo entra</button>
+      <button type="button" class="btn btn-sec" id="playAnim" data-icon="play">Ver cómo entra</button>
       <button type="button" class="btn btn-mini" id="resetBanner">Volver al diseño original</button>
     </aside>
 
@@ -131,7 +131,7 @@
 
   <!-- ================= Pantallas ================= -->
   <section class="editor-grid" id="tab-screen" hidden>
-    <p class="ayuda" style="grid-column:1/-1">Opcional. Es una página con la letra completa de cantos y versículos. Si la quieren mostrar, agréguenla en OBS como otra fuente de <b>Navegador</b> (por ejemplo, en una escena “Letra”). El enlace está en ⚙ Ajustes de la cabina.</p>
+    <p class="ayuda" style="grid-column:1/-1">Opcional. Es una página con la letra completa de cantos y versículos. Si la quieren mostrar, agréguenla en OBS como otra fuente de <b>Navegador</b> (por ejemplo, en una escena “Letra”). El enlace está en Ajustes de la cabina.</p>
     <div class="vista">
       <div class="lienzo" id="screenBox"><div class="tv lienzo-stage" id="screenStage"></div></div>
       <div class="vista-pie">
@@ -152,7 +152,7 @@
       </div>
       <label class="etiqueta" id="sColorBox">Color del fondo <input class="campo" type="color" data-s="color"></label>
       <div id="sImageBox">
-        <label class="btn btn-oro btn-bloque" for="screenFile">⬆ Subir imagen de fondo</label>
+        <label class="btn btn-oro btn-bloque" for="screenFile" data-icon="subir">Subir imagen de fondo</label>
         <input type="file" id="screenFile" accept="image/png,image/jpeg,image/webp" hidden>
         <label class="etiqueta" style="margin-top:10px">Oscurecer la imagen (para que se lea la letra) <span class="valor" data-sshow="dim"></span>
           <input type="range" min="0" max="90" step="5" data-s="dim"></label>

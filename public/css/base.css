@@ -110,6 +110,12 @@ p { margin: 0; }
 .btn-grande { height: 56px; font-size: 16px; padding: 0 24px; border-radius: 14px; }
 .btn-bloque { width: 100%; }
 .btn .icono { font-size: 1.15em; line-height: 1; }
+/* Íconos */
+.ico { flex: none; display: inline-block; vertical-align: -0.2em; }
+.btn .ico, .chip .ico, .nav-boton .ico { vertical-align: 0; }
+.con-icono { display: flex; align-items: center; gap: 8px; }
+p.con-icono { display: block; position: relative; padding-left: 24px; } p.con-icono .ico { position: absolute; left: 0; top: .15em; }
+.paso .ico { vertical-align: 0; }
 
 /* ---------- Formularios ---------- */
 .etiqueta { display: block; font-size: 13px; font-weight: 600; color: color-mix(in srgb, var(--titulo) 80%, transparent); }

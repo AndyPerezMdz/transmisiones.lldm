@@ -34,13 +34,13 @@ function roomCard(room, sb) {
       el('div', { class: 'paso-fila' },
         el('span', { class: 'paso', text: '3' }), el('b', { text: 'Ajusta el diseño a su letrero' }),
         el('p', { class: 'ayuda', text: 'Sube sus logos y su letrero, y acomoda los textos para que todo quede en su lugar.' }),
-        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/diseno', { sala: room.id }), text: '🎨 Abrir Diseño' })))),
+        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/diseno', { sala: room.id }), text: 'Abrir Diseño', 'data-icon': 'paleta' })))),
     el('details', { class: 'opcional' },
       el('summary', { text: 'Opcional: letra completa de cantos y versículos' }),
       el('p', { class: 'ayuda', text: 'Si quieren mostrar la letra completa, agreguen este enlace en OBS como otra fuente de Navegador (por ejemplo, en una escena “Letra”).' }),
       copyBox(absolute('/pantalla', { sala: room.id }))),
     el('div', { class: 'sala-pie' },
-      el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: '🎵 Cantos' }),
+      el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: 'Cantos', 'data-icon': 'himno' }),
       demo ? null : rename));
 }
 
@@ -71,7 +71,7 @@ async function showHome(sb) {
     sel.onchange = () => { rememberTeam(sel.value); showHome(sb); };
     bar.append(sel);
   } else bar.append(el('span', { class: 'chico', text: 'Equipo: ' + team.name }));
-  bar.append(el('a', { class: 'btn btn-sec', href: '/equipo', text: '👥 Personas del equipo' }));
+  bar.append(el('a', { class: 'btn btn-sec', href: '/equipo', text: 'Personas del equipo', 'data-icon': 'personas' }));
 
   $('newRoomBox').hidden = team.role !== 'admin';
   const { data, error } = await sb.from('rooms').select('id, name').eq('team_id', team.id).order('created_at');

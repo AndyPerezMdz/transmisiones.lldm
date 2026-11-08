@@ -4,9 +4,11 @@ import { createCatalog } from './catalog.js';
 import { createPublisher, loadRoom } from './live.js';
 import { createTurno } from './turno.js';
 import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
+import { icon } from './icons.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-const ICON = { bible: '📖', hymn: '🎵', coro: '🎶', theme: '📌' };
+const ICON_NAME = { bible: 'biblia', hymn: 'himno', coro: 'coro', theme: 'tema' };
+const kindIcon = (kind, size = 18) => icon(ICON_NAME[kind] || 'texto', { size });
 const KIND = { bible: 'Cita', hymn: 'Himno', coro: 'Coro', theme: 'Tema' };
 const DEFAULT_SETTINGS = { bannerSeconds: 25, speakerSeconds: 0, location: '', showBanner: true, voiceLang: 'es-MX' };
 
@@ -90,7 +92,7 @@ const actions = {
     commit();
   },
   location() {
-    if (!state.settings.location) return toast('Primero escribe la ubicación en Ajustes ⚙', 'info');
+    if (!state.settings.location) return toast('Primero escribe la ubicación en Ajustes.', 'info');
     showOverlay('Transmitiendo desde', state.settings.location, 'ubicacion'); commit();
   }
 };
@@ -137,7 +139,7 @@ function render() {
     const chip = el('span', 'chip chip-nombre');
     const use = el('button', 'usar', p.name + (p.role ? ' · ' + p.role : '')); use.type = 'button'; use.title = 'Poner este nombre';
     use.onclick = () => { $('spName').value = p.name; $('spRole').value = p.role || ''; showSpeaker(p.name, p.role || ''); };
-    const del = el('button', 'quitar', '✕'); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar ' + p.name);
+    const del = el('button', 'quitar'); del.append(icon('cerrar', { size: 14 })); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar ' + p.name);
     del.onclick = () => { state.speakers = state.speakers.filter(x => x.name !== p.name || x.role !== p.role); commit(); };
     chip.append(use, del);
     rec.append(chip);
@@ -161,9 +163,10 @@ function render() {
   $('clearHistory').hidden = !state.history.length;
   for (const entry of state.history.slice(0, 12)) {
     const li = el('li');
-    const del = el('button', 'quitar', '✕'); del.type = 'button'; del.title = 'Quitar de la lista';
+    const del = el('button', 'quitar'); del.append(icon('cerrar', { size: 14 })); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar de la lista');
     del.onclick = e => { e.stopPropagation(); state.history = state.history.filter(x => x !== entry); commit(); };
-    li.append(el('span', 'k', ICON[entry.ref.kind] || '•'), el('span', 't', entry.label), el('span', 'when', ago(entry.at)), del);
+    const k = el('span', 'k'); k.append(kindIcon(entry.ref.kind));
+    li.append(k, el('span', 't', entry.label), el('span', 'when', ago(entry.at)), del);
     li.title = 'Volver a ponerlo en pantalla';
     li.onclick = () => actions.air(entry.ref);
     h.append(li);
@@ -218,9 +221,10 @@ function renderSuggestions() {
     }
     const go = el('button', 'btn btn-primario', 'Poner en pantalla'); go.type = 'button'; go.onclick = () => accept(s);
     if (i === 0) go.title = 'Tecla Enter';
-    const no = el('button', 'btn btn-mini', '✕'); no.type = 'button'; no.title = 'Descartar (Supr)'; no.onclick = () => dismiss(s);
+    const no = el('button', 'btn btn-mini'); no.append(icon('cerrar', { size: 16 })); no.setAttribute('aria-label', 'Descartar'); no.type = 'button'; no.title = 'Descartar (Supr)'; no.onclick = () => dismiss(s);
     const acc = el('div', 'acc'); acc.append(go, no);
-    li.append(el('span', 'kind', ICON[s.item.kind]), label, acc,
+    const k = el('span', 'kind'); k.append(kindIcon(s.item.kind, 24));
+    li.append(k, label, acc,
       el('div', 'meta', KIND[s.item.kind] + (s.item.byText ? ' · lo leyó sin decir la cita · ' + ago(s.at) : ' · se dijo ' + ago(s.at))
         + (s.item.kind === 'theme' ? ' · puedes corregirlo' : '')));
     ol.append(li);
@@ -237,7 +241,7 @@ $('transcript').append(interimEl, finalsEl);
 
 function setMic(on, text) {
   micBtn.classList.toggle('on', on);
-  micBtn.textContent = on ? '⏹ Dejar de escuchar' : '🎙 Escuchar';
+  micBtn.replaceChildren(icon(on ? 'detener' : 'mic'), on ? 'Dejar de escuchar' : 'Escuchar');
   if (text) micStatus.textContent = text;
 }
 function startListening() {
@@ -276,6 +280,7 @@ function startListening() {
 }
 function stopListening() { listening = false; try { rec?.stop(); } catch {} setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.'); interimEl.textContent = ''; }
 micBtn.onclick = () => listening ? stopListening() : startListening();
+micBtn.replaceChildren(icon('mic'), 'Escuchar');
 if (!SR) { micBtn.disabled = true; micStatus.textContent = 'Abre la cabina en Google Chrome o Edge para usar la voz. El buscador funciona igual.'; }
 
 function heard(text) {
@@ -291,7 +296,7 @@ function heard(text) {
   line.append(document.createTextNode(text + ' '));
   // Durante la prueba de micrófono no se llenan las sugerencias de la cabina.
   if (micTest) { micTestHeard(text, items); return; }
-  for (const it of items) if (addSuggestion(it)) line.append(el('mark', '', ICON[it.kind] + ' ' + it.label), document.createTextNode(' '));
+  for (const it of items) if (addSuggestion(it)) { const mk = el('mark'); mk.append(kindIcon(it.kind, 13), ' ' + it.label); line.append(mk, document.createTextNode(' ')); }
   finalsEl.prepend(line);
   while (finalsEl.children.length > 40) finalsEl.lastChild.remove();
 }
@@ -315,7 +320,8 @@ function renderPhrases() {
   $('micPhrases').replaceChildren(...PHRASES.map((p, n) => {
     const li = el('li', micTest?.done.has(n) ? 'hecho' : '');
     const txt = el('span', '', '“' + p.say + '”'); txt.append(el('small', '', 'Debe aparecer: ' + p.expect));
-    li.append(el('span', 'ok', '✓'), txt);
+    const ok = el('span', 'ok'); ok.append(icon('ok', { size: 14 }));
+    li.append(ok, txt);
     return li;
   }));
 }
@@ -347,7 +353,7 @@ async function openMicTest() {
     loop();
   } catch (err) {
     $('micName').textContent = 'No hay permiso para usar el micrófono';
-    $('micHint').textContent = 'Da clic en el candado 🔒 de la barra de direcciones y permite el micrófono.';
+    $('micHint').textContent = 'Da clic en el candado de la barra de direcciones y permite el micrófono.';
   }
   if (!listening && SR) { micTest.startedListening = true; startListening(); }
 }
@@ -380,7 +386,8 @@ function renderResults() {
   const ol = $('results'); ol.replaceChildren();
   results.forEach((r, i) => {
     const li = el('li', i === sel ? 'sel' : '');
-    li.append(el('span', 'k', ICON[r.kind]), el('span', 't', r.label));
+    const k = el('span', 'k'); k.append(kindIcon(r.kind));
+    li.append(k, el('span', 't', r.label));
     if (i === sel) li.append(el('span', 'hint', 'Enter para poner'));
     li.title = 'Poner en pantalla';
     li.onclick = () => actions.air(r);

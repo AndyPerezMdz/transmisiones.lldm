@@ -135,3 +135,14 @@
 .frases li.hecho .ok { background: var(--verde); border-color: var(--verde); color: #fff; }
 .frases li small { display: block; color: var(--suave); }
 .oido-prueba p { font-size: 15px; font-style: italic; color: var(--titulo); min-height: 22px; }
+
+/* Íconos en la cabina */
+.expositor-tit { display: inline-flex; align-items: center; gap: 6px; }
+.results .k, .history .k { display: flex; align-items: center; justify-content: center; color: var(--oro); }
+.card .kind { display: flex; color: var(--oro); }
+.transcript mark .ico { vertical-align: -2px; }
+.acompanado .ico { color: var(--oro); }
+.quitar { display: inline-flex; align-items: center; justify-content: center; }
+.frases li .ok .ico { color: transparent; }
+.frases li.hecho .ok .ico { color: #fff; }
+.mic { gap: 8px; }

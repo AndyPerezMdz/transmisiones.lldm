@@ -117,7 +117,7 @@ function startResize(e) {
 const tiposBox = $('samples');
 tiposBox.replaceChildren(el('span', { class: 'chico', text: 'Editando:' }));
 for (const [k, info] of Object.entries(LETREROS)) {
-  tiposBox.append(el('button', { type: 'button', class: 'chip' + (k === tipo ? ' activo' : ''), 'data-tipo': k, text: info.icon + ' ' + info.name,
+  tiposBox.append(el('button', { type: 'button', class: 'chip' + (k === tipo ? ' activo' : ''), 'data-tipo': k, text: info.name, 'data-icon': info.icon,
     onclick: () => { tipo = k; for (const c of tiposBox.querySelectorAll('[data-tipo]')) c.classList.toggle('activo', c.dataset.tipo === k); selected = 'tag'; bindLetrero(); drawTx(); } }));
 }
 tiposBox.append(el('button', { type: 'button', class: 'btn btn-mini', text: 'Copiar este diseño a los demás', onclick: async () => {
@@ -330,11 +330,11 @@ async function handleFile(input, kind, fn) {
   const file = input.files[0]; input.value = '';
   if (!file) return;
   const label = document.querySelector(`label[for="${input.id}"]`);
-  const text = label?.textContent;
+  const html = label?.innerHTML;
   if (label) label.textContent = 'Subiendo…';
   try { await fn(await upload(file, kind)); changed(); toast('Imagen lista. Acomódala y guarda los cambios.', 'ok'); }
   catch (err) { toast(err.message); }
-  finally { if (label) label.textContent = text; }
+  finally { if (label) label.innerHTML = html; }
 }
 $('bannerFile').onchange = e => handleFile(e.target, tab === 'banner' ? 'letrero-' + tipo : 'expositor', img => {
   const d = lt();
@@ -370,7 +370,7 @@ function renderLayerRows() {
       el('div', { class: 'capa-mini' }, l ? el('img', { src: l.url, alt: '' }) : el('span', { class: 'chico', text: 'vacío' })),
       el('div', {}, el('b', { text: info.name }), el('span', { class: 'chico', text: info.hint })),
       el('div', { class: 'acciones' },
-        el('label', { class: 'btn btn-sec', for: fileId, text: l ? 'Cambiar imagen' : '⬆ Subir imagen' }), input,
+        el('label', { class: 'btn btn-sec', for: fileId, text: l ? 'Cambiar imagen' : 'Subir imagen', 'data-icon': 'subir' }), input,
         l ? el('button', { type: 'button', class: 'btn btn-mini', text: 'Quitar', onclick: () => { design.layers[slot] = null; renderLayerRows(); changed(); } }) : null,
         l ? el('button', { type: 'button', class: 'btn btn-mini', text: 'Acomodar como al inicio', onclick: () => { Object.assign(l, placeLayer(slot, l.w, l.h)); changed(); } }) : null));
     if (l) {

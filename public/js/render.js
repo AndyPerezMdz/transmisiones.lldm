@@ -62,11 +62,11 @@ export const LAYER_SLOTS = {
 
 // Cada tipo de letrero tiene su propio diseño, lugar y tamaño.
 export const LETREROS = {
-  lectura:   { name: 'Cita bíblica', icon: '📖', sample: ['Lectura', 'Juan 3:16'] },
-  himno:     { name: 'Himno', icon: '🎵', sample: ['Himno 25', 'Un título de himno algo largo'] },
-  coro:      { name: 'Coro', icon: '🎶', sample: ['Coro', 'Alabemos con alegría'] },
-  tema:      { name: 'Tema', icon: '📌', sample: ['Tema', 'La fe que vence al mundo'] },
-  ubicacion: { name: 'Ubicación', icon: '📍', sample: ['Transmitiendo desde', 'Colonia, ciudad, estado'] }
+  lectura:   { name: 'Cita bíblica', icon: 'biblia', sample: ['Lectura', 'Juan 3:16'] },
+  himno:     { name: 'Himno', icon: 'himno', sample: ['Himno 25', 'Un título de himno algo largo'] },
+  coro:      { name: 'Coro', icon: 'coro', sample: ['Coro', 'Alabemos con alegría'] },
+  tema:      { name: 'Tema', icon: 'tema', sample: ['Tema', 'La fe que vence al mundo'] },
+  ubicacion: { name: 'Ubicación', icon: 'ubicacion', sample: ['Transmitiendo desde', 'Colonia, ciudad, estado'] }
 };
 const bannerDefault = () => lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
   tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } });

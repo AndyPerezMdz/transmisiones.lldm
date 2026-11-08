@@ -88,7 +88,7 @@ function resizeTarget() {
   if (!editKind()) return null;
   const d = lt(), root = instanceFor(editPath()).root;
   if (d.mode === 'image') return d.image?.url ? { node: root.querySelector('img'), obj: d.image, prop: 'width', min: 100, max: 1920 } : null;
-  return { nodes: [...root.querySelectorAll('.lt-tag:not([hidden]), .lt-title')], obj: d, prop: 'size', min: 40, max: 250 };
+  return { nodes: [...root.querySelectorAll('.lt-card')], obj: d, prop: 'size', min: 40, max: 250 };
 }
 function placeHandle() {
   const t = resizeTarget();
@@ -154,7 +154,7 @@ function toFree(kind) {
   const d = get(design, kind);
   if (d.position === 'libre') return;
   const root = instanceFor(kind).root, scale = txBox.clientWidth / 1920, box = txStage.getBoundingClientRect();
-  const rects = [...root.querySelectorAll('.lt-tag:not([hidden]), .lt-title')].map(n => n.getBoundingClientRect());
+  const rects = [...root.querySelectorAll('.lt-card')].map(n => n.getBoundingClientRect());
   d.free = { x: Math.round((Math.min(...rects.map(r => r.left)) - box.left) / scale), y: Math.round((Math.min(...rects.map(r => r.top)) - box.top) / scale) };
   d.position = 'libre';
   posSel.value = 'libre';

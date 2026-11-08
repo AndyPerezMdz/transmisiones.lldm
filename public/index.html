@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0a3156">
+<meta name="theme-color" content="#1f4d3f">
 <title>Cabina en Vivo · La Luz del Mundo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -17,14 +17,14 @@
     overflow: hidden; padding: 40px 16px; isolation: isolate; }
   .auth-foto { position: absolute; inset: 0; z-index: -3; background: url(/img/templo.webp) center / cover no-repeat; transform: scale(1.1); filter: blur(6px); }
   .auth-velo { position: absolute; inset: 0; z-index: -2;
-    background: linear-gradient(to bottom, rgb(6 31 56 / .75), rgb(10 49 86 / .55), rgb(6 31 56 / .95)); }
+    background: linear-gradient(to bottom, rgb(14 23 20 / .78), rgb(31 77 63 / .55), rgb(14 23 20 / .95)); }
   .auth .rayos { position: absolute; inset: 0; z-index: -1; opacity: .8; }
   .auth-tema { position: absolute; top: 16px; right: 16px; background: rgb(255 255 255 / .1); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2); backdrop-filter: blur(6px); }
   .auth-logo { width: 240px; height: auto; margin-bottom: 32px; filter: drop-shadow(0 10px 20px rgb(0 0 0 / .35)); }
   .auth-caja { position: relative; width: 100%; max-width: 384px; overflow: hidden; border-radius: 24px; padding: 30px 28px;
     background: color-mix(in srgb, var(--superficie) 95%, transparent); box-shadow: 0 25px 50px -12px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(255 255 255 / .4); backdrop-filter: blur(6px); }
-  .auth-caja::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(to right, transparent, var(--oro-vivo), transparent); }
-  .auth-caja h1 { text-align: center; }
+  .auth-caja::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: linear-gradient(to bottom, var(--oro-vivo), var(--marca)); }
+  .auth-caja h1 { text-align: center; font-size: 32px; }
   .auth-caja .sub { text-align: center; color: var(--suave); font-size: 14px; margin: 6px 0 26px; }
   .auth-caja form { display: flex; flex-direction: column; gap: 16px; }
   .auth-error { border-radius: 12px; background: var(--rojo-suave); color: var(--rojo-texto); padding: 8px 12px; font-size: 14px; }
@@ -42,7 +42,7 @@
 
   /* ----- Salas ----- */
   .salas { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
-  .sala h2 { font: 600 22px/1.2 var(--display); letter-spacing: .02em; }
+  .sala h2 { font: 600 24px/1.2 var(--display); letter-spacing: -.01em; }
   .pasos { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
   .paso-fila { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; }
   .paso-fila .paso { margin-top: 2px; }

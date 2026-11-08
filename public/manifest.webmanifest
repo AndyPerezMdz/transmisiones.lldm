@@ -3,8 +3,8 @@
  "short_name": "Cabina",
  "start_url": "/",
  "display": "standalone",
- "background_color": "#08121e",
- "theme_color": "#0a3156",
+ "background_color": "#0e1714",
+ "theme_color": "#1f4d3f",
  "lang": "es-MX",
  "icons": [
   {

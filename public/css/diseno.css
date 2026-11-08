@@ -7,7 +7,7 @@
 .lienzo.camara { background: #000 url(/img/templo.webp) center / cover; }
 .lienzo-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
 .lienzo-vacio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600;
-  background: rgb(6 31 56 / .55); font-size: 15px; text-align: center; padding: 20px; }
+  background: rgb(14 23 20 / .55); font-size: 15px; text-align: center; padding: 20px; }
 .vista-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .envuelve { flex-wrap: wrap; }
 .chip { border: 1px solid var(--borde); background: var(--superficie); color: var(--titulo); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
@@ -31,10 +31,10 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .txt-opc { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 
 /* Arrastrar sobre la vista previa */
-.editando.edit-banner .lt-banner :is(img, .lt-txt), .editando.edit-speaker .lt-speaker :is(img, .lt-txt) { pointer-events: auto; cursor: move; touch-action: none; }
-.editando.edit-banner .lt-banner.lt-normal .lt-txt:hover, .editando.edit-speaker .lt-speaker.lt-normal .lt-txt:hover { filter: brightness(1.15); }
-.editando .lt-imagen .lt-txt { outline: 3px dashed rgb(220 203 152 / .75); outline-offset: 4px; }
-.editando .lt-imagen .sel { outline: 4px solid #dccb98; }
+.editando.edit-banner .lt-banner :is(img, .lt-txt, .lt-card), .editando.edit-speaker .lt-speaker :is(img, .lt-txt, .lt-card) { pointer-events: auto; cursor: move; touch-action: none; }
+.editando.edit-banner .lt-banner .lt-card:hover, .editando.edit-speaker .lt-speaker .lt-card:hover { filter: brightness(1.12); }
+.editando .lt-imagen .lt-txt { outline: 3px dashed rgb(226 196 120 / .75); outline-offset: 4px; }
+.editando .lt-imagen .sel { outline: 4px solid #e2c478; }
 .editando .lt-imagen img.sel { outline-offset: 0; }
 .editando .lt-imagen .lt-txt[hidden] { display: none; }
 
@@ -58,13 +58,13 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .capa-fila .acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .capa-fila input[type=range] { grid-column: 1 / -1; margin: 0; }
 .editando .capas { pointer-events: none; }
-.editando.edit-layers .capas img { pointer-events: auto; cursor: move; touch-action: none; outline: 3px dashed rgb(220 203 152 / .7); outline-offset: -3px; }
+.editando.edit-layers .capas img { pointer-events: auto; cursor: move; touch-action: none; outline: 3px dashed rgb(226 196 120 / .7); outline-offset: -3px; }
 .editando .lt { pointer-events: none; }
 .editando.edit-banner .lt-speaker .lt-txt, .editando.edit-speaker .lt-banner .lt-txt { outline: none; }
-.editando .capas img.sel { outline: 4px solid #dccb98; }
+.editando .capas img.sel { outline: 4px solid #e2c478; }
 
 .editando .lt:not(.on) * { pointer-events: none !important; }
-.tirador { position: absolute; z-index: 30; width: 44px; height: 44px; border-radius: 50%; background: #dccb98; border: 5px solid #fff;
+.tirador { position: absolute; z-index: 30; width: 44px; height: 44px; border-radius: 50%; background: #e2c478; border: 5px solid #fff;
   box-shadow: 0 4px 14px rgb(0 0 0 / .45); cursor: nwse-resize; touch-action: none; }
 .editando .tirador[hidden] { display: none; }
 .editando .lt:not(.on) { transition: none; }

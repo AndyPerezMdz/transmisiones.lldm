@@ -3,12 +3,14 @@ import { fitText } from './live.js';
 // Lo usan overlay.html, pantalla.html y el editor de diseño (vista previa).
 
 export const FONTS = {
+  jakarta: { name: 'Plus Jakarta Sans', css: '"Plus Jakarta Sans Variable", "Segoe UI", system-ui, sans-serif' },
+  fraunces: { name: 'Fraunces (clásica moderna)', css: '"Fraunces Variable", Georgia, serif' },
   inter: { name: 'Inter', css: '"Inter Variable", "Segoe UI", system-ui, sans-serif' },
   cinzel: { name: 'Cinzel (como el logo)', css: '"Cinzel Variable", "Times New Roman", serif' },
   georgia: { name: 'Georgia (clásica)', css: 'Georgia, "Times New Roman", serif' },
   arial: { name: 'Arial', css: 'Arial, Helvetica, sans-serif' }
 };
-export const fontCss = id => (FONTS[id] || FONTS.inter).css;
+export const fontCss = id => (FONTS[id] || FONTS.jakarta).css;
 
 export const POSITIONS = {
   'abajo-izq': 'Abajo a la izquierda', 'abajo-centro': 'Abajo al centro', 'abajo-der': 'Abajo a la derecha',
@@ -22,11 +24,11 @@ const lowerThird = ({ position, margin, tag, title }) => ({
   anim: 'deslizar',             // 'deslizar' | 'aparecer'
   position, size: 100, margin,  // margin: distancia al borde en px (x horizontal, y vertical)
   free: { x: 100, y: 100 },     // esquina de arriba a la izquierda cuando position = 'libre'
-  colors: { bg: '#0a3156', accent: '#c7ae6e', text: '#ffffff', tagText: '#061f38' },
-  font: 'inter', tagFont: 'cinzel',
+  colors: { bg: '#16231e', accent: '#c2a15a', text: '#ffffff', tagText: '#e6d5a6' },
+  font: 'jakarta', tagFont: 'jakarta',
   image: null,                  // { url, w, h, x, y, width }
-  tag:   { show: true, w: 420, size: 30, color: '#ffffff', font: 'cinzel', weight: 800, align: 'left', upper: true, ...tag },
-  title: { show: true, w: 1100, size: 54, color: '#ffffff', font: 'inter', weight: 600, align: 'left', upper: false, ...title }
+  tag:   { show: true, w: 420, size: 28, color: '#e6d5a6', font: 'jakarta', weight: 700, align: 'left', upper: true, ...tag },
+  title: { show: true, w: 1100, size: 54, color: '#ffffff', font: 'jakarta', weight: 600, align: 'left', upper: false, ...title }
 });
 
 export const LAYER_SLOTS = {
@@ -56,8 +58,8 @@ export const DEFAULT_DESIGN = {
   layers: { izq: null, der: null, centro: null },  // cada una: { url, w, h, x, y, width }
   screen: {
     bg: 'default',                // 'default' | 'color' | 'image'
-    color: '#0a3156', image: null, dim: 45,
-    font: 'inter', titleFont: 'cinzel', text: '#f7f3eb', accent: '#dccb98',
+    color: '#1f4d3f', image: null, dim: 45,
+    font: 'jakarta', titleFont: 'fraunces', text: '#f3f0e8', accent: '#e2c478',
     logo: { show: false, url: null, position: 'arriba-der', size: 180 },
     version: true
   }
@@ -126,9 +128,11 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       root.style.setProperty('--lt-text', c.text); root.style.setProperty('--lt-tag-text', c.tagText);
       root.style.setProperty('--lt-scale', design.size / 100);
       root.style.setProperty('--lt-font', fontCss(design.font)); root.style.setProperty('--lt-tag-font', fontCss(design.tagFont));
+      const card = document.createElement('div'); card.className = 'lt-card'; card.dataset.drag = path + '.free';
       const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag'; tag.dataset.drag = path + '.free';
       const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = path + '.free';
-      root.append(tag, title);
+      card.append(tag, title);
+      root.append(card);
     }
     if (current) fill(current);
   }

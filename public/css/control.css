@@ -18,7 +18,7 @@
 .estado.pausa { background: var(--oro-suave); color: var(--titulo); border-color: var(--oro); }
 .estado.pausa .punto { background: var(--oro); }
 @keyframes latido { 50% { opacity: .35; } }
-.ahora-titulo { font: 600 28px/1.2 var(--display); letter-spacing: .01em; color: var(--titulo); overflow-wrap: anywhere; }
+.ahora-titulo { font: 600 30px/1.15 var(--display); letter-spacing: -.01em; color: var(--titulo); overflow-wrap: anywhere; }
 .ahora-sub { color: var(--suave); font-size: 14px; min-height: 21px; }
 .controles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
 .controles #btnNext { min-width: 180px; }
@@ -102,7 +102,7 @@
 }
 
 .acompanado { display: flex; gap: 10px; align-items: center; padding: 12px 18px; border-radius: 16px; font-size: 14.5px; font-weight: 550;
-  background: color-mix(in srgb, #3b82f6 12%, var(--superficie)); border: 1px solid color-mix(in srgb, #3b82f6 40%, transparent); color: var(--titulo); }
+  background: color-mix(in srgb, var(--oro-vivo) 16%, var(--superficie)); border: 1px solid color-mix(in srgb, var(--oro) 55%, transparent); color: var(--titulo); }
 
 /* ----- Celular: lo importante a la mano ----- */
 .barra-movil { display: none; }

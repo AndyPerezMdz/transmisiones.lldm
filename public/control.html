@@ -63,6 +63,11 @@
         <button class="btn btn-primario mic" id="btnMic" type="button">Escuchar</button></div>
       </div>
       <p class="ayuda" id="micStatus">Presiona <b>Escuchar</b> y la cabina te irá sugiriendo las citas, himnos, coros y el tema que mencione.</p>
+      <div class="mic-vivo" id="micNivelBox" hidden>
+        <div class="nivel"><div class="nivel-barra" id="micNivel"></div></div>
+        <span class="chico" id="micDevice"></span>
+        <span class="mic-aviso" id="micAviso"></span>
+      </div>
       <ol class="cards" id="suggestions"></ol>
       <div class="vacio" id="noSuggestions">Aquí aparecerán las sugerencias. Tú decides cuál se pone en pantalla con <b>Poner en pantalla</b>.</div>
       <details class="oido">
@@ -148,13 +153,19 @@
       <b id="micName">Pidiendo permiso…</b>
       <div class="nivel"><div class="nivel-barra" id="micLevel"></div></div>
       <span class="chico" id="micHint">Habla: la barra debe moverse con tu voz.</span>
+      <span class="chico" id="micList"></span>
     </div>
     <div>
       <h3 style="margin-bottom:8px">Di estas frases (con voz normal)</h3>
       <ol class="frases" id="micPhrases"></ol>
     </div>
     <div class="oido-prueba"><span class="chico">Lo último que se escuchó</span><p id="micHeard">—</p></div>
-    <p class="chico">Si el micrófono no es el que quieres (por ejemplo, el receptor DJI), elígelo en Windows → Configuración → Sonido → Entrada, o en el candado de la barra de direcciones, y vuelve a abrir esta prueba.</p>
+    <div class="consejos">
+      <b>Si no es el micrófono que quieres</b>
+      <span class="chico">El reconocimiento usa el micrófono <b>predeterminado del navegador</b>. Cámbialo en el candado de la barra de direcciones → Micrófono, o en <code>chrome://settings/content/microphone</code>, y en Windows → Configuración → Sistema → Sonido → Entrada. Después cierra y vuelve a abrir esta prueba.</span>
+      <b>Si grita y no lo entiende</b>
+      <span class="chico">El sonido se satura y llega distorsionado. Baja la ganancia del receptor DJI (o del micrófono en Windows a 70–80 %) hasta que, gritando, la barra no llegue a lo rojo. Activar la pista de seguridad (−6 dB) del DJI también ayuda.</span>
+    </div>
     <div class="dialogo-pie"><button class="btn btn-primario" type="button" id="micTestClose">Terminar</button></div>
   </div>
 </dialog>

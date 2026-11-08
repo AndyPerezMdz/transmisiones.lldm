@@ -244,6 +244,53 @@ function setMic(on, text) {
   micBtn.replaceChildren(icon(on ? 'detener' : 'mic'), on ? 'Dejar de escuchar' : 'Escuchar');
   if (text) micStatus.textContent = text;
 }
+// ---------- Medidor de volumen (mientras escucha y en la prueba) ----------
+// El reconocimiento de voz del navegador no deja procesar el audio, pero sí podemos
+// medirlo para avisar cuando no llega sonido o cuando la voz satura (gritos, ganancia alta).
+async function openMeter(onFrame) {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  const ctxA = new (window.AudioContext || window.webkitAudioContext)();
+  const an = ctxA.createAnalyser(); an.fftSize = 1024;
+  ctxA.createMediaStreamSource(stream).connect(an);
+  const buf = new Float32Array(an.fftSize);
+  let raf, quiet = 0, clipped = 0, frames = 0, verdict = 'ok';
+  const loop = () => {
+    an.getFloatTimeDomainData(buf);
+    let sum = 0, peak = 0;
+    for (const v of buf) { sum += v * v; const a = Math.abs(v); if (a > peak) peak = a; }
+    const rms = Math.sqrt(sum / buf.length);
+    frames++; if (peak > 0.97) clipped++;
+    quiet = rms < 0.004 ? quiet + 1 : 0;
+    if (frames >= 60) { // ~1 segundo
+      verdict = clipped / frames > 0.04 ? 'satura' : quiet > 480 ? 'silencio' : 'ok';
+      frames = 0; clipped = 0;
+    }
+    onFrame({ level: Math.min(100, Math.round(rms * 400)), peak, verdict: quiet > 480 ? 'silencio' : verdict });
+    raf = requestAnimationFrame(loop);
+  };
+  loop();
+  return { label: stream.getAudioTracks()[0]?.label || 'Micrófono predeterminado',
+    close() { cancelAnimationFrame(raf); stream.getTracks().forEach(t => t.stop()); ctxA.close(); } };
+}
+const METER_TXT = {
+  satura: 'La voz está saturando (gritos o ganancia muy alta): baja la ganancia del micrófono o del receptor. Si satura, el reconocimiento no entiende.',
+  silencio: 'No está llegando sonido. Revisa que el micrófono esté encendido y que sea el que usa el navegador.'
+};
+let liveMeter = null;
+async function startLiveMeter() {
+  if (liveMeter || !navigator.mediaDevices?.getUserMedia) return;
+  try {
+    liveMeter = await openMeter(({ level, verdict }) => {
+      $('micNivel').style.width = level + '%';
+      $('micNivelBox').dataset.estado = verdict;
+      $('micAviso').textContent = METER_TXT[verdict] || '';
+    });
+    $('micNivelBox').hidden = false;
+    $('micDevice').textContent = 'Escuchando con: ' + liveMeter.label;
+  } catch {}
+}
+function stopLiveMeter() { liveMeter?.close(); liveMeter = null; $('micNivelBox').hidden = true; $('micAviso').textContent = ''; }
+
 function startListening() {
   if (!SR) return toast('El reconocimiento de voz solo funciona en Google Chrome o Microsoft Edge.');
   if (!catalog) return toast('Aún se está cargando el catálogo, intenta en un segundo.', 'info');
@@ -252,7 +299,7 @@ function startListening() {
   rec.lang = state.settings.voiceLang || 'es-MX';
   rec.continuous = true;
   rec.interimResults = true;
-  rec.onstart = () => { restartDelay = 250; setMic(true, 'Escuchando… Habla cerca del micrófono para probar: di “Juan tres dieciséis”.'); };
+  rec.onstart = () => { restartDelay = 250; setMic(true, 'Escuchando… Habla cerca del micrófono para probar: di “Juan tres dieciséis”.'); if (!micTest) startLiveMeter(); };
   rec.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -278,7 +325,7 @@ function startListening() {
   };
   try { rec.start(); } catch (err) { toast('No se pudo iniciar el micrófono: ' + err.message); }
 }
-function stopListening() { listening = false; try { rec?.stop(); } catch {} setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.'); interimEl.textContent = ''; }
+function stopListening() { listening = false; stopLiveMeter(); try { rec?.stop(); } catch {} setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.'); interimEl.textContent = ''; }
 micBtn.onclick = () => listening ? stopListening() : startListening();
 micBtn.replaceChildren(icon('mic'), 'Escuchar');
 if (!SR) { micBtn.disabled = true; micStatus.textContent = 'Abre la cabina en Google Chrome o Edge para usar la voz. El buscador funciona igual.'; }
@@ -331,26 +378,18 @@ async function openMicTest() {
   $('micHeard').textContent = '—';
   $('micTest').showModal();
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const track = stream.getAudioTracks()[0];
-    $('micName').textContent = track?.label || 'Micrófono predeterminado';
-    const ctxA = new (window.AudioContext || window.webkitAudioContext)();
-    const an = ctxA.createAnalyser(); an.fftSize = 1024;
-    ctxA.createMediaStreamSource(stream).connect(an);
-    const buf = new Float32Array(an.fftSize);
-    let quiet = 0;
-    const loop = () => {
+    stopLiveMeter();
+    const meter = await openMeter(({ level, verdict }) => {
       if (!micTest) return;
-      an.getFloatTimeDomainData(buf);
-      const rms = Math.sqrt(buf.reduce((a, v) => a + v * v, 0) / buf.length);
-      const pct = Math.min(100, Math.round(rms * 400));
-      $('micLevel').style.width = pct + '%';
-      quiet = pct < 3 ? quiet + 1 : 0;
-      $('micHint').textContent = quiet > 240 ? 'No se oye nada. Revisa que el micrófono esté encendido y sea el correcto.' : 'Habla: la barra debe moverse con tu voz.';
-      micTest.raf = requestAnimationFrame(loop);
-    };
-    Object.assign(micTest, { stream, ctxA });
-    loop();
+      $('micLevel').style.width = level + '%';
+      $('micLevel').parentElement.dataset.estado = verdict;
+      $('micHint').textContent = METER_TXT[verdict] || 'Habla: la barra debe moverse con tu voz. Si grita, debe quedarse fuera de lo rojo.';
+    });
+    $('micName').textContent = meter.label;
+    micTest.meter = meter;
+    // Lista de micrófonos conectados (el reconocimiento usa el predeterminado del navegador).
+    const devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    $('micList').textContent = devices.length > 1 ? 'Micrófonos conectados: ' + devices.map(d => d.label || 'sin nombre').join(' · ') : '';
   } catch (err) {
     $('micName').textContent = 'No hay permiso para usar el micrófono';
     $('micHint').textContent = 'Da clic en el candado de la barra de direcciones y permite el micrófono.';
@@ -359,11 +398,10 @@ async function openMicTest() {
 }
 function closeMicTest() {
   if (!micTest) return;
-  cancelAnimationFrame(micTest.raf);
-  micTest.stream?.getTracks().forEach(t => t.stop());
-  micTest.ctxA?.close();
+  micTest.meter?.close();
   if (micTest.startedListening) stopListening();
   micTest = null;
+  if (listening) startLiveMeter();
 }
 $('btnMicTest').onclick = openMicTest;
 $('micTestClose').onclick = () => $('micTest').close();

@@ -146,3 +146,15 @@
 .frases li .ok .ico { color: transparent; }
 .frases li.hecho .ok .ico { color: #fff; }
 .mic { gap: 8px; }
+
+/* Medidor en vivo */
+.mic-vivo { display: flex; flex-direction: column; gap: 6px; margin: -4px 0 14px; }
+.mic-aviso { font-size: 13.5px; font-weight: 600; color: var(--rojo-texto); }
+.mic-aviso:empty { display: none; }
+.nivel[data-estado="satura"] .nivel-barra { background: #e5484d; }
+.nivel { position: relative; }
+.nivel::after { content: ""; position: absolute; top: 0; bottom: 0; left: 85%; right: 0; background: rgb(229 72 77 / .18); pointer-events: none; }
+#micNivelBox[data-estado="satura"] .nivel-barra { background: #e5484d; }
+.consejos { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); }
+.consejos b { color: var(--titulo); font-size: 14px; }
+.consejos b:not(:first-child) { margin-top: 8px; }

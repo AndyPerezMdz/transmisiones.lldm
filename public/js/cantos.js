@@ -127,6 +127,7 @@ $('importFile').addEventListener('change', async e => {
 // Guarda cantos en el equipo: los numerados reemplazan al del mismo número;
 // los que no tienen número solo se agregan si no hay uno con el mismo título.
 async function importSongs(list) {
+  if (!demo && !team?.id) return toast('Esta cuenta todavía no está en ningún equipo. Pide que te inviten (o crea uno en Salas) y luego importas.');
   const rows = list.map(s => ({ number: s.number || null, title: s.title, sections: s.sections, kind: s.kind, team_id: team?.id }));
   if (demo) {
     songs = [...songs.filter(s => !rows.some(r => r.kind === s.kind && r.number && r.number === s.number)),
@@ -158,6 +159,7 @@ async function importSongs(list) {
 
 // ---------- Himnario y coros base (recursos de Proyector LLDM, de Huri Tolentino) ----------
 async function importBase() {
+  if (!demo && !team?.id) return toast('Esta cuenta todavía no está en ningún equipo. Pide que te inviten (o crea uno en Salas) y luego agregas el himnario.');
   const ok = await modal({ title: 'Usar el himnario y coros base',
     text: 'Se agregan 676 himnos y 386 coros tomados de los recursos de Proyector LLDM, de Huri Tolentino (licencia PolyForm Noncommercial: solo sin fines de lucro). Si ya tienes un canto con el mismo número, se reemplaza. Los errores que traigan los puedes corregir aquí mismo.',
     ok: 'Agregar' });
@@ -178,7 +180,11 @@ for (const b of document.querySelectorAll('[data-base]')) b.onclick = importBase
   sb = await supa();
   try {
     team = await currentTeam();
-    if (!team) { toast('Todavía no estás en ningún equipo. Ve a Salas para unirte o crear uno.'); return; }
+    if (!team) {
+      toast('Todavía no estás en ningún equipo. Ve a Salas para unirte o crear uno.');
+      document.querySelector('.cantos').hidden = true;
+      return;
+    }
     document.querySelector('.pagina-cabeza .ayuda').textContent = `Himnario y coros de “${team.name}”. Todo el equipo los ve y los puede editar; lo que agregues aparece al instante en el buscador de la cabina.`;
     songs = await loadSongs(team.id);
   } catch (err) { toast(err.message); }

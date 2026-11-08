@@ -1,5 +1,5 @@
 // Piezas de interfaz compartidas: tema claro/oscuro, barra de navegación y avisos.
-import { demo, supa, qs } from './db.js';
+import { demo, supa, qs, myTeams, pickTeam } from './db.js';
 
 export const $ = id => document.getElementById(id);
 export function el(tag, attrs = {}, ...children) {
@@ -44,6 +44,29 @@ export function themeButton(extraClass = '') {
   return b;
 }
 
+// ---------- Paleta de colores del equipo ----------
+// Toda la app se pinta con dos colores: principal y acento.
+export const PALETTES = {
+  bosque:  { name: 'Bosque', hint: 'verde profundo y latón', p: '#1f4d3f', a: '#c2a15a' },
+  vino:    { name: 'Vino', hint: 'vino tinto y cobre', p: '#6b1e2e', a: '#b8763e' },
+  oceano:  { name: 'Océano', hint: 'azul petróleo y miel', p: '#1d4e6b', a: '#e0a458' },
+  grafito: { name: 'Grafito', hint: 'carbón y ámbar', p: '#2b2f36', a: '#e8a33d' },
+  ciruela: { name: 'Ciruela', hint: 'morado y durazno', p: '#4a2a5a', a: '#d4a373' },
+  terra:   { name: 'Terracota', hint: 'barro y salvia', p: '#8a3b26', a: '#8fae8b' }
+};
+export function themeColors(theme = {}) {
+  if (theme.preset === 'propia' && /^#[0-9a-f]{6}$/i.test(theme.p || '') && /^#[0-9a-f]{6}$/i.test(theme.a || '')) return { p: theme.p, a: theme.a };
+  const preset = PALETTES[theme.preset] || PALETTES.bosque;
+  return { p: preset.p, a: preset.a };
+}
+export function applyTheme(theme) {
+  const { p, a } = themeColors(theme);
+  document.documentElement.style.setProperty('--p', p);
+  document.documentElement.style.setProperty('--a', a);
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', p);
+  try { localStorage.setItem('cabina-colores', JSON.stringify({ p, a })); } catch {}
+}
+
 // ---------- Navegación ----------
 export function withDemo(path, params = {}) {
   const parts = Object.entries(params).filter(([, v]) => v).map(([k, v]) => `${k}=${encodeURIComponent(v)}`);
@@ -80,6 +103,8 @@ export function mountNav(active, { roomName = '' } = {}) {
         help, themeButton(), demo ? el('span', { class: 'nav-boton', title: 'Sin base de datos', text: 'Demo' }) : salir)),
     el('div', { class: 'nav-movil' }, linkList()));
   document.body.prepend(header);
+  // Pinta la app con la paleta del equipo (ya se aplicó la última conocida antes de dibujar).
+  myTeams().then(ts => { const t = pickTeam(ts); if (t) applyTheme(t.theme); }).catch(() => {});
   return header;
 }
 

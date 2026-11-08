@@ -1,3 +1,4 @@
+@import url(/css/fuentes.css);
 /* Identidad de Cabina en Vivo: verde profundo y arena con acento latón.
    Fraunces para títulos y Plus Jakarta Sans para todo lo demás.
    (Inter y Cinzel se quedan solo como opciones de letra para los letreros.) */
@@ -32,20 +33,31 @@
   --sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
   --display: "Fraunces Variable", Georgia, "Times New Roman", serif;
 
-  --marca: #1f4d3f; --marca-medio: #2b6553; --marca-oscuro: #12302a; --marca-claro: #e3ece7;
-  --oro: #b08d48; --oro-vivo: #c2a15a; --oro-claro: #e6d5a6; --oro-suave: #f4eedd;
-  --tinta: #1b2420; --papel: #f3f0e8; --superficie: #fdfcf8; --titulo: #1f4d3f;
-  --borde: #e4dfd3; --borde-fuerte: #d3ccbc; --campo: #faf8f2; --suave: #6b6f68; --tenue: #a39f94;
+  /* Paleta del equipo: solo dos colores (principal y acento); todo lo demás sale de ellos.
+     Se cambian en Equipo → Apariencia. Predeterminada: verde profundo y latón. */
+  --p: #1f4d3f; --a: #c2a15a;
+
+  --marca: var(--p); --marca-medio: color-mix(in srgb, var(--p) 82%, white); --marca-oscuro: color-mix(in srgb, var(--p) 62%, black);
+  --marca-claro: color-mix(in srgb, var(--p) 12%, white);
+  --oro: color-mix(in srgb, var(--a) 86%, black); --oro-vivo: var(--a); --oro-claro: color-mix(in srgb, var(--a) 55%, white);
+  --oro-suave: color-mix(in srgb, var(--a) 15%, white);
+  --tinta: color-mix(in srgb, var(--p) 18%, #151817); --papel: color-mix(in srgb, var(--a) 9%, #f5f4ef);
+  --superficie: color-mix(in srgb, var(--a) 3%, #fefefc); --titulo: var(--p);
+  --borde: color-mix(in srgb, var(--a) 16%, #e2e0da); --borde-fuerte: color-mix(in srgb, var(--a) 22%, #cfccc4);
+  --campo: color-mix(in srgb, var(--a) 5%, #fbfaf7); --suave: color-mix(in srgb, var(--p) 15%, #6b6c68); --tenue: #a3a19a;
   --rojo: #b3261e; --rojo-suave: #fbeeec; --rojo-texto: #a1231b; --rojo-borde: #efc5c0;
   --verde: #2f7a3b; --verde-suave: #eef6ee;
-  --sombra: 0 1px 2px rgb(27 36 32 / .05), 0 10px 28px -14px rgb(27 36 32 / .18);
+  --sombra: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(0 0 0 / .18);
   color-scheme: light;
 }
 .dark {
   color-scheme: dark;
-  --papel: #0e1714; --superficie: #16231e; --tinta: #e6eae6; --titulo: #e6d5a6;
-  --marca: #2b6553; --marca-medio: #357a64; --marca-oscuro: #12302a; --marca-claro: #1c3a31; --oro-suave: #2a2615;
-  --borde: #24352e; --borde-fuerte: #33493f; --campo: #1a2924; --suave: #9aa8a1; --tenue: #6f7e77;
+  --marca: color-mix(in srgb, var(--p) 85%, white); --marca-medio: color-mix(in srgb, var(--p) 70%, white); --marca-oscuro: var(--p);
+  --marca-claro: color-mix(in srgb, var(--p) 45%, #0b0d0c); --oro-suave: color-mix(in srgb, var(--a) 18%, #0b0d0c);
+  --tinta: #e7e9e6; --papel: color-mix(in srgb, var(--p) 26%, #0a0c0b); --superficie: color-mix(in srgb, var(--p) 32%, #111413);
+  --titulo: color-mix(in srgb, var(--a) 60%, white);
+  --borde: color-mix(in srgb, var(--p) 40%, #202623); --borde-fuerte: color-mix(in srgb, var(--p) 45%, #2e3532);
+  --campo: color-mix(in srgb, var(--p) 30%, #151918); --suave: #9ea7a2; --tenue: #6f7a75;
   --rojo-suave: #2e1614; --rojo-texto: #f4a39b; --rojo-borde: #6b2a25;
   --verde: #86d49a; --verde-suave: #11291b;
   --sombra: 0 1px 2px rgb(0 0 0 / .25), 0 10px 28px -14px rgb(0 0 0 / .6);

@@ -9,7 +9,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
   .cantos { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 16px; align-items: start; }

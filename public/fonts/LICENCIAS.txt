@@ -1,0 +1,7 @@
+Fuentes incluidas en Cabina en Vivo (todas gratuitas, se pueden usar y distribuir libremente, incluso con fines comerciales):
+
+- Plus Jakarta Sans, Fraunces, Inter, Cinzel, Lora, Playfair Display, Oswald, Raleway, Nunito, Montserrat, Source Serif 4:
+  SIL Open Font License 1.1 — https://openfontlicense.org
+- Roboto Slab: Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+
+Archivos tomados de Fontsource (https://fontsource.org), que redistribuye las fuentes de Google Fonts con sus licencias originales.

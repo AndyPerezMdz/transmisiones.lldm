@@ -71,12 +71,12 @@ export async function acceptInvites() {
   return data || 0;
 }
 export async function myTeams() {
-  if (demo) return [{ id: 'demo', name: 'Equipo de prueba', role: 'admin' }];
+  if (demo) { let theme = {}; try { theme = JSON.parse(localStorage.getItem('cabina-demo-paleta') || '{}'); } catch {} return [{ id: 'demo', name: 'Equipo de prueba', role: 'admin', theme }]; }
   const sb = await supa();
   const { data: { user } } = await sb.auth.getUser();
-  const { data, error } = await sb.from('team_members').select('role, team:teams(id, name)').eq('user_id', user.id);
+  const { data, error } = await sb.from('team_members').select('role, team:teams(id, name, theme)').eq('user_id', user.id);
   if (error) throw new Error(error.message);
-  return data.filter(m => m.team).map(m => ({ id: m.team.id, name: m.team.name, role: m.role }))
+  return data.filter(m => m.team).map(m => ({ id: m.team.id, name: m.team.name, theme: m.team.theme || {}, role: m.role }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 export function pickTeam(teams) {

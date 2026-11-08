@@ -78,3 +78,9 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .solo-lectura #samples .btn-mini { display: none; }
 .solo-lectura .panel { opacity: .55; filter: grayscale(.4); }
 .solo-lectura .tirador { display: none; }
+
+.estilos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin-top: -6px; }
+.estilo { padding: 8px 10px; border-radius: 12px; border: 1px solid var(--borde); background: var(--superficie); cursor: pointer; text-align: left; color: var(--tinta); }
+.estilo b { display: block; font-size: 13.5px; color: var(--titulo); }
+.estilo small { display: block; font-size: 11.5px; color: var(--suave); }
+.estilo.activo { border-color: var(--oro); background: var(--oro-suave); box-shadow: inset 0 0 0 1px var(--oro); }

@@ -2,7 +2,7 @@
 import { demo, supa, requireSession, currentTeam, loadSongs } from './db.js';
 import { loadRoom, saveDesign } from './live.js';
 import { normalizeSong } from './song-text.js';
-import { $, el, toast, mountNav, modal } from './ui.js';
+import { $, el, toast, mountNav, modal, PALETTES, applyTheme, themeColors } from './ui.js';
 
 let sb = null, team = null, me = null;
 const isAdmin = () => team?.role === 'admin';
@@ -22,10 +22,12 @@ async function load() {
     $('members').replaceChildren(person({ name: 'Tú', email: 'demo', role: 'admin', you: true }), person({ name: 'Hno. de ejemplo', email: 'ejemplo@correo.com', role: 'miembro' }));
     $('count').textContent = '2 personas';
     $('inviteBox').hidden = false;
+    setupTheme(await currentTeam());
     return;
   }
   team = await currentTeam();
   if (!team) { $('teamName').textContent = 'Sin equipo'; return toast('Todavía no estás en un equipo. Ve a Salas.'); }
+  setupTheme(team);
   $('teamName').textContent = team.name;
   $('inviteBox').hidden = !isAdmin();
   renderActions();
@@ -89,6 +91,49 @@ function renderActions() {
     load();
   };
   box.append(rename);
+}
+
+// ---------- Apariencia (paleta del equipo) ----------
+let savedTheme = {}, theme = {};
+function renderPalettes() {
+  const box = $('palettes'); box.replaceChildren();
+  const opts = { ...PALETTES, propia: { name: 'Propia', hint: 'tú eliges los dos colores', ...themeColors(theme.preset === 'propia' ? theme : { preset: 'bosque' }) } };
+  for (const [id, pal] of Object.entries(opts)) {
+    const active = (theme.preset || 'bosque') === id;
+    const b = el('button', { type: 'button', class: 'paleta' + (active ? ' activo' : '') },
+      el('span', { class: 'muestra', style: `background: linear-gradient(135deg, ${pal.p} 0 55%, ${pal.a} 55% 100%)` }),
+      el('span', {}, el('b', { text: pal.name }), el('small', { text: pal.hint })));
+    b.onclick = () => {
+      theme = id === 'propia' ? { preset: 'propia', ...themeColors(theme) } : { preset: id };
+      if (id === 'propia') { $('customP').value = theme.p; $('customA').value = theme.a; }
+      previewTheme();
+    };
+    box.append(b);
+  }
+  $('customBox').hidden = theme.preset !== 'propia';
+  const dirty = JSON.stringify(theme) !== JSON.stringify(savedTheme);
+  $('themeSave').disabled = !dirty || (!demo && !isAdmin());
+  $('themeMsg').textContent = dirty ? 'Vista previa (sin guardar)' : '';
+}
+function previewTheme() { applyTheme(theme); renderPalettes(); }
+for (const id of ['customP', 'customA']) $(id).addEventListener('input', () => {
+  theme = { preset: 'propia', p: $('customP').value, a: $('customA').value }; previewTheme();
+});
+$('themeSave').onclick = async () => {
+  if (demo) { try { localStorage.setItem('cabina-demo-paleta', JSON.stringify(theme)); } catch {} }
+  else {
+    const { error } = await sb.from('teams').update({ theme }).eq('id', team.id);
+    if (error) return toast('No se guardó: ' + error.message);
+  }
+  savedTheme = { ...theme }; renderPalettes(); toast('Paleta guardada para todo el equipo.', 'ok');
+};
+// Si sales sin guardar, se regresa a la paleta guardada.
+addEventListener('pagehide', () => applyTheme(savedTheme));
+function setupTheme(t) {
+  savedTheme = { ...(t?.theme || {}) }; theme = { ...savedTheme };
+  const c = themeColors(theme); $('customP').value = c.p; $('customA').value = c.a;
+  if (!demo && !isAdmin()) { $('themeBox').classList.add('solo-ver'); $('themeAyuda').textContent = 'Colores de la app para todo el equipo. Solo un administrador los puede cambiar.'; }
+  renderPalettes();
 }
 
 // ---------- Respaldo ----------

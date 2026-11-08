@@ -9,7 +9,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/stage.css">
 <link rel="stylesheet" href="/css/diseno.css">
@@ -61,6 +61,8 @@
       </div>
 
       <div id="bDefault">
+        <span class="etiqueta">Estilo</span>
+        <div class="estilos" id="styleChips"></div>
         <label class="etiqueta">Dónde aparece
           <select class="campo" data-b="position"></select></label>
         <label class="etiqueta">Tamaño <span class="valor" data-show="size"></span>
@@ -70,6 +72,7 @@
           <label class="etiqueta">Separación del lado <span class="valor" data-show="margin.x"></span><input type="range" min="0" max="600" step="5" data-b="margin.x"></label>
           <label class="etiqueta">Separación arriba/abajo <span class="valor" data-show="margin.y"></span><input type="range" min="0" max="700" step="5" data-b="margin.y"></label>
         </div>
+        <button type="button" class="btn btn-mini" id="useTeamColors">🎨 Usar los colores del equipo</button>
         <div class="dos">
           <label class="etiqueta">Fondo <input class="campo" type="color" data-b="colors.bg"></label>
           <label class="etiqueta">Detalle <input class="campo" type="color" data-b="colors.accent"></label>
@@ -111,7 +114,10 @@
       </div>
 
       <label class="etiqueta">Cómo entra
-        <select class="campo" data-b="anim"><option value="deslizar">Se desliza</option><option value="aparecer">Aparece suave</option></select></label>
+        <select class="campo" data-b="anim"></select></label>
+      <label class="etiqueta">Velocidad
+        <select class="campo" data-b="speed"><option value="rapida">Rápida</option><option value="normal">Normal</option><option value="lenta">Lenta</option></select></label>
+      <button type="button" class="btn btn-sec" id="playAnim">▶ Ver cómo entra</button>
       <button type="button" class="btn btn-mini" id="resetBanner">Volver al diseño original</button>
     </aside>
 

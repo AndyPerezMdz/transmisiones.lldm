@@ -2,8 +2,8 @@
 import { demo, supa, requireSession, roomId } from './db.js';
 import { loadRoom, saveDesign, subscribe } from './live.js';
 import { createTurno } from './turno.js';
-import { $, el, toast, mountNav, modal } from './ui.js';
-import { FONTS, POSITIONS, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
+import { $, el, toast, mountNav, modal, themeColors } from './ui.js';
+import { FONTS, POSITIONS, ANIMS, STYLES, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
   createBanner, createLayers, createScreen, applyScreenDesign, fitStage } from './render.js';
 
 const room = roomId();
@@ -46,6 +46,7 @@ $('tabs').addEventListener('click', e => {
 
 // ---------- Opciones de los selects ----------
 for (const s of document.querySelectorAll('select.fuentes')) for (const [id, f] of Object.entries(FONTS)) s.append(new Option(f.name, id));
+for (const [id, n] of Object.entries(ANIMS)) document.querySelector('[data-b="anim"]').append(new Option(n, id));
 const posSel = document.querySelector('[data-b="position"]');
 for (const [id, n] of Object.entries(POSITIONS)) posSel.append(new Option(n, id));
 
@@ -216,6 +217,22 @@ document.addEventListener('keydown', e => {
   changed();
 });
 
+$('useTeamColors').onclick = () => {
+  let c = null; try { c = JSON.parse(localStorage.getItem('cabina-colores') || 'null'); } catch {}
+  const { p, a } = c?.p ? c : themeColors();
+  Object.assign(lt().colors, { bg: p, accent: a, text: '#ffffff', tagText: a });
+  bindLetrero(); changed();
+};
+
+// Ver la animación de entrada del letrero que se está editando
+$('playAnim').onclick = () => {
+  const k = editPath(); if (!k) return;
+  const b = instanceFor(k), sample = k === 'speaker' ? ['Ministro', 'Hno. Juan Pérez'] : LETREROS[tipo].sample;
+  b.root.classList.remove('sin-anim'); b.hide();
+  setTimeout(() => b.show(...sample), 700);
+  setTimeout(() => b.root.classList.add('sin-anim'), 700 + 1200);
+};
+
 // ---------- Letrero / expositor: controles ----------
 function bindLetrero() {
   const k = editKind(); if (!k) return;
@@ -228,6 +245,8 @@ function bindLetrero() {
     if (input.type === 'checkbox') input.checked = !!v; else input.value = v ?? '';
   }
   for (const r of document.querySelectorAll('input[name=bmode]')) r.checked = r.value === d.mode;
+  $('styleChips').replaceChildren(...Object.entries(STYLES).map(([id, st]) => el('button', { type: 'button', class: 'estilo' + ((d.style || 'tarjeta') === id ? ' activo' : ''),
+    onclick: () => { lt().style = id; bindLetrero(); changed(); } }, el('b', { text: st.name }), el('small', { text: st.hint }))));
   $('bDefault').hidden = d.mode !== 'default';
   $('margins').hidden = d.position === 'libre';
   $('bImage').hidden = d.mode !== 'image';

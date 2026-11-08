@@ -302,3 +302,11 @@ drop policy if exists "Salas: operar (equipo)" on public.rooms;
 create policy "Salas: operar (equipo)" on public.rooms for update to authenticated using (public.is_member(team_id)) with check (public.is_member(team_id));
 drop policy if exists "Salas: borrar (admin)" on public.rooms;
 create policy "Salas: borrar (admin)" on public.rooms for delete to authenticated using (public.is_admin(team_id));
+
+-- =====================================================================
+-- Apariencia
+-- =====================================================================
+-- Paleta de colores de la app, por equipo (la cambian los administradores).
+alter table public.teams
+  add column if not exists theme jsonb not null default '{}'::jsonb
+  check (jsonb_typeof(theme) = 'object');

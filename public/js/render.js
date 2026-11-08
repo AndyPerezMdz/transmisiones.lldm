@@ -8,9 +8,31 @@ export const FONTS = {
   inter: { name: 'Inter', css: '"Inter Variable", "Segoe UI", system-ui, sans-serif' },
   cinzel: { name: 'Cinzel (como el logo)', css: '"Cinzel Variable", "Times New Roman", serif' },
   georgia: { name: 'Georgia (clásica)', css: 'Georgia, "Times New Roman", serif' },
+  montserrat: { name: 'Montserrat', css: '"Montserrat Variable", system-ui, sans-serif' },
+  raleway: { name: 'Raleway (elegante)', css: '"Raleway Variable", system-ui, sans-serif' },
+  nunito: { name: 'Nunito (redondeada)', css: '"Nunito Variable", system-ui, sans-serif' },
+  oswald: { name: 'Oswald (angosta, para títulos)', css: '"Oswald Variable", "Arial Narrow", sans-serif' },
+  lora: { name: 'Lora (para leer)', css: '"Lora Variable", Georgia, serif' },
+  sourceserif: { name: 'Source Serif (libro)', css: '"Source Serif 4 Variable", Georgia, serif' },
+  playfair: { name: 'Playfair Display (de revista)', css: '"Playfair Display Variable", Georgia, serif' },
+  robotoslab: { name: 'Roboto Slab (firme)', css: '"Roboto Slab Variable", Georgia, serif' },
   arial: { name: 'Arial', css: 'Arial, Helvetica, sans-serif' }
 };
 export const fontCss = id => (FONTS[id] || FONTS.jakarta).css;
+
+export const ANIMS = {
+  deslizar: 'Se desliza desde la izquierda', 'deslizar-der': 'Se desliza desde la derecha', subir: 'Sube desde abajo', bajar: 'Baja desde arriba',
+  aparecer: 'Aparece suave', crecer: 'Crece', rebote: 'Con rebote', barrido: 'Barrido (se va dibujando)', cortina: 'Cortina (se abre del centro)', desenfoque: 'Desenfoque'
+};
+export const SPEEDS = { rapida: 0.3, normal: 0.55, lenta: 1 };
+// Estilos del letrero de la cabina (además del modo "su propio diseño" con imagen).
+export const STYLES = {
+  tarjeta: { name: 'Tarjeta', hint: 'con barra de color a un lado' },
+  pildora: { name: 'Píldora', hint: 'redonda y compacta' },
+  cinta:   { name: 'Cinta', hint: 'barra ancha con línea arriba' },
+  cristal: { name: 'Cristal', hint: 'transparente y difuminado' },
+  minimal: { name: 'Solo texto', hint: 'sin fondo, con sombra' }
+};
 
 export const POSITIONS = {
   'abajo-izq': 'Abajo a la izquierda', 'abajo-centro': 'Abajo al centro', 'abajo-der': 'Abajo a la derecha',
@@ -21,7 +43,8 @@ export const POSITIONS = {
 // Plantilla de un letrero (se usa para el de cantos/citas/tema y para el del expositor).
 const lowerThird = ({ position, margin, tag, title }) => ({
   mode: 'default',              // 'default' | 'image'
-  anim: 'deslizar',             // 'deslizar' | 'aparecer'
+  style: 'tarjeta',             // ver STYLES
+  anim: 'deslizar', speed: 'normal',  // ver ANIMS y SPEEDS
   position, size: 100, margin,  // margin: distancia al borde en px (x horizontal, y vertical)
   free: { x: 100, y: 100 },     // esquina de arriba a la izquierda cuando position = 'libre'
   colors: { bg: '#16231e', accent: '#c2a15a', text: '#ffffff', tagText: '#e6d5a6' },
@@ -86,6 +109,8 @@ export function mergeDesign(saved) {
   // Diseños guardados antes tenían un solo letrero ("banner") para todo: sirve de base para cada tipo.
   if (isObj(src.banner)) for (const k of Object.keys(LETREROS)) out.letreros[k] = merge(merge(bannerDefault(), src.banner), src.letreros?.[k] || {});
   delete out.banner;
+  // El color de etiqueta viejo (azul oscuro, pensado para una etiqueta dorada) no se lee en la tarjeta nueva.
+  for (const lt of [...Object.values(out.letreros), out.speaker]) if (lt?.colors?.tagText === '#061f38') lt.colors.tagText = lt.colors.accent || '#e6d5a6';
   return out;
 }
 
@@ -102,7 +127,8 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
 
   function build() {
     root.replaceChildren();
-    root.dataset.anim = design.anim;
+    root.dataset.anim = ANIMS[design.anim] ? design.anim : 'deslizar';
+    const dur = () => (SPEEDS[design.speed] ?? SPEEDS.normal);
     if (design.mode === 'image' && design.image?.url) {
       root.className = base() + ' lt-imagen';
       root.removeAttribute('style');
@@ -121,6 +147,7 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       }
     } else {
       root.className = base() + ' lt-normal pos-' + design.position;
+      root.dataset.style = STYLES[design.style] ? design.style : 'tarjeta';
       const c = design.colors;
       root.style.setProperty('--x', (design.margin?.x ?? 70) + 'px'); root.style.setProperty('--y', (design.margin?.y ?? 110) + 'px');
       root.style.setProperty('--fx', (design.free?.x ?? 100) + 'px'); root.style.setProperty('--fy', (design.free?.y ?? 100) + 'px');
@@ -134,6 +161,7 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       card.append(tag, title);
       root.append(card);
     }
+    root.style.setProperty('--lt-dur', dur() + 's');
     if (current) fill(current);
   }
 
@@ -155,7 +183,7 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       if (same) return;
       if (root.classList.contains('on') && !instant) {
         root.classList.remove('on');
-        swapTimer = setTimeout(() => { fill(next); root.classList.add('on'); }, 420);
+        swapTimer = setTimeout(() => { fill(next); root.classList.add('on'); }, (SPEEDS[design.speed] ?? SPEEDS.normal) * 1000);
       } else { fill(next); if (instant) root.classList.add('sin-anim'); root.classList.add('on'); }
     },
     hide() { clearTimeout(swapTimer); root.classList.remove('on'); },

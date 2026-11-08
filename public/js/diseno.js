@@ -3,7 +3,7 @@ import { demo, supa, requireSession, roomId } from './db.js';
 import { loadRoom, saveDesign, subscribe } from './live.js';
 import { createTurno } from './turno.js';
 import { $, el, toast, mountNav, modal, themeColors } from './ui.js';
-import { FONTS, POSITIONS, ANIMS, STYLES, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
+import { FONTS, POSITIONS, LADOS, ANIMS, STYLES, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
   createBanner, createLayers, createScreen, applyScreenDesign, fitStage } from './render.js';
 
 const room = roomId();
@@ -49,6 +49,7 @@ for (const s of document.querySelectorAll('select.fuentes')) for (const [id, f] 
 for (const [id, n] of Object.entries(ANIMS)) document.querySelector('[data-b="anim"]').append(new Option(n, id));
 const posSel = document.querySelector('[data-b="position"]');
 for (const [id, n] of Object.entries(POSITIONS)) posSel.append(new Option(n, id));
+for (const [id, n] of Object.entries(LADOS)) document.querySelector('[data-b="lado"]').append(new Option(n, id));
 
 // ---------- Vista previa de la transmisión (logos + letrero + expositor) ----------
 const SAMPLES = [['Lectura', 'Juan 3:16'], ['Himno 25', 'Un título de himno algo largo para probar'], ['Tema', 'La fe que vence al mundo'], ['Transmitiendo desde', 'Colonia, ciudad, estado']];
@@ -196,6 +197,7 @@ txStage.addEventListener('pointermove', e => {
     drag.obj.y = Math.max(-20, Math.min(1000, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
     drag.root.style.setProperty('--fx', drag.obj.x + 'px');
     drag.root.style.setProperty('--fy', drag.obj.y + 'px');
+    drag.root.refreshSide?.();
     return;
   }
   if (!drag) return;

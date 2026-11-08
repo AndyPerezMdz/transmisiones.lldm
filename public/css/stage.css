@@ -31,10 +31,10 @@
 .lt-card .lt-tag { font: 700 24px/1.1 var(--lt-tag-font); letter-spacing: .18em; text-transform: uppercase; color: var(--lt-tag-text); }
 .lt-card .lt-title { font: 600 50px/1.1 var(--lt-font); color: var(--lt-text); letter-spacing: -.01em; }
 .pos-abajo-izq .lt-card { left: var(--x); bottom: var(--y); transform-origin: left bottom; }
-.pos-abajo-der .lt-card { right: var(--x); bottom: var(--y); transform-origin: right bottom; border-left: 0; border-right: 8px solid var(--lt-accent); border-radius: 22px 6px 6px 22px; text-align: right; }
+.pos-abajo-der .lt-card { right: var(--x); bottom: var(--y); transform-origin: right bottom; }
 .pos-abajo-centro .lt-card { left: 50%; bottom: var(--y); transform: translateX(-50%) scale(var(--lt-scale)); transform-origin: center bottom; text-align: center; }
 .pos-arriba-izq .lt-card { left: var(--x); top: var(--y); transform-origin: left top; }
-.pos-arriba-der .lt-card { right: var(--x); top: var(--y); transform-origin: right top; border-left: 0; border-right: 8px solid var(--lt-accent); border-radius: 22px 6px 6px 22px; text-align: right; }
+.pos-arriba-der .lt-card { right: var(--x); top: var(--y); transform-origin: right top; }
 /* Estilos */
 [data-style="pildora"] .lt-card { border: 0 !important; border-radius: 999px !important; padding: 16px 46px 18px; gap: 2px; }
 [data-style="pildora"] .lt-tag { font-size: 20px; }
@@ -50,6 +50,9 @@
 [data-style="minimal"] .lt-tag::after { content: ""; display: block; width: 70px; height: 5px; margin-top: 8px; border-radius: 3px; background: var(--lt-accent); }
 
 /* Posición libre: la esquina de arriba a la izquierda de la tarjeta va en (--fx, --fy) */
+[data-lado="der"] .lt-card { border-left: 0; border-right: 8px solid var(--lt-accent); border-radius: 22px 6px 6px 22px; text-align: right; }
+[data-lado="der"][data-style="minimal"] .lt-tag::after { margin-left: auto; }
+.pos-abajo-centro .lt-card { text-align: center; }
 .pos-libre .lt-card { left: var(--fx); top: var(--fy); transform-origin: left top; }
 
 .lt-imagen img { position: absolute; display: block; user-select: none; }

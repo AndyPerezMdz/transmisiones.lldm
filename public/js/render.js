@@ -34,6 +34,8 @@ export const STYLES = {
   minimal: { name: 'Solo texto', hint: 'sin fondo, con sombra' }
 };
 
+export const LADOS = { auto: 'Automática (hacia el borde más cercano)', izq: 'A la izquierda', der: 'A la derecha' };
+
 export const POSITIONS = {
   'abajo-izq': 'Abajo a la izquierda', 'abajo-centro': 'Abajo al centro', 'abajo-der': 'Abajo a la derecha',
   'arriba-izq': 'Arriba a la izquierda', 'arriba-der': 'Arriba a la derecha',
@@ -47,6 +49,7 @@ const lowerThird = ({ position, margin, tag, title }) => ({
   anim: 'deslizar', speed: 'normal',  // ver ANIMS y SPEEDS
   position, size: 100, margin,  // margin: distancia al borde en px (x horizontal, y vertical)
   free: { x: 100, y: 100 },     // esquina de arriba a la izquierda cuando position = 'libre'
+  lado: 'auto',                 // franja de color: 'auto' (hacia el borde más cercano) | 'izq' | 'der'
   colors: { bg: '#16231e', accent: '#c2a15a', text: '#ffffff', tagText: '#e6d5a6' },
   font: 'jakarta', tagFont: 'jakarta',
   image: null,                  // { url, w, h, x, y, width }
@@ -160,10 +163,27 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = path + '.free';
       card.append(tag, title);
       root.append(card);
+      refreshSide();
     }
     root.style.setProperty('--lt-dur', dur() + 's');
     if (current) fill(current);
   }
+
+  // Lado de la franja: fijo, o automático según dónde quede el letrero en la pantalla.
+  function refreshSide() {
+    if (design.mode === 'image') return;
+    let lado = design.lado === 'izq' || design.lado === 'der' ? design.lado : null;
+    if (!lado) {
+      if (design.position === 'libre') {
+        const card = root.querySelector('.lt-card');
+        const x = parseFloat(root.style.getPropertyValue('--fx')) || 0;
+        const w = (card?.offsetWidth || 0) * (design.size / 100);
+        lado = x + w / 2 > 960 ? 'der' : 'izq';
+      } else lado = String(design.position).endsWith('-der') ? 'der' : 'izq';
+    }
+    root.dataset.lado = lado;
+  }
+  root.refreshSide = refreshSide;
 
   function fill({ tag, title }) {
     const t = root.querySelector('.lt-tag'), ti = root.querySelector('.lt-title');
@@ -171,6 +191,7 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
     if (ti) ti.textContent = title || '';
     if (design.mode === 'image') for (const box of root.querySelectorAll('.lt-txt')) shrinkToWidth(box, design[box.dataset.key].size);
     if (t && design.mode !== 'image') t.hidden = !tag;
+    refreshSide();
   }
 
   return {

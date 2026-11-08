@@ -35,6 +35,8 @@
   .auth-listo b { color: var(--titulo); }
   .equipo-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
   .equipo-barra .campo { margin: 0; width: auto; min-width: 220px; }
+  .aviso-cantos { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 18px; margin-bottom: 16px;
+    border-radius: 16px; background: var(--oro-suave); border: 1px solid color-mix(in srgb, var(--oro) 50%, transparent); color: var(--titulo); font-weight: 550; }
   .sin-equipo { max-width: 640px; display: flex; flex-direction: column; gap: 14px; }
   .sin-equipo .campo { margin: 0; }
   .auth-pie { margin-top: 32px; text-align: center; font-size: 12px; letter-spacing: .04em; color: rgb(255 255 255 / .7); }
@@ -77,6 +79,7 @@
       </label>
       <p class="auth-error" id="loginMsg" hidden></p>
       <button class="btn btn-primario btn-bloque" id="loginBtn">Entrar</button>
+      <p class="auth-cambio"><button type="button" class="enlace" id="toForgot">¿Olvidaste tu contraseña?</button></p>
       <p class="auth-cambio">¿No tienes cuenta? <button type="button" class="enlace" id="toRegister">Regístrate</button></p>
     </form>
     <form id="registerForm" hidden>
@@ -94,6 +97,26 @@
       <p class="auth-cambio">¿Ya tienes cuenta? <button type="button" class="enlace" id="toLogin">Entra</button></p>
     </form>
     <div id="registerDone" class="auth-listo" hidden></div>
+    <form id="forgotForm" hidden>
+      <p class="ayuda" style="text-align:center">Escribe tu correo y te mandamos un enlace para poner una contraseña nueva.</p>
+      <label class="etiqueta">Correo
+        <input class="campo" name="email" type="email" required autocomplete="email" placeholder="tucorreo@ejemplo.com">
+      </label>
+      <p class="auth-error" id="forgotMsg" hidden></p>
+      <button class="btn btn-primario btn-bloque" id="forgotBtn">Mandar enlace</button>
+      <p class="auth-cambio"><button type="button" class="enlace" data-volver>Volver a entrar</button></p>
+    </form>
+    <form id="newPassForm" hidden>
+      <p class="ayuda" style="text-align:center">Escribe tu contraseña nueva.</p>
+      <label class="etiqueta">Contraseña nueva
+        <input class="campo" name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+      </label>
+      <label class="etiqueta">Repítela
+        <input class="campo" name="password2" type="password" required minlength="8" autocomplete="new-password">
+      </label>
+      <p class="auth-error" id="newPassMsg" hidden></p>
+      <button class="btn btn-primario btn-bloque" id="newPassBtn">Guardar contraseña</button>
+    </form>
   </div>
 </main>
 
@@ -106,6 +129,10 @@
     <div class="equipo-barra" id="teamBar"></div>
   </div>
   <section class="tarjeta sin-equipo" id="noTeam" hidden></section>
+  <div class="aviso-cantos" id="sinCantos" hidden>
+    <span>Tu equipo todavía no tiene cantos. Sin ellos, la cabina solo encuentra citas bíblicas.</span>
+    <a class="btn btn-oro" href="/cantos" data-icon="himno">Agregar cantos</a>
+  </div>
   <div class="salas" id="rooms"></div>
   <section class="tarjeta" id="newRoomBox" style="margin-top:20px">
     <h2>Agregar una sala</h2>

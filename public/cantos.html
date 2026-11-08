@@ -25,6 +25,12 @@
   textarea.campo { min-height: 340px; resize: vertical; font: 15px/1.55 ui-monospace, Consolas, monospace; }
   .formato { font-size: 13px; color: var(--suave); background: var(--campo); border: 1px solid var(--borde); border-radius: 12px; padding: 10px 12px; }
   .importar { margin-top: 16px; }
+  .bienvenida { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .opciones-inicio { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opcion-inicio { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; border: 1px solid var(--borde); background: var(--campo); }
+  .opcion-inicio b { color: var(--titulo); }
+  .envuelve { flex-wrap: wrap; }
+  @media (max-width: 760px) { .opciones-inicio { grid-template-columns: 1fr; } }
   @media (max-width: 860px) { .cantos { grid-template-columns: 1fr; } .campos { grid-template-columns: 1fr 1fr; } .campos label:last-child { grid-column: span 2; } }
 </style>
 </head>
@@ -36,6 +42,25 @@
       <p class="ayuda">Aquí se guardan el himnario y los coros. Lo que agregues aparece al instante en el buscador de la cabina.</p>
     </div>
   </div>
+  <section class="tarjeta bienvenida" id="bienvenida" hidden>
+    <h2 class="titulo" style="font-size:22px">Tu equipo todavía no tiene cantos</h2>
+    <p class="ayuda">Elige cómo empezar. Lo que agregues lo ve todo el equipo y aparece al instante en el buscador de la cabina.</p>
+    <div class="opciones-inicio">
+      <div class="opcion-inicio">
+        <b>Importar los que ya tienen</b>
+        <p class="chico">Un archivo .txt o .json con muchos cantos. Primero elige abajo si son del <b>Himnario</b> o <b>Coros</b>.</p>
+        <div class="fila envuelve">
+          <label class="btn btn-primario" for="importFile" data-icon="subir">Elegir archivo</label>
+          <button type="button" class="btn btn-sec" id="plantilla" data-icon="bajar">Descargar plantilla</button>
+        </div>
+      </div>
+      <div class="opcion-inicio">
+        <b>Capturarlos uno por uno</b>
+        <p class="chico">Escribe o pega la letra en el editor de la derecha y guarda. Puedes empezar con los que más cantan.</p>
+        <div class="fila"><button type="button" class="btn btn-sec" id="empezarManual" data-icon="editar">Capturar el primero</button></div>
+      </div>
+    </div>
+  </section>
   <div class="cantos">
     <section class="tarjeta">
       <div class="tabs" id="tabs">

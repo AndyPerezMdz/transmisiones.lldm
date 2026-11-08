@@ -74,6 +74,8 @@ async function showHome(sb) {
   bar.append(el('a', { class: 'btn btn-sec', href: '/equipo', text: 'Personas del equipo', 'data-icon': 'personas' }));
 
   $('newRoomBox').hidden = team.role !== 'admin';
+  const { count } = await sb.from('songs').select('id', { count: 'exact', head: true }).eq('team_id', team.id);
+  $('sinCantos').hidden = count !== 0;
   const { data, error } = await sb.from('rooms').select('id, name').eq('team_id', team.id).order('created_at');
   if (error) return toast(error.message);
   if (!data.length) list.append(el('div', { class: 'vacio', text: team.role === 'admin' ? 'Todavía no hay salas. Crea la primera aquí abajo.' : 'Todavía no hay salas en este equipo. Pídele a un administrador que cree una.' }));
@@ -116,14 +118,57 @@ async function showNoTeam(sb) {
     const back = qs.get('volver');
     if (back && back.startsWith('/') && !back.startsWith('//')) location.href = back; else showHome(sb);
   };
-  if (data.session) after(); else $('login').hidden = false;
+  if (qs.has('nueva-contrasena')) { /* se muestra el formulario de contraseña nueva más abajo */ }
+  else if (data.session) after(); else $('login').hidden = false;
 
+  const SUB = { register: 'Crea tu cuenta para unirte al equipo', forgot: 'Recuperar tu contraseña', newpass: 'Contraseña nueva' };
   const show = which => {
     $('loginForm').hidden = which !== 'login';
     $('registerForm').hidden = which !== 'register';
     $('registerDone').hidden = which !== 'done';
-    document.querySelector('.auth-caja .sub').textContent = which === 'register' ? 'Crea tu cuenta para unirte al equipo' : 'Proyección y transmisión del templo';
+    $('forgotForm').hidden = which !== 'forgot';
+    $('newPassForm').hidden = which !== 'newpass';
+    document.querySelector('.auth-caja .sub').textContent = SUB[which] || 'Proyección y transmisión del templo';
   };
+  $('toForgot').onclick = () => { show('forgot'); $('forgotForm').email.value = $('loginForm').email.value; $('forgotForm').email.focus(); };
+  for (const b of document.querySelectorAll('[data-volver]')) b.onclick = () => show('login');
+
+  // Olvidé mi contraseña: se manda un enlace; al volver con él, se pide la nueva.
+  $('forgotForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target, btn = $('forgotBtn'), msg = $('forgotMsg');
+    btn.disabled = true; btn.textContent = 'Mandando…'; msg.hidden = true;
+    const email = f.email.value.trim().toLowerCase();
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/?nueva-contrasena' });
+    btn.disabled = false; btn.textContent = 'Mandar enlace';
+    if (error) { msg.textContent = /rate|seconds/i.test(error.message) ? 'Espera un momento antes de pedir otro enlace.' : 'No se pudo mandar: ' + error.message; msg.hidden = false; return; }
+    const done = $('registerDone');
+    done.replaceChildren('Si hay una cuenta con ', el('b', { text: email }), ', te llegará un correo con el enlace. Ábrelo desde este mismo dispositivo.');
+    const back = el('button', { type: 'button', class: 'btn btn-sec', style: 'margin-top:12px', text: 'Volver a entrar' });
+    back.onclick = () => show('login');
+    done.append(el('br'), back);
+    show('done');
+  });
+  let recovering = qs.has('nueva-contrasena');
+  sb.auth.onAuthStateChange(event => { if (event === 'PASSWORD_RECOVERY') { recovering = true; $('home').hidden = true; $('login').hidden = false; show('newpass'); } });
+  if (recovering) { $('home').hidden = true; $('login').hidden = false; show('newpass'); }
+  $('newPassForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target, btn = $('newPassBtn'), msg = $('newPassMsg');
+    msg.hidden = true;
+    if (f.password.value !== f.password2.value) { msg.textContent = 'Las contraseñas no son iguales.'; msg.hidden = false; return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    const { error } = await sb.auth.updateUser({ password: f.password.value });
+    btn.disabled = false; btn.textContent = 'Guardar contraseña';
+    if (error) {
+      msg.textContent = /session|expired|missing/i.test(error.message) ? 'El enlace ya venció. Pide otro con “¿Olvidaste tu contraseña?”.' : 'No se pudo guardar: ' + error.message;
+      msg.hidden = false; return;
+    }
+    recovering = false;
+    history.replaceState(null, '', '/');
+    toast('Contraseña nueva guardada.', 'ok');
+    showHome(sb);
+  });
   $('toRegister').onclick = () => { show('register'); $('registerForm').name.focus(); };
   $('toLogin').onclick = () => show('login');
 

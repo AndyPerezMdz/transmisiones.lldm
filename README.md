@@ -27,10 +27,24 @@ Si se cae el internet a media reunión, las TVs conectadas a la laptop siguen fu
 1. Crea un proyecto en https://supabase.com.
 2. En **SQL Editor**, pega todo `supabase/todo.sql` y presiona **Run**. Se puede correr las veces que quieras; cuando haya cambios nuevos, vuelve a correrlo. Si usas el CLI, `supabase db push` aplica lo mismo desde `supabase/migrations/`.
 3. En **Authentication → Sign In / Providers → Email**, deja activados *Allow new users to sign up* y *Confirm email*. Cualquiera se puede registrar, pero quien no esté invitado a un equipo no ve nada.
-4. En **Authentication → URL Configuration**, pon en *Site URL* la dirección de tu sitio en Vercel (para que el correo de confirmación regrese ahí).
+4. En **Authentication → URL Configuration**, pon en *Site URL* la dirección de tu sitio en Vercel y agrega `https://tu-sitio/**` en *Redirect URLs* (para que los correos de confirmación y de "Olvidé mi contraseña" regresen ahí).
 5. Regístrate en el sitio, confirma tu correo, entra y crea tu equipo (la congregación). Desde **Equipo** invitas a los demás por correo.
 6. En **Project Settings → API**, copia la *Project URL* y la *publishable key* (o la *anon key* antigua) a `public/config.js`.
    La publishable key está hecha para ir en el navegador. **Nunca** pongas la *secret* / `service_role` key en el repo.
+
+### Correos (obligatorio para que otros se registren)
+
+Sin esto, Supabase **solo manda correos a las personas de tu organización en Supabase y como máximo 2 por hora**: nadie más recibiría la confirmación de registro ni el enlace de "Olvidé mi contraseña".
+
+1. Crea una cuenta gratis en un servicio de correo, por ejemplo [Brevo](https://www.brevo.com) o [Resend](https://resend.com), y verifica el correo o dominio desde el que vas a mandar.
+2. Copia los datos SMTP que te dan: servidor, puerto, usuario y contraseña (o llave).
+3. En Supabase: **Authentication → Emails → SMTP Settings** → *Enable custom SMTP*, pega los datos y pon como remitente algo como `Cabina en Vivo <no-responder@tu-dominio>`.
+4. En **Authentication → Rate Limits**, sube el límite de correos por hora (por ejemplo, a 30).
+5. Opcional: en **Authentication → Emails → Templates** traduce los mensajes de *Confirm signup* y *Reset password* al español.
+
+### Que Supabase no se duerma
+
+El plan gratis pausa el proyecto tras una semana sin actividad. El archivo `.github/workflows/despertar-supabase.yml` hace una consulta pequeña cada día desde GitHub Actions; no hay que configurar nada, solo tener el repo en GitHub. Puedes probarlo en la pestaña **Actions → Despertar Supabase → Run workflow**. (GitHub apaga las tareas programadas de repos que pasan 60 días sin cambios; si pasa, se vuelve a activar desde esa misma pestaña.)
 
 ### 2. Vercel
 

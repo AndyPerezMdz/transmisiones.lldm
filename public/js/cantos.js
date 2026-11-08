@@ -75,6 +75,36 @@ $('tabs').addEventListener('click', e => {
 });
 const sortSongs = () => songs.sort((a, b) => a.kind.localeCompare(b.kind) || (a.number ?? 1e9) - (b.number ?? 1e9) || a.title.localeCompare(b.title));
 
+// ---------- Bienvenida: equipo sin cantos ----------
+function showWelcome() { $('bienvenida').hidden = songs.length > 0; }
+const PLANTILLA = `# 1 Título del primer canto
+[Estrofa 1]
+Primera línea de la estrofa
+Segunda línea de la estrofa
+
+[Coro]
+Primera línea del coro
+Segunda línea del coro
+
+[Estrofa 2]
+Primera línea
+Segunda línea
+
+# 2 Título del segundo canto
+Si no le pones etiqueta, cada bloque se numera solo como estrofa.
+Deja una línea en blanco entre estrofas.
+
+[Coro]
+Las partes que se llamen "Coro" se marcan como coro.
+`;
+$('plantilla').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([PLANTILLA], { type: 'text/plain;charset=utf-8' }));
+  a.download = 'plantilla-cantos.txt';
+  document.body.append(a); a.click(); a.remove();
+};
+$('empezarManual').onclick = () => { edit(null); form.title.focus(); form.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
 // ---------- importar ----------
 $('importFile').addEventListener('change', async e => {
   const file = e.target.files[0]; e.target.value = '';
@@ -114,7 +144,7 @@ $('importFile').addEventListener('change', async e => {
     }
     toast(`Listo: ${done} cantos importados.`, 'ok');
   } catch (err) { toast(`Se importaron ${done}; falló el resto: ${err.message}`); }
-  songs = await loadSongs(team?.id); renderList();
+  songs = await loadSongs(team?.id); renderList(); showWelcome();
 });
 
 (async () => {
@@ -127,5 +157,5 @@ $('importFile').addEventListener('change', async e => {
     document.querySelector('.pagina-cabeza .ayuda').textContent = `Himnario y coros de “${team.name}”. Todo el equipo los ve y los puede editar; lo que agregues aparece al instante en el buscador de la cabina.`;
     songs = await loadSongs(team.id);
   } catch (err) { toast(err.message); }
-  sortSongs(); edit(null);
+  sortSongs(); edit(null); showWelcome();
 })();

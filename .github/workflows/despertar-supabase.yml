@@ -1,0 +1,27 @@
+# Supabase (plan gratis) pausa el proyecto si pasa una semana sin actividad.
+# Esto hace una consulta pequeña cada día para que nunca se duerma antes de un culto.
+# Lee la URL y la llave pública de public/config.js, así que no necesita secretos.
+name: Despertar Supabase
+
+on:
+  schedule:
+    - cron: "17 11 * * *"   # todos los días, 5:17 a. m. en México (centro)
+  workflow_dispatch: {}      # también se puede correr a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+
+jobs:
+  despertar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Consultar la base
+        run: |
+          URL=$(grep -oP "SUPABASE_URL = '\K[^']+" public/config.js)
+          KEY=$(grep -oP "SUPABASE_ANON_KEY = '\K[^']+" public/config.js)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js no tiene Supabase; nada que despertar"; exit 0; fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$URL/rest/v1/rooms?select=id&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "Respuesta: $code"
+          test "$code" -lt 500

@@ -68,3 +68,13 @@ input[type=range] { width: 100%; margin-top: 8px; }
   box-shadow: 0 4px 14px rgb(0 0 0 / .45); cursor: nwse-resize; touch-action: none; }
 .editando .tirador[hidden] { display: none; }
 .editando .lt:not(.on) { transition: none; }
+
+/* Turno: alguien más está editando */
+.turno { position: sticky; top: 57px; z-index: 18; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 20px;
+  background: var(--oro-suave); color: var(--titulo); border-bottom: 1px solid var(--oro); font-weight: 600; font-size: 14.5px; }
+.turno .crece { flex: 1; }
+.turno-icono { font-size: 18px; }
+.solo-lectura .panel, .solo-lectura #bannerStage, .solo-lectura .tirador { pointer-events: none; }
+.solo-lectura #samples .btn-mini { display: none; }
+.solo-lectura .panel { opacity: .55; filter: grayscale(.4); }
+.solo-lectura .tirador { display: none; }

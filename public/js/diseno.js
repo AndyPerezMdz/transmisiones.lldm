@@ -1,6 +1,7 @@
 // Editor de diseño: letrero (cantos, citas, tema), nombre del expositor, logos fijos y letra completa.
 import { demo, supa, requireSession, roomId } from './db.js';
-import { loadRoom, saveDesign } from './live.js';
+import { loadRoom, saveDesign, subscribe } from './live.js';
+import { createTurno } from './turno.js';
 import { $, el, toast, mountNav, modal } from './ui.js';
 import { FONTS, POSITIONS, LAYER_SLOTS, LETREROS, DEFAULT_DESIGN, mergeDesign, placeLayer,
   createBanner, createLayers, createScreen, applyScreenDesign, fitStage } from './render.js';
@@ -129,6 +130,7 @@ $('fakeCam').onchange = camToggle; camToggle();
 // Arrastrar: solo lo que pertenece a la pestaña abierta
 let drag = null, selectedLayer = 'der';
 txStage.addEventListener('pointerdown', e => {
+  if (readOnly) return;
   const target = e.target.closest('[data-drag]');
   if (!target) return;
   const path = target.dataset.drag;
@@ -201,6 +203,7 @@ txStage.addEventListener('pointercancel', endDrag);
 
 // Flechas del teclado para acomodar fino
 document.addEventListener('keydown', e => {
+  if (readOnly) return;
   if (tab === 'screen' || e.target.closest('input, select, textarea')) return;
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (!d) return;
@@ -408,6 +411,7 @@ $('resetScreen').onclick = async () => {
 
 // ---------- Guardar ----------
 function changed() {
+  if (readOnly) { drawTx(); drawScreen(); return; }
   showValues();
   drawTx();
   drawScreen();
@@ -443,6 +447,53 @@ document.addEventListener('click', async e => {
 }, true);
 
 // ---------- Arranque ----------
+// ---------- Turno: una sola persona edita a la vez ----------
+let readOnly = false, hadTurn = false;
+function setReadOnly(on, state) {
+  readOnly = on;
+  document.body.classList.toggle('solo-lectura', on);
+  const bar = $('turnoBar');
+  bar.hidden = !on;
+  if (on) {
+    const who = state.holder?.name || 'Otra persona';
+    $('turnoTxt').textContent = state.checking ? 'Revisando si alguien más está editando el diseño…'
+      : `${who} está editando el diseño. Puedes ver cómo va, pero no mover nada hasta que termine.`;
+    $('turnoTomar').hidden = !!state.checking;
+  }
+  $('saveBar').hidden = on;
+}
+async function reloadDesign() {
+  try { const saved = await loadRoom(room); design = mergeDesign(saved?.design); savedJson = JSON.stringify(design); } catch {}
+  bindLetrero(); bindScreenControls(); renderLayerRows(); changed();
+}
+function startTurno(me) {
+  let first = true;
+  setReadOnly(true, { checking: true });
+  const turno = createTurno('diseno-' + room, me, async state => {
+    const wasFirst = first; first = false;
+    if (state.mine) {
+      const was = readOnly;
+      setReadOnly(false, state);
+      if (was && !wasFirst) { await reloadDesign(); toast('Ya es tu turno: puedes editar el diseño.', 'ok'); }
+      hadTurn = true;
+    } else {
+      const lost = hadTurn && !readOnly;
+      setReadOnly(true, state);
+      if (lost) {
+        // Alguien tomó el turno: lo que no se guardó se descarta para no pisar su trabajo.
+        await modal({ title: 'Alguien más tomó el diseño', text: `${state.holder?.name || 'Otra persona'} está editando ahora. Lo que no guardaste se descartó.`, ok: 'Entendido', cancel: null });
+        await reloadDesign();
+      }
+    }
+  });
+  $('turnoTomar').onclick = async () => {
+    if (await modal({ title: 'Entrar de todos modos', text: 'Úsalo solo si la otra persona ya no está editando (por ejemplo, dejó la página abierta). Lo que no haya guardado se perderá.', ok: 'Sí, entrar', danger: true })) turno.take();
+  };
+  addEventListener('pagehide', () => turno.release());
+  // Mientras miras, ves los cambios que va guardando la otra persona.
+  subscribe(room, () => {}, d => { if (readOnly) { design = mergeDesign(d); savedJson = JSON.stringify(design); bindLetrero(); bindScreenControls(); renderLayerRows(); changed(); } });
+}
+
 (async () => {
   const session = await requireSession();
   mountNav('diseno');
@@ -458,4 +509,6 @@ document.addEventListener('click', async e => {
   bindLetrero(); bindScreenControls(); renderLayerRows();
   fitTx(); fitScreen();
   changed();
+  const meta = session.user.user_metadata || {};
+  startTurno({ id: session.user.id, name: demo ? 'Otra pestaña' : (meta.name || session.user.email || 'Alguien') });
 })();

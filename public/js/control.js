@@ -429,7 +429,7 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
     }
     document.title = (saved?.name ? saved.name + ' · ' : '') + 'Cabina en Vivo';
     if ($('navSala')) $('navSala').textContent = saved?.name || 'Sala de prueba';
-    const [songs, bible] = await Promise.all([loadSongs(), loadBible()]);
+    const [songs, bible] = await Promise.all([loadSongs(saved?.team_id), loadBible()]);
     catalog = createCatalog({ songs, bible });
     setTimeout(() => catalog.warmUp(), 300); // arma el índice de versículos antes de que se necesite
     if (!catalog.counts.songs) toast('Aún no hay cantos. Agrégalos en la pestaña Cantos (arriba).', 'info');

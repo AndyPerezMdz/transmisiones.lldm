@@ -42,12 +42,14 @@ const DEMO_SONGS = [
     { type: 'chorus', label: 'Coro', lines: ['Un coro corto de prueba', 'con dos líneas nada más.'] }] }
 ];
 
-export async function loadSongs() {
+export async function loadSongs(teamId) {
   if (demo) return DEMO_SONGS;
   const sb = await supa();
   const all = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from('songs').select('id, kind, number, title, sections')
+    let q = sb.from('songs').select('id, kind, number, title, sections');
+    if (teamId) q = q.eq('team_id', teamId);
+    const { data, error } = await q
       .order('kind').order('number', { nullsFirst: false }).order('title').range(from, from + 999);
     if (error) throw new Error('No se pudieron cargar los cantos: ' + error.message);
     all.push(...data);
@@ -58,3 +60,30 @@ export async function loadSongs() {
 
 export const qs = new URLSearchParams(location.search);
 export const roomId = () => qs.get('sala') || 'demo';
+
+// ---------- Equipos ----------
+// Todo (cantos, salas, diseños) pertenece a un equipo: la congregación.
+const TEAM_KEY = 'cabina-equipo';
+export async function acceptInvites() {
+  if (demo) return 0;
+  const sb = await supa();
+  const { data } = await sb.rpc('accept_invites');
+  return data || 0;
+}
+export async function myTeams() {
+  if (demo) return [{ id: 'demo', name: 'Equipo de prueba', role: 'admin' }];
+  const sb = await supa();
+  const { data: { user } } = await sb.auth.getUser();
+  const { data, error } = await sb.from('team_members').select('role, team:teams(id, name)').eq('user_id', user.id);
+  if (error) throw new Error(error.message);
+  return data.filter(m => m.team).map(m => ({ id: m.team.id, name: m.team.name, role: m.role }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+export function pickTeam(teams) {
+  let saved = null;
+  try { saved = localStorage.getItem(TEAM_KEY); } catch {}
+  return teams.find(t => t.id === saved) || teams[0] || null;
+}
+export function rememberTeam(id) { try { localStorage.setItem(TEAM_KEY, id); } catch {} }
+// Equipo actual de quien está usando la app (o null si todavía no lo invitan).
+export async function currentTeam() { return pickTeam(await myTeams()); }

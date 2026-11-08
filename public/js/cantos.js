@@ -1,5 +1,5 @@
 // Editor e importador de cantos.
-import { demo, supa, requireSession, loadSongs } from './db.js';
+import { demo, supa, requireSession, loadSongs, currentTeam } from './db.js';
 import { norm } from './detector.js';
 import { parseSongText, songToText, parseSongBook, normalizeSong } from './song-text.js';
 
@@ -7,7 +7,7 @@ import { $, toast, mountNav, modal } from './ui.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-let songs = [], kind = 'hymn', current = null, sb = null;
+let songs = [], kind = 'hymn', current = null, sb = null, team = null;
 const form = $('editor');
 
 function renderList() {
@@ -48,7 +48,7 @@ form.addEventListener('submit', async e => {
     toast('Modo demo: el cambio no se guarda en ningún lado.', 'info');
     kind = row.kind; return edit(saved);
   }
-  const query = current ? sb.from('songs').update(row).eq('id', current.id) : sb.from('songs').insert(row);
+  const query = current ? sb.from('songs').update(row).eq('id', current.id) : sb.from('songs').insert({ ...row, team_id: team.id });
   const { data, error } = await query.select('id, kind, number, title, sections').single();
   if (error) return toast('No se guardó: ' + error.message);
   songs = current ? songs.map(s => s.id === data.id ? data : s) : [...songs, data];
@@ -91,7 +91,7 @@ $('importFile').addEventListener('change', async e => {
   if (!parsed.length) return toast('No encontré cantos en ese archivo. Revisa el formato en el LEEME.');
   const target = kind === 'hymn' ? 'Himnario' : 'Coros';
   if (!(await modal({ title: 'Importar cantos', text: `Se encontraron ${parsed.length} cantos. ¿Agregarlos a "${target}"? Los que tengan el mismo número se reemplazan.`, ok: 'Importar' }))) return;
-  const rows = parsed.map(s => ({ ...s, kind }));
+  const rows = parsed.map(s => ({ ...s, kind, team_id: team?.id }));
   if (demo) {
     songs = [...songs.filter(s => s.kind !== kind || !rows.some(r => r.number && r.number === s.number)),
       ...rows.map((r, i) => ({ ...r, id: 'demo-imp-' + i }))];
@@ -102,7 +102,7 @@ $('importFile').addEventListener('change', async e => {
   let done = 0;
   try {
     for (let i = 0; i < numbered.length; i += 200) {
-      const { error } = await sb.from('songs').upsert(numbered.slice(i, i + 200), { onConflict: 'owner,kind,number' });
+      const { error } = await sb.from('songs').upsert(numbered.slice(i, i + 200), { onConflict: 'team_id,kind,number' });
       if (error) throw error;
       done += Math.min(200, numbered.length - i);
       $('count').textContent = `Importando… ${done} de ${rows.length}`;
@@ -114,13 +114,18 @@ $('importFile').addEventListener('change', async e => {
     }
     toast(`Listo: ${done} cantos importados.`, 'ok');
   } catch (err) { toast(`Se importaron ${done}; falló el resto: ${err.message}`); }
-  songs = await loadSongs(); renderList();
+  songs = await loadSongs(team?.id); renderList();
 });
 
 (async () => {
   await requireSession();
   mountNav('cantos');
   sb = await supa();
-  try { songs = await loadSongs(); } catch (err) { toast(err.message); }
+  try {
+    team = await currentTeam();
+    if (!team) { toast('Todavía no estás en ningún equipo. Ve a Salas para unirte o crear uno.'); return; }
+    document.querySelector('.pagina-cabeza .ayuda').textContent = `Himnario y coros de “${team.name}”. Todo el equipo los ve y los puede editar; lo que agregues aparece al instante en el buscador de la cabina.`;
+    songs = await loadSongs(team.id);
+  } catch (err) { toast(err.message); }
   sortSongs(); edit(null);
 })();

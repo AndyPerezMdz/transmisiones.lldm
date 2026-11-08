@@ -60,7 +60,8 @@ export function mountNav(active, { roomName = '' } = {}) {
       { id: 'cabina', n: 'Cabina', href: withDemo('/control', { sala }) },
       { id: 'diseno', n: 'Diseño', href: withDemo('/diseno', { sala }) }
     ] : []),
-    { id: 'cantos', n: 'Cantos', href: withDemo('/cantos', { sala }) }
+    { id: 'cantos', n: 'Cantos', href: withDemo('/cantos', { sala }) },
+    { id: 'equipo', n: 'Equipo', href: withDemo('/equipo', { sala }) }
   ];
   const linkList = () => el('nav', { class: 'nav-links' },
     links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null, text: l.n })));

@@ -47,10 +47,10 @@ export async function loadRoom(room) {
   if (demo) {
     let design = {};
     try { design = JSON.parse(localStorage.getItem(DEMO_DESIGN_KEY(room)) || '{}'); } catch {}
-    return { id: room, name: 'Sala demo', state: {}, design };
+    return { id: room, name: 'Sala demo', state: {}, design, team_id: 'demo' };
   }
   const sb = await supa();
-  const { data, error } = await sb.from('rooms').select('id, name, state, design').eq('id', room).maybeSingle();
+  const { data, error } = await sb.from('rooms').select('id, name, state, design, team_id').eq('id', room).maybeSingle();
   if (error) throw new Error(error.message);
   return data;
 }

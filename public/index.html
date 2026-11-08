@@ -25,6 +25,15 @@
   .auth-caja .sub { text-align: center; color: var(--suave); font-size: 14px; margin: 6px 0 26px; }
   .auth-caja form { display: flex; flex-direction: column; gap: 16px; }
   .auth-error { border-radius: 12px; background: var(--rojo-suave); color: var(--rojo-texto); padding: 8px 12px; font-size: 14px; }
+  .auth-cambio { text-align: center; font-size: 14px; color: var(--suave); }
+  .enlace { border: 0; background: none; padding: 0; font: inherit; font-weight: 650; color: var(--titulo); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .enlace:hover { color: var(--oro); }
+  .auth-listo { border-radius: 14px; background: var(--verde-suave); color: var(--verde); padding: 14px; font-size: 14.5px; text-align: center; }
+  .auth-listo b { color: var(--titulo); }
+  .equipo-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .equipo-barra .campo { margin: 0; width: auto; min-width: 220px; }
+  .sin-equipo { max-width: 640px; display: flex; flex-direction: column; gap: 14px; }
+  .sin-equipo .campo { margin: 0; }
   .auth-pie { margin-top: 32px; text-align: center; font-size: 12px; letter-spacing: .04em; color: rgb(255 255 255 / .7); }
   .auth-pie a { color: var(--oro-claro); }
 
@@ -65,7 +74,23 @@
       </label>
       <p class="auth-error" id="loginMsg" hidden></p>
       <button class="btn btn-primario btn-bloque" id="loginBtn">Entrar</button>
+      <p class="auth-cambio">¿No tienes cuenta? <button type="button" class="enlace" id="toRegister">Regístrate</button></p>
     </form>
+    <form id="registerForm" hidden>
+      <label class="etiqueta">Tu nombre
+        <input class="campo" name="name" required maxlength="80" autocomplete="name" placeholder="Como quieres que te vean en el equipo">
+      </label>
+      <label class="etiqueta">Correo
+        <input class="campo" name="email" type="email" required autocomplete="email" placeholder="tucorreo@ejemplo.com">
+      </label>
+      <label class="etiqueta">Contraseña
+        <input class="campo" name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+      </label>
+      <p class="auth-error" id="registerMsg" hidden></p>
+      <button class="btn btn-oro btn-bloque" id="registerBtn">Crear mi cuenta</button>
+      <p class="auth-cambio">¿Ya tienes cuenta? <button type="button" class="enlace" id="toLogin">Entra</button></p>
+    </form>
+    <div id="registerDone" class="auth-listo" hidden></div>
   </div>
   <p class="auth-pie">Colonia Sambulá · Mérida, Yucatán</p>
 </main>
@@ -74,9 +99,11 @@
   <div class="pagina-cabeza">
     <div>
       <h1>Tus salas</h1>
-      <p class="ayuda">Una sala es un lugar donde se proyecta (por ejemplo, el templo principal). Sigue los pasos en orden.</p>
+      <p class="ayuda" id="homeAyuda">Una sala es un lugar donde se proyecta (por ejemplo, el templo principal). Sigue los pasos en orden.</p>
     </div>
+    <div class="equipo-barra" id="teamBar"></div>
   </div>
+  <section class="tarjeta sin-equipo" id="noTeam" hidden></section>
   <div class="salas" id="rooms"></div>
   <section class="tarjeta" id="newRoomBox" style="margin-top:20px">
     <h2>Agregar una sala</h2>

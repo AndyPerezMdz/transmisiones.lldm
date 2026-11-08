@@ -26,9 +26,10 @@ Si se cae el internet a media reunión, las TVs conectadas a la laptop siguen fu
 
 1. Crea un proyecto en https://supabase.com.
 2. En **SQL Editor**, pega todo `supabase/todo.sql` y presiona **Run**. Se puede correr las veces que quieras; cuando haya cambios nuevos, vuelve a correrlo. Si usas el CLI, `supabase db push` aplica lo mismo desde `supabase/migrations/`.
-3. En **Authentication → Sign In / Providers → Email**, desactiva *Allow new users to sign up* para que nadie más pueda crear cuenta.
-4. En **Authentication → Users → Add user**, crea tu usuario con correo y contraseña.
-5. En **Project Settings → API**, copia la *Project URL* y la *publishable key* (o la *anon key* antigua) a `public/config.js`.
+3. En **Authentication → Sign In / Providers → Email**, deja activados *Allow new users to sign up* y *Confirm email*. Cualquiera se puede registrar, pero quien no esté invitado a un equipo no ve nada.
+4. En **Authentication → URL Configuration**, pon en *Site URL* la dirección de tu sitio en Vercel (para que el correo de confirmación regrese ahí).
+5. Regístrate en el sitio, confirma tu correo, entra y crea tu equipo (la congregación). Desde **Equipo** invitas a los demás por correo.
+6. En **Project Settings → API**, copia la *Project URL* y la *publishable key* (o la *anon key* antigua) a `public/config.js`.
    La publishable key está hecha para ir en el navegador. **Nunca** pongas la *secret* / `service_role` key en el repo.
 
 ### 2. Vercel
@@ -99,4 +100,5 @@ El **modo demo** (`?demo`, o `config.js` vacío) funciona sin base de datos con 
 
 - La voz usa el reconocimiento del navegador: necesita Chrome o Edge y conexión a internet.
 - La Biblia incluida es la **Reina-Valera 1909**, que es de dominio público (`public/data/rv1909.json`).
-- Seguridad: los cantos solo los ve su dueño. El estado de una sala (lo que se proyecta) lo puede leer cualquiera que tenga el enlace, porque es lo mismo que se ve en las TVs. Solo el dueño puede cambiarlo.
+- Equipos: cantos, salas y diseños pertenecen a un equipo y los comparten todos sus miembros. Los administradores invitan o quitan personas y crean salas; los miembros operan la cabina y editan cantos y diseño. Al entrar, se aceptan solas las invitaciones hechas a tu correo (ya confirmado).
+- Seguridad: los cantos solo los ve su equipo. El estado de una sala (lo que se proyecta) lo puede leer cualquiera que tenga el enlace, porque es lo mismo que se ve en las TVs. Solo su equipo puede cambiarlo.

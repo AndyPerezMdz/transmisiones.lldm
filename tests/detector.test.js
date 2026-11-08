@@ -84,3 +84,13 @@ test('formato de texto de cantos', () => {
   assert.equal(normalizeSong({ number: 4, title: 'Y', sections: [{ type: 'chorus', lines: ['z'] }] }).sections[0].label, 'Coro');
   assert.equal(normalizeSong({ title: '' }), null);
 });
+
+test('versículos por su texto (sin la cita)', () => {
+  assert.equal(cat.findVerses('todo lo puedo en Cristo que me fortalece')[0].label, 'Filipenses 4:13');
+  assert.equal(cat.search('de tal manera amó Dios al mundo')[0].label.split(' · ')[0], 'Juan 3:16');
+  assert.ok(cat.search('Jehová es mi pastor').some(r => r.label.startsWith('Salmos 23:1')));
+  const said = 'hermanos dice la palabra porque de tal manera amó Dios al mundo que ha dado a su hijo unigénito para que todo aquel';
+  assert.equal(cat.findVerses(said, { mode: 'speech' })[0].label, 'Juan 3:16');
+  assert.deepEqual(cat.findVerses('vamos a cantar con mucho gozo hermanos el siguiente canto que todos conocemos', { mode: 'speech' }), []);
+  assert.deepEqual(cat.findVerses('buenas noches'), []);
+});

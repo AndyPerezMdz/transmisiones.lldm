@@ -3,6 +3,11 @@
 import { createDetector, norm } from './detector.js';
 
 const MAX_LINES = 6;
+// Palabras demasiado comunes para buscar un versículo por su texto.
+const STOP = new Set(('a al ante bajo con contra de del desde el en entre hacia hasta la las le les lo los mas me mi mis '
+  + 'no nos o os para pero por que se si sin sobre su sus te ti tu tus un una uno unos y ya yo es era fue son ha he '
+  + 'han como cual cuando donde este esta esto ese esa eso aquel').split(' '));
+const toWords = text => norm(text).replace(/[^a-z0-9ñ ]/g, ' ').split(/\s+/).filter(Boolean);
 
 export function createCatalog({ songs = [], bible }) {
   const books = new Map(bible.books.map(b => [b.name, b.chapters]));
@@ -60,6 +65,75 @@ export function createCatalog({ songs = [], bible }) {
     }
   }
 
+  // ---------- Buscar versículos por lo que dicen (sin la referencia) ----------
+  // Índice de palabras → versículos. Se arma la primera vez que se necesita.
+  let verseIndex = null;
+  function buildVerseIndex() {
+    const verses = [], inv = new Map();
+    for (const b of bible.books) {
+      b.chapters.forEach((ch, ci) => ch.forEach((text, vi) => {
+        const words = toWords(text);
+        const id = verses.length;
+        verses.push({ book: b.name, chapter: ci + 1, verse: vi + 1, words, text });
+        for (const w of new Set(words)) {
+          if (STOP.has(w) || w.length < 3) continue;
+          let list = inv.get(w);
+          if (!list) inv.set(w, list = []);
+          list.push(id);
+        }
+      }));
+    }
+    return { verses, inv };
+  }
+  // Cuántas palabras de "needle" aparecen en "hay", en el mismo orden.
+  function inOrder(needle, hay) {
+    let j = 0, n = 0, content = 0;
+    for (const w of needle) {
+      const k = hay.indexOf(w, j);
+      if (k < 0) continue;
+      n++; if (!STOP.has(w)) content++; j = k + 1;
+    }
+    return { n, content };
+  }
+  // phrase: lo que se escribe en el buscador debe estar dentro del versículo.
+  // speech: el principio del versículo debe estar dentro de lo que se escuchó.
+  function findVerses(text, { mode = 'phrase', limit = 3 } = {}) {
+    const words = toWords(text);
+    const keys = [...new Set(words.filter(w => !STOP.has(w) && w.length >= 3))];
+    if (words.length < 3 || !keys.length) return [];
+    verseIndex ??= buildVerseIndex();
+    const { verses, inv } = verseIndex;
+    const usable = keys.map(w => inv.get(w) || []).filter(l => l.length && l.length < 3500);
+    if (!usable.length) return [];
+    const hits = new Map();
+    for (const list of usable) for (const id of list) hits.set(id, (hits.get(id) || 0) + 1);
+    const need = Math.min(mode === 'speech' ? 3 : 2, usable.length);
+    const candidates = [...hits].filter(([, c]) => c >= need).sort((a, b) => b[1] - a[1]).slice(0, 400);
+    const scored = [];
+    for (const [id] of candidates) {
+      const v = verses[id];
+      let score, ok;
+      if (mode === 'speech') {
+        const head = v.words.slice(0, 16);
+        const m = inOrder(head, words);
+        score = m.n / head.length;
+        ok = score >= 0.75 && m.content >= 4;
+      } else {
+        const m = inOrder(words, v.words);
+        score = m.n / words.length;
+        ok = score >= 0.8 && m.content >= 1;
+      }
+      if (ok) scored.push({ v, score });
+    }
+    scored.sort((a, b) => b.score - a.score || a.v.words.length - b.v.words.length);
+    return scored.slice(0, limit).map(({ v, score }) => {
+      const ref = `${v.book} ${v.chapter}:${v.verse}`;
+      const snippet = v.text.length > 70 ? v.text.slice(0, 68).replace(/\s+\S*$/, '') + '…' : v.text;
+      return { kind: 'bible', key: 'b|' + ref, book: v.book, chapter: v.chapter, from: v.verse, to: null,
+        label: ref, snippet, byText: true, score };
+    });
+  }
+
   function search(q) {
     q = String(q || '').trim();
     if (!q) return [];
@@ -76,13 +150,16 @@ export function createCatalog({ songs = [], bible }) {
         if (score) scored.push({ score, s: e.s });
       }
       scored.sort((a, b) => b.score - a.score || (a.s.number || 1e9) - (b.s.number || 1e9));
-      for (const { s } of scored.slice(0, 12)) {
-        const r = songRef(s);
-        if (!results.some(x => x.key === r.key)) results.push(r);
-      }
+      // Si no escribieron una referencia, también se busca el texto dentro de la Biblia.
+      const verses = results.some(r => r.kind === 'bible') ? [] : findVerses(q, { mode: 'phrase', limit: 4 })
+        .map(v => ({ ...v, label: v.label + ' · ' + v.snippet }));
+      const add = r => { if (!results.some(x => x.key === r.key)) results.push(r); };
+      for (const { s } of scored.filter(x => x.score === 3).slice(0, 4)) add(songRef(s));
+      for (const v of verses) add(v);
+      for (const { s } of scored.slice(0, 12)) add(songRef(s));
     }
     return results.slice(0, 15);
   }
 
-  return { detector, resolve, search, counts: { hymns: hymns.length, coros: coros.length, songs: songs.length } };
+  return { detector, resolve, search, findVerses, warmUp: () => { verseIndex ??= buildVerseIndex(); }, counts: { hymns: hymns.length, coros: coros.length, songs: songs.length } };
 }

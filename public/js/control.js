@@ -207,13 +207,17 @@ function renderSuggestions() {
       const input = el('input', 'campo'); input.value = s.item.text; input.maxLength = 200; input.title = 'Puedes corregirlo antes de ponerlo';
       input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); accept(s); } };
       label.append(input);
-    } else label.textContent = s.item.label;
+    } else {
+      label.textContent = s.item.label;
+      if (s.item.snippet) label.append(el('span', 'snip', '“' + s.item.snippet + '”'));
+    }
     const go = el('button', 'btn btn-primario', 'Poner en pantalla'); go.type = 'button'; go.onclick = () => accept(s);
     if (i === 0) go.title = 'Tecla Enter';
     const no = el('button', 'btn btn-mini', '✕'); no.type = 'button'; no.title = 'Descartar (Supr)'; no.onclick = () => dismiss(s);
     const acc = el('div', 'acc'); acc.append(go, no);
     li.append(el('span', 'kind', ICON[s.item.kind]), label, acc,
-      el('div', 'meta', KIND[s.item.kind] + ' · se dijo ' + ago(s.at) + (s.item.kind === 'theme' ? ' · puedes corregirlo' : '')));
+      el('div', 'meta', KIND[s.item.kind] + (s.item.byText ? ' · lo leyó sin decir la cita · ' + ago(s.at) : ' · se dijo ' + ago(s.at))
+        + (s.item.kind === 'theme' ? ' · puedes corregirlo' : '')));
     ol.append(li);
   });
 }
@@ -221,7 +225,7 @@ setInterval(() => { if (suggestions.length) renderSuggestions(); }, 30000);
 
 // ---------- voz ----------
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, listening = false, lastFinal = '', restartDelay = 250;
+let rec = null, listening = false, lastFinal = '', heardWords = '', restartDelay = 250;
 const micBtn = $('btnMic'), micStatus = $('micStatus');
 const finalsEl = el('div'), interimEl = el('div', 'interim');
 $('transcript').append(interimEl, finalsEl);
@@ -274,6 +278,12 @@ function heard(text) {
   // Se analiza junto con el fragmento anterior para no perder citas partidas en dos.
   const { items, context } = catalog.detector.detect(lastFinal + ' ' + text, { mode: 'speech', context: ctx });
   ctx = context; lastFinal = text;
+  // Si leyó el versículo sin decir la cita, se busca por lo que dijo.
+  heardWords = (heardWords + ' ' + text).split(/\s+/).slice(-60).join(' ');
+  if (!items.some(i => i.kind === 'bible')) {
+    const [verse] = catalog.findVerses(heardWords, { mode: 'speech', limit: 1 });
+    if (verse) { items.push(verse); ctx = { ...ctx, book: verse.book, chapter: verse.chapter }; }
+  }
   const line = el('p'); line.style.margin = '0 0 6px';
   line.append(document.createTextNode(text + ' '));
   for (const it of items) if (addSuggestion(it)) line.append(el('mark', '', ICON[it.kind] + ' ' + it.label), document.createTextNode(' '));
@@ -420,6 +430,7 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
     if ($('navSala')) $('navSala').textContent = saved?.name || 'Sala de prueba';
     const [songs, bible] = await Promise.all([loadSongs(), loadBible()]);
     catalog = createCatalog({ songs, bible });
+    setTimeout(() => catalog.warmUp(), 300); // arma el índice de versículos antes de que se necesite
     if (!catalog.counts.songs) toast('Aún no hay cantos. Agrégalos en la pestaña Cantos (arriba).', 'info');
     commit();
   } catch (err) { toast(err.message); }

@@ -121,21 +121,30 @@ $('importFile').addEventListener('change', async e => {
   if (!parsed.length) return toast('No encontré cantos en ese archivo. Revisa el formato en el LEEME.');
   const target = kind === 'hymn' ? 'Himnario' : 'Coros';
   if (!(await modal({ title: 'Importar cantos', text: `Se encontraron ${parsed.length} cantos. ¿Agregarlos a "${target}"? Los que tengan el mismo número se reemplazan.`, ok: 'Importar' }))) return;
-  const rows = parsed.map(s => ({ ...s, kind, team_id: team?.id }));
+  await importSongs(parsed.map(s => ({ ...s, kind })));
+});
+
+// Guarda cantos en el equipo: los numerados reemplazan al del mismo número;
+// los que no tienen número solo se agregan si no hay uno con el mismo título.
+async function importSongs(list) {
+  const rows = list.map(s => ({ number: s.number || null, title: s.title, sections: s.sections, kind: s.kind, team_id: team?.id }));
   if (demo) {
-    songs = [...songs.filter(s => s.kind !== kind || !rows.some(r => r.number && r.number === s.number)),
-      ...rows.map((r, i) => ({ ...r, id: 'demo-imp-' + i }))];
-    sortSongs(); renderList();
-    return toast(`Modo demo: ${rows.length} cantos cargados solo en esta pestaña.`, 'info');
+    songs = [...songs.filter(s => !rows.some(r => r.kind === s.kind && r.number && r.number === s.number)),
+      ...rows.map((r, i) => ({ ...r, id: 'demo-imp-' + Date.now() + i }))];
+    sortSongs(); renderList(); showWelcome();
+    return toast(`Modo de prueba: ${rows.length} cantos cargados solo en esta pestaña.`, 'info');
   }
-  const numbered = rows.filter(r => r.number), loose = rows.filter(r => !r.number);
+  const numbered = rows.filter(r => r.number);
+  const have = new Set(songs.filter(s => !s.number).map(s => s.kind + '|' + s.title.trim().toLowerCase()));
+  const loose = rows.filter(r => !r.number && !have.has(r.kind + '|' + r.title.trim().toLowerCase()));
+  const total = numbered.length + loose.length;
   let done = 0;
   try {
     for (let i = 0; i < numbered.length; i += 200) {
       const { error } = await sb.from('songs').upsert(numbered.slice(i, i + 200), { onConflict: 'team_id,kind,number' });
       if (error) throw error;
       done += Math.min(200, numbered.length - i);
-      $('count').textContent = `Importando… ${done} de ${rows.length}`;
+      $('count').textContent = `Importando… ${done} de ${total}`;
     }
     for (let i = 0; i < loose.length; i += 200) {
       const { error } = await sb.from('songs').insert(loose.slice(i, i + 200));
@@ -144,8 +153,24 @@ $('importFile').addEventListener('change', async e => {
     }
     toast(`Listo: ${done} cantos importados.`, 'ok');
   } catch (err) { toast(`Se importaron ${done}; falló el resto: ${err.message}`); }
-  songs = await loadSongs(team?.id); renderList(); showWelcome();
-});
+  songs = await loadSongs(team?.id); sortSongs(); renderList(); showWelcome();
+}
+
+// ---------- Himnario y coros base (recursos de Proyector LLDM, de Huri Tolentino) ----------
+async function importBase() {
+  const ok = await modal({ title: 'Usar el himnario y coros base',
+    text: 'Se agregan 676 himnos y 386 coros tomados de los recursos de Proyector LLDM, de Huri Tolentino (licencia PolyForm Noncommercial: solo sin fines de lucro). Si ya tienes un canto con el mismo número, se reemplaza. Los errores que traigan los puedes corregir aquí mismo.',
+    ok: 'Agregar' });
+  if (!ok) return;
+  const btns = document.querySelectorAll('[data-base]');
+  btns.forEach(b => { b.disabled = true; });
+  try {
+    const [h, c] = await Promise.all(['himnario', 'coros'].map(f => fetch(`/data/catalogo-base/${f}.json`).then(r => { if (!r.ok) throw new Error('No se pudo descargar el catálogo.'); return r.json(); })));
+    await importSongs([...h.map(s => ({ ...s, kind: 'hymn' })), ...c.map(s => ({ ...s, kind: 'coro' }))]);
+  } catch (err) { toast(err.message); }
+  btns.forEach(b => { b.disabled = false; });
+}
+for (const b of document.querySelectorAll('[data-base]')) b.onclick = importBase;
 
 (async () => {
   await requireSession();

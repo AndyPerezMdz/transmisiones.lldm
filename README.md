@@ -116,3 +116,10 @@ El **modo demo** (`?demo`, o `config.js` vacío) funciona sin base de datos con 
 - La Biblia incluida es la **Reina-Valera 1909**, que es de dominio público (`public/data/rv1909.json`).
 - Equipos: cantos, salas y diseños pertenecen a un equipo y los comparten todos sus miembros. Los administradores invitan o quitan personas y crean salas; los miembros operan la cabina y editan cantos y diseño. Al entrar, se aceptan solas las invitaciones hechas a tu correo (ya confirmado).
 - Seguridad: los cantos solo los ve su equipo. El estado de una sala (lo que se proyecta) lo puede leer cualquiera que tenga el enlace, porque es lo mismo que se ve en las TVs. Solo su equipo puede cambiarlo.
+
+## Créditos
+
+- **Himnario y coros base** (`public/data/catalogo-base/`): vienen de los recursos de [Proyector LLDM](https://github.com/HuriTolentino/ProyectorLLDM), de **Huri Tolentino**, bajo su licencia PolyForm Noncommercial 1.0.0 (copia en esa carpeta). Por eso esos catálogos solo se pueden usar y compartir **sin fines de lucro**. En la app se ofrecen como opción en **Cantos**; cada equipo decide si los agrega.
+- **Biblia:** Reina-Valera 1909 (dominio público).
+- **Fuentes:** licencias libres, ver `public/fonts/LICENCIAS.txt`.
+- **Íconos:** [Lucide](https://lucide.dev) (licencia ISC).

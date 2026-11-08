@@ -1,0 +1,13 @@
+Himnario y coros base
+
+Estos catálogos vienen de los recursos de Proyector LLDM, de Huri Tolentino:
+https://github.com/HuriTolentino/ProyectorLLDM
+
+Se comparten bajo su licencia, PolyForm Noncommercial 1.0.0 (copia en
+LICENCIA-PolyForm-Noncommercial.txt): se pueden usar, copiar y compartir
+libremente, siempre que sea sin fines de lucro y conservando este aviso.
+
+En Cabina en Vivo solo se convirtieron al formato de la app; el contenido
+es el mismo. Los errores que traigan se pueden corregir desde la página Cantos.
+
+Required Notice: Copyright (c) 2026 Huri Tolentino (https://github.com/HuriTolentino/ProyectorLLDM)

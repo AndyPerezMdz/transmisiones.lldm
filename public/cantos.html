@@ -26,11 +26,14 @@
   .formato { font-size: 13px; color: var(--suave); background: var(--campo); border: 1px solid var(--borde); border-radius: 12px; padding: 10px 12px; }
   .importar { margin-top: 16px; }
   .bienvenida { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-  .opciones-inicio { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opciones-inicio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .opcion-inicio.destacada { border-color: var(--oro); background: var(--oro-suave); }
+  .credito { font-size: 12px; color: var(--suave); margin-top: 8px; }
+  .credito a { color: inherit; }
   .opcion-inicio { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; border: 1px solid var(--borde); background: var(--campo); }
   .opcion-inicio b { color: var(--titulo); }
   .envuelve { flex-wrap: wrap; }
-  @media (max-width: 760px) { .opciones-inicio { grid-template-columns: 1fr; } }
+  @media (max-width: 960px) { .opciones-inicio { grid-template-columns: 1fr; } }
   @media (max-width: 860px) { .cantos { grid-template-columns: 1fr; } .campos { grid-template-columns: 1fr 1fr; } .campos label:last-child { grid-column: span 2; } }
 </style>
 </head>
@@ -46,6 +49,11 @@
     <h2 class="titulo" style="font-size:22px">Tu equipo todavía no tiene cantos</h2>
     <p class="ayuda">Elige cómo empezar. Lo que agregues lo ve todo el equipo y aparece al instante en el buscador de la cabina.</p>
     <div class="opciones-inicio">
+      <div class="opcion-inicio destacada">
+        <b>Usar el himnario y coros base</b>
+        <p class="chico">676 himnos y 386 coros listos para usar. Vienen de los recursos de <a href="https://github.com/HuriTolentino/ProyectorLLDM" target="_blank" rel="noopener">Proyector LLDM</a>, de <b>Huri Tolentino</b>, que los comparte sin fines de lucro.</p>
+        <div class="fila"><button type="button" class="btn btn-oro" data-base data-icon="himno">Agregar himnario y coros</button></div>
+      </div>
       <div class="opcion-inicio">
         <b>Importar los que ya tienen</b>
         <p class="chico">Un archivo .txt o .json con muchos cantos. Primero elige abajo si son del <b>Himnario</b> o <b>Coros</b>.</p>
@@ -74,6 +82,8 @@
         <label class="btn btn-sec btn-bloque" for="importFile" data-icon="subir">Importar muchos cantos (archivo)</label>
         <input id="importFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
         <p class="chico" style="margin-top:6px">Acepta .txt o .json. Se agregan a la pestaña que tengas abierta.</p>
+        <button type="button" class="btn btn-mini" data-base data-icon="himno" data-icon-size="15" style="margin-top:4px">Agregar el himnario y coros base</button>
+        <p class="credito">Himnario y coros base: de los recursos de <a href="https://github.com/HuriTolentino/ProyectorLLDM" target="_blank" rel="noopener">Proyector LLDM</a>, por Huri Tolentino · licencia PolyForm Noncommercial.</p>
       </div>
     </section>
     <section class="tarjeta">

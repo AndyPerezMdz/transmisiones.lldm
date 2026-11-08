@@ -1,0 +1,60 @@
+# PolyForm Noncommercial License 1.0.0
+
+<https://polyformproject.org/licenses/noncommercial/1.0.0>
+
+Copyright (c) 2026 Huri Tolentino
+
+Resumen en español:
+Este software es de código abierto para uso comunitario y no comercial.
+Cualquier persona o congregación puede usarlo, modificarlo y compartirlo gratuitamente.
+Queda estrictamente prohibida su venta, comercialización, cobro o redistribución con fines de lucro.
+
+---
+
+## Purpose
+
+This license allows you to use, modify, and share this software for noncommercial purposes only.
+
+## Agreement
+
+In order to receive this license, you have to agree to its rules. The rules of this license are both terms of your agreement with us and conditions to your license. Don't do anything with this software that is not authorized by this license.
+
+## Notices
+
+You must ensure that everyone who gets a copy of any part of this software from you also gets a copy of this license.
+
+## Noncommercial Purpose
+
+Any purpose is noncommercial if it is not primarily intended for or directed towards commercial advantage or monetary compensation.
+
+## Commercial Advantage
+
+Commercial advantage includes doing business or using this software in the conduct of a trade, occupation, or business for profit.
+
+## Monetary Compensation
+
+Monetary compensation includes direct or indirect payment, reimbursement, or compensation of any kind for this software or services related to it.
+
+## Permitted Uses
+
+You may run, copy, modify, distribute, and display this software, provided you do so for noncommercial purposes only.
+
+## Fair Use
+
+You may use this software as allowed by fair use, fair dealing, or similar statutory exceptions.
+
+## No Other Rights
+
+These terms do not grant you any other rights, including any rights under patents, trademarks, or trade dress.
+
+## Changes
+
+We may change this software at any time, but those changes will not affect your license under these terms for versions of the software that were released before the change.
+
+## No Warranty
+
+As far as the law allows, this software is provided as is, without any warranty, express or implied, including warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+## Liability
+
+As far as the law allows, we will not be liable for any damages arising out of or related to this software or these terms, including direct, indirect, special, incidental, or consequential damages.

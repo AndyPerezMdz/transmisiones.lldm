@@ -6,12 +6,18 @@
 <meta name="theme-color" content="#0a3156">
 <title>Cabina · Cabina en Vivo</title>
 <link rel="icon" href="/img/icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/img/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/control.css">
 </head>
 <body>
 <main class="cab">
+  <div class="acompanado" id="otrosBar" hidden>
+    <span>👀</span><span id="otrosTxt"></span>
+  </div>
   <div class="primera" id="primeraVez" hidden>
     <div><b>¿Primera vez aquí?</b> Mira en un minuto cómo se usa la cabina.</div>
     <div class="fila"><button class="btn btn-oro" id="verGuia" type="button">Ver cómo se usa</button><button class="btn btn-mini" id="cerrarPrimera" type="button">Ya sé</button></div>
@@ -53,7 +59,8 @@
     <section class="tarjeta" id="voicePanel">
       <div class="tarjeta-cabeza">
         <div class="fila"><span class="paso">1</span><h2>Escuchar al expositor</h2></div>
-        <button class="btn btn-primario mic" id="btnMic" type="button">🎙 Escuchar</button>
+        <div class="fila"><button class="btn btn-mini" id="btnMicTest" type="button">Probar micrófono</button>
+        <button class="btn btn-primario mic" id="btnMic" type="button">🎙 Escuchar</button></div>
       </div>
       <p class="ayuda" id="micStatus">Presiona <b>Escuchar</b> y la cabina te irá sugiriendo las citas, himnos, coros y el tema que mencione.</p>
       <ol class="cards" id="suggestions"></ol>
@@ -92,6 +99,12 @@
   </div>
 </main>
 
+<nav class="barra-movil" aria-label="Controles rápidos">
+  <button class="btn btn-sec" id="mPrev" type="button">◀</button>
+  <button class="btn btn-primario" id="mNext" type="button">Siguiente ▶</button>
+  <button class="btn btn-peligro" id="mClear" type="button">Quitar</button>
+</nav>
+
 <dialog id="settings">
   <form method="dialog" class="dialogo" id="settingsForm">
     <h2 class="titulo" style="font-size:22px">Ajustes de la sala</h2>
@@ -125,6 +138,25 @@
       <button class="btn btn-primario" value="save">Guardar</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="micTest">
+  <div class="dialogo">
+    <h2 class="titulo" style="font-size:22px">Probar el micrófono</h2>
+    <div class="prueba-mic">
+      <span class="chico">Micrófono que está usando el navegador</span>
+      <b id="micName">Pidiendo permiso…</b>
+      <div class="nivel"><div class="nivel-barra" id="micLevel"></div></div>
+      <span class="chico" id="micHint">Habla: la barra debe moverse con tu voz.</span>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Di estas frases (con voz normal)</h3>
+      <ol class="frases" id="micPhrases"></ol>
+    </div>
+    <div class="oido-prueba"><span class="chico">Lo último que se escuchó</span><p id="micHeard">—</p></div>
+    <p class="chico">Si el micrófono no es el que quieres (por ejemplo, el receptor DJI), elígelo en Windows → Configuración → Sonido → Entrada, o en el candado 🔒 de la barra de direcciones, y vuelve a abrir esta prueba.</p>
+    <div class="dialogo-pie"><button class="btn btn-primario" type="button" id="micTestClose">Terminar</button></div>
+  </div>
 </dialog>
 
 <dialog id="guia">

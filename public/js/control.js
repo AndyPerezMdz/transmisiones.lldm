@@ -2,6 +2,7 @@
 import { demo, requireSession, loadSongs, loadBible, roomId } from './db.js';
 import { createCatalog } from './catalog.js';
 import { createPublisher, loadRoom } from './live.js';
+import { createTurno } from './turno.js';
 import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -112,6 +113,9 @@ function render() {
     $('onairSub').textContent = state.theme ? state.theme : 'Cuando pongas algo, aparecerá aquí.';
   }
   $('btnPrev').disabled = !item || state.index === 0;
+  $('mPrev').disabled = !item || state.index === 0;
+  $('mNext').disabled = !item || state.index >= item.slides.length - 1;
+  $('mClear').disabled = !item && !state.overlay.visible;
   $('btnNext').disabled = !item || state.index >= item.slides.length - 1;
   $('btnBlank').disabled = !item;
   $('btnBlank').textContent = state.blank ? 'Mostrar texto' : 'Ocultar texto';
@@ -281,17 +285,83 @@ function heard(text) {
   ctx = context; lastFinal = text;
   // Si leyó el versículo sin decir la cita, se busca por lo que dijo.
   heardWords = (heardWords + ' ' + text).split(/\s+/).slice(-60).join(' ');
-  if (!items.some(i => i.kind === 'bible')) {
-    const [verse] = catalog.findVerses(heardWords, { mode: 'speech', limit: 1 });
-    if (verse) { items.push(verse); ctx = { ...ctx, book: verse.book, chapter: verse.chapter }; }
-  }
+  const [verse] = catalog.findVerses(heardWords, { mode: 'speech', limit: 1 });
+  if (verse && !items.some(i => i.key === verse.key)) { items.push(verse); ctx = { ...ctx, book: verse.book, chapter: verse.chapter }; }
   const line = el('p'); line.style.margin = '0 0 6px';
   line.append(document.createTextNode(text + ' '));
+  // Durante la prueba de micrófono no se llenan las sugerencias de la cabina.
+  if (micTest) { micTestHeard(text, items); return; }
   for (const it of items) if (addSuggestion(it)) line.append(el('mark', '', ICON[it.kind] + ' ' + it.label), document.createTextNode(' '));
   finalsEl.prepend(line);
   while (finalsEl.children.length > 40) finalsEl.lastChild.remove();
 }
 window.simularVoz = heard; // para probar sin micrófono desde la consola
+
+// ---------- Prueba de micrófono ----------
+const PHRASES = [
+  { say: 'Juan capítulo tres, versículo dieciséis', expect: 'Juan 3:16', ok: i => i.kind === 'bible' && i.label === 'Juan 3:16' },
+  { say: 'Cantemos el himno número uno', expect: 'Himno 1', ok: i => i.kind === 'hymn' && i.number === 1 },
+  { say: 'El tema de hoy es la fe que vence al mundo', expect: 'Tema', ok: i => i.kind === 'theme' },
+  { say: 'Jehová es mi pastor, nada me faltará, en lugares de delicados pastos', expect: 'Salmos 23:1 (sin decir la cita)', ok: i => i.kind === 'bible' && i.byText && i.label === 'Salmos 23:1' }
+];
+let micTest = null;
+function micTestHeard(text, items) {
+  if (!micTest) return;
+  $('micHeard').textContent = text;
+  PHRASES.forEach((p, n) => { if (items.some(p.ok)) micTest.done.add(n); });
+  renderPhrases();
+}
+function renderPhrases() {
+  $('micPhrases').replaceChildren(...PHRASES.map((p, n) => {
+    const li = el('li', micTest?.done.has(n) ? 'hecho' : '');
+    const txt = el('span', '', '“' + p.say + '”'); txt.append(el('small', '', 'Debe aparecer: ' + p.expect));
+    li.append(el('span', 'ok', '✓'), txt);
+    return li;
+  }));
+}
+async function openMicTest() {
+  micTest = { done: new Set(), startedListening: false };
+  renderPhrases();
+  $('micHeard').textContent = '—';
+  $('micTest').showModal();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const track = stream.getAudioTracks()[0];
+    $('micName').textContent = track?.label || 'Micrófono predeterminado';
+    const ctxA = new (window.AudioContext || window.webkitAudioContext)();
+    const an = ctxA.createAnalyser(); an.fftSize = 1024;
+    ctxA.createMediaStreamSource(stream).connect(an);
+    const buf = new Float32Array(an.fftSize);
+    let quiet = 0;
+    const loop = () => {
+      if (!micTest) return;
+      an.getFloatTimeDomainData(buf);
+      const rms = Math.sqrt(buf.reduce((a, v) => a + v * v, 0) / buf.length);
+      const pct = Math.min(100, Math.round(rms * 400));
+      $('micLevel').style.width = pct + '%';
+      quiet = pct < 3 ? quiet + 1 : 0;
+      $('micHint').textContent = quiet > 240 ? 'No se oye nada. Revisa que el micrófono esté encendido y sea el correcto.' : 'Habla: la barra debe moverse con tu voz.';
+      micTest.raf = requestAnimationFrame(loop);
+    };
+    Object.assign(micTest, { stream, ctxA });
+    loop();
+  } catch (err) {
+    $('micName').textContent = 'No hay permiso para usar el micrófono';
+    $('micHint').textContent = 'Da clic en el candado 🔒 de la barra de direcciones y permite el micrófono.';
+  }
+  if (!listening && SR) { micTest.startedListening = true; startListening(); }
+}
+function closeMicTest() {
+  if (!micTest) return;
+  cancelAnimationFrame(micTest.raf);
+  micTest.stream?.getTracks().forEach(t => t.stop());
+  micTest.ctxA?.close();
+  if (micTest.startedListening) stopListening();
+  micTest = null;
+}
+$('btnMicTest').onclick = openMicTest;
+$('micTestClose').onclick = () => $('micTest').close();
+$('micTest').addEventListener('close', closeMicTest);
 
 // ---------- buscador ----------
 const search = $('search');
@@ -327,6 +397,9 @@ themeInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.prevent
 
 // ---------- botones y teclado ----------
 $('btnPrev').onclick = actions.prev;
+$('mPrev').onclick = actions.prev;
+$('mNext').onclick = actions.next;
+$('mClear').onclick = actions.clear;
 $('btnNext').onclick = actions.next;
 $('btnClear').onclick = actions.clear;
 $('btnBlank').onclick = actions.blank;
@@ -412,8 +485,15 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
 
 // ---------- arranque ----------
 (async () => {
-  await requireSession();
+  const session = await requireSession();
   mountNav('cabina');
+  // Aviso si alguien más tiene abierta la cabina de esta sala (no bloquea: solo avisa).
+  const meta = session.user.user_metadata || {};
+  createTurno('cabina-' + room, { id: session.user.id, name: demo ? 'Otra pestaña' : (meta.name || session.user.email || 'Alguien') }, st => {
+    const names = [...new Set(st.others.map(o => o.name))];
+    $('otrosBar').hidden = !names.length;
+    $('otrosTxt').textContent = names.length ? `${names.join(', ')} también ${names.length > 1 ? 'tienen' : 'tiene'} abierta esta cabina. Pónganse de acuerdo: lo que uno ponga reemplaza lo del otro.` : '';
+  });
   setupGuide();
   $('monitor').src = withDemo('/overlay', { sala: room, preview: 'cam' });
   if (demo) toast('Modo de prueba: no se guarda nada y solo funciona en esta computadora.', 'info');

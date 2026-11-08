@@ -11,8 +11,9 @@ export function createTurno(name, me, onChange) {
   function decide(list) {
     const people = list.slice().sort((a, b) => a.since - b.since || (a.key < b.key ? -1 : 1));
     const holder = people[0] || null;
-    const state = { mine: !holder || holder.key === key, holder, waiting: people.length - 1 };
-    const sig = JSON.stringify([state.mine, holder?.key, state.waiting]);
+    const others = people.filter(p => p.key !== key);
+    const state = { mine: !holder || holder.key === key, holder, waiting: people.length - 1, others };
+    const sig = JSON.stringify([state.mine, holder?.key, others.map(o => o.key + o.name)]);
     if (sig !== last) { last = sig; onChange(state); }
   }
 

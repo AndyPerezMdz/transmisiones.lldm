@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0a3156">
 <title>Equipo · Cabina en Vivo</title>
 <link rel="icon" href="/img/icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/img/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <script>try{var t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')document.documentElement.classList.add('dark')}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
@@ -22,6 +25,9 @@
   .rol.admin { background: var(--oro-suave); color: var(--titulo); border-color: var(--oro); }
   .invitar { display: flex; flex-direction: column; gap: 12px; }
   .invitar .campo { margin-top: 6px; }
+  .columna { display: flex; flex-direction: column; gap: 16px; }
+  .respaldo { display: flex; flex-direction: column; gap: 12px; }
+  .envuelve { flex-wrap: wrap; }
   .pasos-inv { margin: 0; padding-left: 20px; color: var(--suave); font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
   @media (max-width: 900px) { .equipo { grid-template-columns: 1fr; } .persona { grid-template-columns: 40px minmax(0,1fr); } .persona .acc { grid-column: 1 / -1; justify-content: flex-end; } }
 </style>
@@ -44,6 +50,7 @@
         <ol class="personas" id="invites"></ol>
       </div>
     </section>
+    <div class="columna">
     <section class="tarjeta" id="inviteBox" hidden>
       <form class="invitar" id="inviteForm">
         <h2>Invitar a alguien</h2>
@@ -64,6 +71,17 @@
         </ol>
       </form>
     </section>
+    <section class="tarjeta respaldo" id="backupBox">
+      <h2>Respaldo</h2>
+      <p class="ayuda">Descarga un archivo con todos los cantos y el diseño de cada sala. Guárdalo en tu computadora o en Drive; si alguien borra algo sin querer, lo regresas desde aquí.</p>
+      <div class="fila envuelve">
+        <button type="button" class="btn btn-primario" id="backupDownload">⬇ Descargar respaldo</button>
+        <label class="btn btn-sec" for="backupFile" id="backupRestoreLabel">⬆ Restaurar desde archivo</label>
+        <input type="file" id="backupFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="chico" id="backupNote">Restaurar no borra nada: agrega lo que falte y reemplaza los cantos con el mismo número y el diseño de las salas con el mismo nombre.</p>
+    </section>
+    </div>
   </div>
 </main>
 <script type="module" src="/js/equipo.js"></script>

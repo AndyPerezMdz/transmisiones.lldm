@@ -101,7 +101,7 @@ input[type=color].campo { padding: 4px; height: 44px; cursor: pointer; }
 
 /* ---------- Tarjetas ---------- */
 .tarjeta { background: var(--superficie); border: 1px solid color-mix(in srgb, var(--borde) 70%, transparent); border-radius: 24px; padding: 24px; box-shadow: var(--sombra); }
-.tarjeta-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.tarjeta-cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin-bottom: 14px; }
 .paso { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; flex: none;
   background: linear-gradient(to bottom, var(--oro-claro), var(--oro)); color: var(--marca-oscuro); font-weight: 800; font-size: 13px; }
 .vacio { border: 1.5px dashed var(--borde-fuerte); border-radius: 16px; padding: 18px; text-align: center; color: var(--suave); font-size: 14px; }

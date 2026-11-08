@@ -1,5 +1,7 @@
 // Personas del equipo: invitar, cambiar permisos, quitar o salirse.
-import { demo, supa, requireSession, currentTeam } from './db.js';
+import { demo, supa, requireSession, currentTeam, loadSongs } from './db.js';
+import { loadRoom, saveDesign } from './live.js';
+import { normalizeSong } from './song-text.js';
 import { $, el, toast, mountNav, modal } from './ui.js';
 
 let sb = null, team = null, me = null;
@@ -88,6 +90,76 @@ function renderActions() {
   };
   box.append(rename);
 }
+
+// ---------- Respaldo ----------
+const today = () => new Date().toISOString().slice(0, 10);
+$('backupDownload').onclick = async () => {
+  const btn = $('backupDownload'); btn.disabled = true; btn.textContent = 'Preparando…';
+  try {
+    const songs = await loadSongs(team?.id);
+    let rooms;
+    if (demo) rooms = [await loadRoom('demo')].map(r => ({ name: r.name, design: r.design }));
+    else {
+      const { data, error } = await sb.from('rooms').select('name, design').eq('team_id', team.id).order('created_at');
+      if (error) throw error;
+      rooms = data;
+    }
+    const backup = { app: 'Cabina en Vivo', version: 1, fecha: new Date().toISOString(), equipo: team?.name || 'Equipo de prueba',
+      cantos: songs.map(({ kind, number, title, sections }) => ({ kind, number, title, sections })), salas: rooms };
+    const blob = new Blob([JSON.stringify(backup, null, 1)], { type: 'application/json' });
+    const a = el('a', { href: URL.createObjectURL(blob), download: `respaldo-cabina-${today()}.json` });
+    document.body.append(a); a.click(); a.remove();
+    toast(`Respaldo listo: ${backup.cantos.length} cantos y ${rooms.length} sala(s).`, 'ok');
+  } catch (err) { toast('No se pudo hacer el respaldo: ' + err.message); }
+  btn.disabled = false; btn.textContent = '⬇ Descargar respaldo';
+};
+
+$('backupFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { return toast('Ese archivo no es un respaldo válido.'); }
+  if (data?.app !== 'Cabina en Vivo' || !Array.isArray(data.cantos)) return toast('Ese archivo no es un respaldo de Cabina en Vivo.');
+  const songs = data.cantos.map(s => ({ ...normalizeSong(s), kind: s.kind === 'coro' ? 'coro' : 'hymn' })).filter(s => s.title);
+  const rooms = Array.isArray(data.salas) ? data.salas.filter(r => r?.name) : [];
+  const ok = await modal({ title: 'Restaurar respaldo', ok: 'Restaurar',
+    text: `Respaldo del ${String(data.fecha || '').slice(0, 10)} (${data.equipo || 'sin nombre'}): ${songs.length} cantos y ${rooms.length} sala(s). Se agregan a “${team?.name || 'este equipo'}”; los cantos con el mismo número y las salas con el mismo nombre se reemplazan.` });
+  if (!ok) return;
+  if (demo) {
+    if (rooms[0]?.design) await saveDesign('demo', rooms[0].design);
+    return toast('Modo de prueba: se restauró el diseño; los cantos no se guardan.', 'info');
+  }
+  let done = 0;
+  try {
+    const numbered = songs.filter(s => s.number).map(s => ({ ...s, team_id: team.id }));
+    const loose = songs.filter(s => !s.number).map(s => ({ ...s, team_id: team.id }));
+    for (let i = 0; i < numbered.length; i += 200) {
+      const { error } = await sb.from('songs').upsert(numbered.slice(i, i + 200), { onConflict: 'team_id,kind,number' });
+      if (error) throw error;
+      done += Math.min(200, numbered.length - i);
+    }
+    // Los que no tienen número solo se agregan si no existe uno con el mismo título.
+    const { data: existing } = await sb.from('songs').select('kind, title').eq('team_id', team.id).is('number', null);
+    const have = new Set((existing || []).map(s => s.kind + '|' + s.title.toLowerCase()));
+    const missing = loose.filter(s => !have.has(s.kind + '|' + s.title.toLowerCase()));
+    for (let i = 0; i < missing.length; i += 200) {
+      const { error } = await sb.from('songs').insert(missing.slice(i, i + 200));
+      if (error) throw error;
+      done += Math.min(200, missing.length - i);
+    }
+    const { data: mine } = await sb.from('rooms').select('id, name').eq('team_id', team.id);
+    let roomsDone = 0;
+    for (const r of rooms) {
+      const match = (mine || []).find(m => m.name.trim().toLowerCase() === r.name.trim().toLowerCase());
+      if (match) { await saveDesign(match.id, r.design || {}); roomsDone++; }
+      else if (isAdmin()) {
+        const { error } = await sb.from('rooms').insert({ name: r.name, team_id: team.id, design: r.design || {} });
+        if (!error) roomsDone++;
+      }
+    }
+    toast(`Listo: ${done} cantos y ${roomsDone} sala(s) restaurados.`, 'ok');
+  } catch (err) { toast(`Se restauraron ${done} cantos; falló el resto: ${err.message}`); }
+});
 
 $('inviteForm').addEventListener('submit', async e => {
   e.preventDefault();

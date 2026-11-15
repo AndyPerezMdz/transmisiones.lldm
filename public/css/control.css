@@ -91,7 +91,7 @@
 
 @media (max-width: 1000px) {
   .ahora { grid-template-columns: 1fr; }
-  .monitor { max-width: 520px; }
+  .monitor-col { max-width: 520px; }
   .cab-cols { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
@@ -114,7 +114,7 @@
   .barra-movil #mNext { flex: 2; }
   .controles #btnPrev, .controles #btnNext, .controles #btnClear { display: none; }
   .controles #btnBlank { flex: 1; }
-  .monitor { max-width: none; }
+  .monitor-col { max-width: none; }
   .ahora-titulo { font-size: 21px; }
   .cab-cols #searchPanel { order: 1; }
   .cab-cols #voicePanel { order: 2; }
@@ -186,3 +186,23 @@
 .piezas-obs summary { cursor: pointer; }
 #urlPiezas { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 #urlPiezas code { display: block; }
+
+/* Vista previa: simulada u OBS en vivo */
+.monitor-col { display: flex; flex-direction: column; gap: 8px; align-self: start; min-width: 0; width: 100%; }
+.monitor-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.monitor-pie .segmento { display: flex; gap: 6px; }
+.monitor-pie .chip { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.monitor[data-vista="obs"] iframe { pointer-events: none; }
+.monitor-tag.vivo::before { content: "● "; color: #ef4444; }
+.pasos-obs { display: flex; flex-direction: column; gap: 12px; padding-left: 20px; margin: 12px 0; }
+.pasos-obs .copiar { margin-top: 8px; }
+
+/* Celular: cada fila de la cabina a lo ancho */
+@media (max-width: 640px) {
+  .expositor-tit { flex: 1 1 100%; }
+  .letreros-activos { flex: 1 1 100%; }
+  .av-extra label { flex: 1 1 calc(50% - 4px); }
+  .av-extra .av-lugar { flex: 1 1 100%; }
+  .chip-aire .usar { max-width: 220px; }
+}
+.monitor-col .monitor { align-self: stretch; width: 100%; }

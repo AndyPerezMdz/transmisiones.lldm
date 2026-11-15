@@ -114,3 +114,8 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .lt.fantasma { pointer-events: none; }
 .lt.fantasma.on { opacity: .38 !important; }
 .lt.fantasma * { pointer-events: none !important; }
+
+@media (max-width: 640px) {
+  .vista-pie { justify-content: flex-start; }
+  .vista-pie label { flex: 0 0 auto; }
+}

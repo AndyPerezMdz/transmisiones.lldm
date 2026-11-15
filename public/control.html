@@ -25,7 +25,16 @@
 
   <!-- Lo que se ve ahora -->
   <section class="tarjeta ahora" id="ahora">
-    <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1"></iframe><span class="monitor-tag">Así se ve en la transmisión</span></div>
+    <div class="monitor-col">
+      <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1" allow="autoplay; fullscreen"></iframe><span class="monitor-tag" id="monitorTag">Simulación de la transmisión</span></div>
+      <div class="monitor-pie">
+        <div class="segmento" id="vistaModo" role="group" aria-label="Qué se ve en la vista previa">
+          <button type="button" class="chip activo" data-vista="sim">Simulada</button>
+          <button type="button" class="chip" data-vista="obs" data-icon="tv" data-icon-size="14">OBS en vivo</button>
+        </div>
+        <button type="button" class="btn btn-mini" id="obsConfig" data-icon="ajustes" data-icon-size="14">Cómo conectar OBS</button>
+      </div>
+    </div>
     <div class="ahora-info">
       <div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div>
       <div class="ahora-titulo" id="onairLabel">Nada al aire</div>
@@ -224,5 +233,19 @@
   </div>
 </dialog>
 <script type="module" src="/js/control.js"></script>
+<dialog id="obsDlg">
+  <form method="dialog" class="dialogo">
+    <h2 class="titulo" style="font-size:22px">Ver la imagen de OBS en la cabina</h2>
+    <p class="ayuda">La imagen viaja directo de la laptop de OBS a esta, con <a href="https://vdo.ninja" target="_blank" rel="noopener">VDO.Ninja</a> (lo mismo que usan para las cámaras de los celulares). No pasa por nuestro servidor. Se configura una vez:</p>
+    <ol class="pasos-obs">
+      <li><b>En OBS</b> (laptop de la transmisión): presiona <b>Iniciar cámara virtual</b>, abajo a la derecha.</li>
+      <li><b>En esa misma laptop</b>, abre este enlace en Chrome y deja la pestaña abierta (puede estar minimizada). Si te pregunta la cámara, elige <b>OBS Virtual Camera</b>.
+        <div class="copiar"><input class="campo" id="obsPush" readonly><button class="btn btn-sec" type="button" id="obsPushCopiar" data-icon="copiar">Copiar</button></div></li>
+      <li><b>Aquí</b>, elige <b>OBS en vivo</b> arriba de la vista previa. Tarda unos segundos en aparecer.</li>
+    </ol>
+    <p class="chico">Ese enlace también está en la página del Oído. La vista llega con unos segundos de diferencia y sin sonido. Si el internet del templo es lento, déjala en <b>Simulada</b>: no afecta la transmisión, solo lo que ves aquí.</p>
+    <div class="dialogo-pie"><button class="btn btn-primario" value="ok">Entendido</button></div>
+  </form>
+</dialog>
 </body>
 </html>

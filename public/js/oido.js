@@ -5,8 +5,10 @@ import { createOidoLink } from './oido-link.js';
 import { createListener, openMeter, METER_TXT, SR } from './voz.js';
 import { $, mountNav, toast } from './ui.js';
 import { icon } from './icons.js';
+import { obsPushUrl } from './obs-vista.js';
 
 const room = roomId();
+$('obsPushLink').href = obsPushUrl(room);
 const btn = $('btnOido'), status = $('oidoStatus');
 let ultimoParcial = 0, meter = null, wakeLock = null, cabinaVista = 0, nivel = { level: 0, verdict: 'ok' }, me = 'Oído';
 

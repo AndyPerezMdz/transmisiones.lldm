@@ -7,6 +7,7 @@ import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
 import { icon } from './icons.js';
 import { openMeter, METER_TXT } from './voz.js';
 import { PIEZAS_OBS } from './render.js';
+import { obsPushUrl, obsViewUrl } from './obs-vista.js';
 import { createOidoLink } from './oido-link.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -631,6 +632,27 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
   chip.onclick = () => { search.value = chip.dataset.q; search.dispatchEvent(new Event('input')); search.focus(); };
 }
 
+// ---------- Vista previa: simulada u OBS en vivo ----------
+// "OBS en vivo" recibe la cámara virtual de OBS por VDO.Ninja (de la laptop de OBS a esta, sin pasar por Supabase).
+const VISTA_KEY = 'cabina-vista:' + room;
+function vistaGuardada() { try { return localStorage.getItem(VISTA_KEY) === 'obs' ? 'obs' : 'sim'; } catch { return 'sim'; } }
+function setVista(v) {
+  try { localStorage.setItem(VISTA_KEY, v); } catch {}
+  for (const b of document.querySelectorAll('[data-vista]')) b.classList.toggle('activo', b.dataset.vista === v);
+  document.querySelector('.monitor').dataset.vista = v;
+  const src = v === 'obs' ? obsViewUrl(room) : withDemo('/overlay', { sala: room, preview: 'cam' });
+  if ($('monitor').src !== new URL(src, location.href).href) $('monitor').src = src;
+  $('monitorTag').textContent = v === 'obs' ? 'OBS en vivo' : 'Simulación de la transmisión';
+  $('monitorTag').classList.toggle('vivo', v === 'obs');
+}
+for (const b of document.querySelectorAll('[data-vista]')) b.onclick = () => setVista(b.dataset.vista);
+$('obsPush').value = obsPushUrl(room);
+$('obsConfig').onclick = () => $('obsDlg').showModal();
+$('obsPushCopiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('obsPush').value); toast('Enlace copiado.', 'ok'); }
+  catch { $('obsPush').select(); toast('Selecciónalo y cópialo con Ctrl + C.', 'info'); }
+};
+
 // ---------- arranque ----------
 (async () => {
   const session = await requireSession();
@@ -643,7 +665,7 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
     $('otrosTxt').textContent = names.length ? `${names.join(', ')} también ${names.length > 1 ? 'tienen' : 'tiene'} abierta esta cabina. Pónganse de acuerdo: lo que uno ponga reemplaza lo del otro.` : '';
   });
   setupGuide();
-  $('monitor').src = withDemo('/overlay', { sala: room, preview: 'cam' });
+  setVista(vistaGuardada());
   if (demo) toast('Modo de prueba: no se guarda nada y solo funciona en esta computadora.', 'info');
   try {
     const saved = demo ? null : await loadRoom(room);

@@ -170,3 +170,9 @@
 .otra-laptop .ayuda { margin: 8px 0; }
 .copiar { display: flex; gap: 8px; }
 .copiar .campo { flex: 1; min-width: 0; font-size: 13px; }
+
+/* Fecha, hora y lugar del letrero libre */
+.av-extra { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
+.av-extra label { display: flex; flex-direction: column; gap: 4px; flex: 0 1 170px; font-weight: 600; }
+.av-extra .av-lugar { flex: 1 1 220px; }
+.av-extra .campo { margin: 0; padding: 8px 10px; flex: none; width: 100%; }

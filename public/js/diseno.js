@@ -117,7 +117,7 @@ function drawTx() {
   layers.setDesign(design.layers);
   for (const [k, b] of Object.entries(tipos)) {
     b.setDesign(design.letreros[k]);
-    if (k === tipo) b.show(...LETREROS[k].sample, { instant: true }); else b.hide();
+    if (k === tipo) b.show(...LETREROS[k].sample, { instant: true, ...LETREROS[k].extra }); else b.hide();
   }
   speakerLt.setDesign(design.speaker);
   speakerLt.show('Ministro', 'Hno. Juan Pérez', { instant: true });
@@ -303,7 +303,7 @@ $('playAnim').onclick = () => {
   const k = editPath(); if (!k) return;
   const b = instanceFor(k), sample = k === 'speaker' ? ['Ministro', 'Hno. Juan Pérez'] : LETREROS[tipo].sample;
   b.root.classList.remove('sin-anim'); b.hide();
-  setTimeout(() => b.show(...sample), 700);
+  setTimeout(() => b.show(...sample, k === 'speaker' ? {} : { ...LETREROS[tipo].extra }), 700);
   setTimeout(() => b.root.classList.add('sin-anim'), 700 + 1200);
 };
 

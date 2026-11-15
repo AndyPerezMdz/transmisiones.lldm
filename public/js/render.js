@@ -1,4 +1,5 @@
 import { fitText } from './live.js';
+import { icon } from './icons.js';
 // Dibuja el letrero de la transmisión y aplica el diseño de las pantallas.
 // Lo usan overlay.html, pantalla.html y el editor de diseño (vista previa).
 
@@ -70,7 +71,8 @@ export const LETREROS = {
   coro:      { name: 'Coro', icon: 'coro', sample: ['Coro', 'Alabemos con alegría'] },
   tema:      { name: 'Tema', icon: 'tema', sample: ['Tema', 'La fe que vence al mundo'] },
   ubicacion: { name: 'Ubicación', icon: 'ubicacion', sample: ['Transmitiendo desde', 'Colonia, ciudad, estado'] },
-  aviso:     { name: 'Letrero libre', icon: 'aviso', sample: ['Aviso', 'Lo que quieran mostrar'] }
+  aviso:     { name: 'Letrero libre', icon: 'aviso', sample: ['Aviso', 'Lo que quieran mostrar'],
+    extra: { fecha: 'Domingo 15 de noviembre · 6:00 p.m.', lugar: 'Templo principal' } }
 };
 const bannerDefault = () => lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
   tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } });
@@ -162,7 +164,14 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
       const card = document.createElement('div'); card.className = 'lt-card'; card.dataset.drag = path + '.free';
       const tag = document.createElement('div'); tag.className = 'lt-txt lt-tag'; tag.dataset.key = 'tag'; tag.dataset.drag = path + '.free';
       const title = document.createElement('div'); title.className = 'lt-txt lt-title'; title.dataset.key = 'title'; title.dataset.drag = path + '.free';
-      card.append(tag, title);
+      // Renglón opcional con fecha y lugar (lo usa el letrero libre).
+      const sub = document.createElement('div'); sub.className = 'lt-sub'; sub.dataset.drag = path + '.free';
+      for (const [cls, ico] of [['lt-fecha', 'calendario'], ['lt-lugar', 'ubicacion']]) {
+        const sp = document.createElement('span'); sp.className = cls; sp.dataset.drag = path + '.free';
+        sp.append(icon(ico, { size: 30 }), document.createElement('b'));
+        sub.append(sp);
+      }
+      card.append(tag, title, sub);
       root.append(card);
       refreshSide();
     }
@@ -186,10 +195,15 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
   }
   root.refreshSide = refreshSide;
 
-  function fill({ tag, title }) {
+  function fill({ tag, title, fecha = '', lugar = '' }) {
     const t = root.querySelector('.lt-tag'), ti = root.querySelector('.lt-title');
     if (t) t.textContent = tag || '';
     if (ti) ti.textContent = title || '';
+    const sub = root.querySelector('.lt-sub');
+    if (sub) {
+      for (const [cls, v] of [['.lt-fecha', fecha], ['.lt-lugar', lugar]]) { const sp = sub.querySelector(cls); sp.querySelector('b').textContent = v; sp.hidden = !v; }
+      sub.hidden = !fecha && !lugar;
+    }
     if (design.mode === 'image') for (const box of root.querySelectorAll('.lt-txt')) shrinkToWidth(box, design[box.dataset.key].size);
     if (t && design.mode !== 'image') t.hidden = !tag;
     refreshSide();
@@ -197,10 +211,10 @@ export function createBanner(stage, { kind = 'banner', path = kind === 'speaker'
 
   return {
     setDesign(d) { const full = {}; set(full, path, d || {}); design = get(mergeDesign(full), path); build(); },
-    show(tag, title, { instant = false } = {}) {
+    show(tag, title, { instant = false, fecha = '', lugar = '' } = {}) {
       clearTimeout(swapTimer);
-      const next = { tag, title };
-      const same = current && current.tag === tag && current.title === title && root.classList.contains('on');
+      const next = { tag, title, fecha, lugar };
+      const same = current && current.tag === tag && current.title === title && current.fecha === fecha && current.lugar === lugar && root.classList.contains('on');
       current = next;
       if (same) return;
       if (root.classList.contains('on') && !instant) {

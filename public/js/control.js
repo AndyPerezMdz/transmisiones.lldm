@@ -46,10 +46,10 @@ function commit() {
 
 let overlayTimer;
 const TYPE_OF = { bible: 'lectura', hymn: 'himno', coro: 'coro', theme: 'tema' };
-function showOverlay(tag, title, type = 'lectura', secs = Number(state.settings.bannerSeconds)) {
+function showOverlay(tag, title, type = 'lectura', secs = Number(state.settings.bannerSeconds), extra = {}) {
   clearTimeout(overlayTimer);
   if (!state.settings.showBanner || !title) { state.overlay = { ...state.overlay, visible: false }; return; }
-  state.overlay = { visible: true, tag, title, type, seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
+  state.overlay = { visible: true, tag, title, type, fecha: extra.fecha || '', lugar: extra.lugar || '', seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
   if (secs > 0) overlayTimer = setTimeout(() => { state.overlay = { ...state.overlay, visible: false }; commit(); }, secs * 1000);
 }
 function hideOverlay() { clearTimeout(overlayTimer); state.overlay = { ...state.overlay, visible: false }; }
@@ -152,10 +152,11 @@ function render() {
   const avr = $('avRecent'); avr.replaceChildren();
   for (const a of state.avisos || []) {
     const chip = el('span', 'chip chip-nombre');
-    const use = el('button', 'usar', a.text + (a.tag ? ' · ' + a.tag : '')); use.type = 'button'; use.title = 'Mostrar este letrero';
-    use.onclick = () => { $('avText').value = a.text; $('avTag').value = a.tag || ''; showAviso(a.text, a.tag || ''); };
+    const extra = [fechaTexto(a.fecha, a.hora), a.lugar].filter(Boolean).join(' · ');
+    const use = el('button', 'usar', a.text + (a.tag ? ' · ' + a.tag : '') + (extra ? ' · ' + extra : '')); use.type = 'button'; use.title = 'Mostrar este letrero';
+    use.onclick = () => { fillAviso(a); showAviso(a); };
     const del = el('button', 'quitar'); del.append(icon('cerrar', { size: 14 })); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar ' + a.text);
-    del.onclick = () => { state.avisos = state.avisos.filter(x => x.text !== a.text || x.tag !== a.tag); commit(); };
+    del.onclick = () => { state.avisos = state.avisos.filter(x => avKey(x) !== avKey(a)); commit(); };
     chip.append(use, del);
     avr.append(chip);
   }
@@ -495,24 +496,43 @@ $('clearHistory').onclick = async () => {
 
 // ---------- letrero libre ----------
 // Para avisos o cualquier texto que no sea cita ni canto. Se queda hasta que lo ocultes.
+// Puede llevar fecha, hora y lugar en un renglón abajo.
 const avisoVisible = () => state.overlay.visible && state.overlay.type === 'aviso';
-function showAviso(text, tag) {
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+function fechaTexto(fecha, hora) {
+  let out = '';
+  if (fecha) {
+    const [y, m, d] = fecha.split('-').map(Number);
+    out = cap(new Date(y, m - 1, d).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', ''));
+  }
+  if (hora) {
+    const [h, mi] = hora.split(':').map(Number);
+    const t = new Date(2000, 0, 1, h, mi).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true });
+    out = out ? out + ' · ' + t : t;
+  }
+  return out;
+}
+const avForm = () => ({ text: $('avText').value.trim(), tag: $('avTag').value.trim(), fecha: $('avFecha').value, hora: $('avHora').value, lugar: $('avLugar').value.trim() });
+const avKey = a => [a.text, a.tag || '', a.fecha || '', a.hora || '', a.lugar || ''].join('|');
+const avShown = a => avisoVisible() && a.text === state.overlay.title && (a.tag || 'Aviso') === state.overlay.tag
+  && fechaTexto(a.fecha, a.hora) === (state.overlay.fecha || '') && (a.lugar || '') === (state.overlay.lugar || '');
+function fillAviso(a) { $('avText').value = a.text; $('avTag').value = a.tag || ''; $('avFecha').value = a.fecha || ''; $('avHora').value = a.hora || ''; $('avLugar').value = a.lugar || ''; }
+function showAviso(a) {
   if (!state.settings.showBanner) return toast('El letrero de la transmisión está apagado en Ajustes.', 'info');
-  showOverlay(tag || 'Aviso', text, 'aviso', 0);
-  state.avisos = [{ text, tag }, ...(state.avisos || []).filter(a => a.text !== text || a.tag !== tag)].slice(0, 8);
+  showOverlay(a.tag || 'Aviso', a.text, 'aviso', 0, { fecha: fechaTexto(a.fecha, a.hora), lugar: a.lugar });
+  state.avisos = [a, ...(state.avisos || []).filter(x => avKey(x) !== avKey(a))].slice(0, 8);
   commit();
 }
 $('avForm').addEventListener('submit', e => {
   e.preventDefault();
-  const text = $('avText').value.trim(), tag = $('avTag').value.trim();
-  if (avisoVisible() && (!text || (text === state.overlay.title && (tag || 'Aviso') === state.overlay.tag))) { hideOverlay(); commit(); return; }
-  if (!text) { $('avText').focus(); return toast('Escribe lo que quieres mostrar.', 'info'); }
-  showAviso(text, tag);
+  const a = avForm();
+  if (avisoVisible() && (!a.text || avShown(a))) { hideOverlay(); commit(); return; }
+  if (!a.text) { $('avText').focus(); return toast('Escribe lo que quieres mostrar.', 'info'); }
+  showAviso(a);
   document.activeElement?.blur();
 });
-for (const id of ['avText', 'avTag']) $(id).addEventListener('input', () => {
-  const differs = avisoVisible() && ($('avText').value.trim() !== state.overlay.title || ($('avTag').value.trim() || 'Aviso') !== state.overlay.tag);
-  $('btnAviso').textContent = differs ? 'Cambiar' : avisoVisible() ? 'Ocultar' : 'Mostrar';
+for (const id of ['avText', 'avTag', 'avFecha', 'avHora', 'avLugar']) $(id).addEventListener('input', () => {
+  $('btnAviso').textContent = !avisoVisible() ? 'Mostrar' : avShown(avForm()) ? 'Ocultar' : 'Cambiar';
 });
 
 // ---------- expositor ----------

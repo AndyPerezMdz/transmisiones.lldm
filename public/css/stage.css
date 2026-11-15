@@ -91,3 +91,14 @@
 .slide.bible .verse { color: var(--tv-accent); font-size: .55em; vertical-align: .55em; margin-right: .25em; font-weight: 700; }
 .slide.chorus .fit { font-style: italic; }
 [data-style="cristal"] .lt-txt { text-shadow: 0 2px 10px rgb(0 0 0 / .45); }
+
+/* Renglón de fecha y lugar (letrero libre) */
+.lt-card .lt-sub { display: flex; flex-wrap: wrap; gap: 6px 30px; margin-top: 4px; font: 500 30px/1.2 var(--lt-font); color: var(--lt-tag-text); }
+.lt-card .lt-sub[hidden], .lt-card .lt-sub span[hidden] { display: none; }
+.lt-card .lt-sub span { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.lt-card .lt-sub b { font-weight: 500; }
+.lt-card .lt-sub .ico { flex: none; opacity: .9; }
+[data-lado="der"] .lt-card .lt-sub { justify-content: flex-end; }
+.pos-abajo-centro .lt-card .lt-sub { justify-content: center; }
+[data-style="minimal"] .lt-sub { text-shadow: 0 2px 10px rgb(0 0 0 / .8); }
+[data-style="pildora"] .lt-sub { font-size: 24px; }

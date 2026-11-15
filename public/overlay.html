@@ -41,7 +41,7 @@ function show(state) {
     const left = o.until ? o.until - Date.now() : Infinity;
     if (!o.visible || left <= 0) { b.hide(); continue; }
     if (key === 'overlay') shownType = type;
-    if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title); }
+    if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title, { fecha: o.fecha || '', lugar: o.lugar || '' }); }
     if (left !== Infinity) timers[key] = setTimeout(b.hide, left);
   }
 }

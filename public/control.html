@@ -54,6 +54,11 @@
         <span class="expositor-tit" data-icon="aviso">Letrero libre</span>
         <input class="campo" id="avText" maxlength="160" placeholder="Lo que quieras mostrar, ej. Bienvenidos a la Santa Cena">
         <input class="campo" id="avTag" maxlength="60" placeholder="Etiqueta (opcional), ej. Aviso">
+        <div class="av-extra">
+          <label class="chico">Fecha <input class="campo" id="avFecha" type="date"></label>
+          <label class="chico">Hora <input class="campo" id="avHora" type="time"></label>
+          <label class="chico av-lugar">Lugar <input class="campo" id="avLugar" maxlength="80" placeholder="Opcional, ej. Templo principal"></label>
+        </div>
         <button class="btn btn-oro" id="btnAviso" type="submit" title="Tecla L">Mostrar</button>
         <div class="recientes" id="avRecent"></div>
       </form>

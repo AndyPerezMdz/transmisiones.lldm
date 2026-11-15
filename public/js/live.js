@@ -7,8 +7,9 @@ import { demo, supa } from './db.js';
 const channelName = room => 'cabina-en-vivo:' + room;
 const DEMO_DESIGN_KEY = room => 'cabina-diseno:' + room;
 
-export function createPublisher(room, { getState, onSyncChange = () => {} }) {
-  const bc = 'BroadcastChannel' in window ? new BroadcastChannel(channelName(room)) : null;
+// practica: true → nada sale a la transmisión; el estado solo viaja a la vista previa de esta computadora.
+export function createPublisher(room, { getState, onSyncChange = () => {}, practica = false }) {
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel(channelName(practica ? 'practica:' + room : room)) : null;
   bc?.addEventListener('message', e => { if (e.data?.type === 'hello') bc.postMessage({ type: 'state', state: getState() }); });
   let pending = null, writing = false;
 
@@ -36,7 +37,7 @@ export function createPublisher(room, { getState, onSyncChange = () => {} }) {
   return {
     publish(state) {
       bc?.postMessage({ type: 'state', state });
-      if (demo) return onSyncChange('demo');
+      if (demo || practica) return onSyncChange(practica ? 'practica' : 'demo');
       pending = state;
       flush();
     }
@@ -67,7 +68,7 @@ export async function saveDesign(room, design) {
   if (error) throw new Error(error.message);
 }
 
-export function subscribe(room, onState, onDesign = () => {}) {
+export function subscribe(room, onState, onDesign = () => {}, { practica = false } = {}) {
   let rev = -1, designJson = null;
   const apply = state => {
     if (!state || typeof state.rev !== 'number' || state.rev <= rev) return;
@@ -83,18 +84,23 @@ export function subscribe(room, onState, onDesign = () => {}) {
   if ('BroadcastChannel' in window) {
     const bc = new BroadcastChannel(channelName(room));
     bc.addEventListener('message', e => {
-      if (e.data?.type === 'state') apply(e.data.state);
+      if (e.data?.type === 'state' && !practica) apply(e.data.state);
       else if (e.data?.type === 'design') applyDesign(e.data.design);
     });
-    bc.postMessage({ type: 'hello' });
+    if (practica) {
+      // En práctica, el estado viene solo de la cabina de práctica de esta computadora.
+      const bp = new BroadcastChannel(channelName('practica:' + room));
+      bp.addEventListener('message', e => { if (e.data?.type === 'state') apply(e.data.state); });
+      bp.postMessage({ type: 'hello' });
+    } else bc.postMessage({ type: 'hello' });
   }
-  const refresh = () => loadRoom(room).then(r => { if (r) { applyDesign(r.design); apply(r.state); } }).catch(() => {});
+  const refresh = () => loadRoom(room).then(r => { if (r) { applyDesign(r.design); if (!practica) apply(r.state); } }).catch(() => {});
   refresh();
   if (!demo) {
     supa().then(sb => sb.channel('sala-' + room)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + room }, p => {
         if (p.new?.design) applyDesign(p.new.design);
-        apply(p.new?.state);
+        if (!practica) apply(p.new?.state);
       })
       .subscribe(status => { if (status === 'SUBSCRIBED') refresh(); }));
     // Red de seguridad por si se cae el realtime un rato.

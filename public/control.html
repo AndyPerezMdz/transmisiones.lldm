@@ -16,6 +16,10 @@
 <body>
 <main class="cab">
   <div class="cab-avisos">
+  <div class="practica-bar" id="practicaBar" hidden>
+    <span data-icon="ojo"></span><span><b>Modo práctica.</b> Lo que pongas solo se ve en la vista previa de esta computadora: no sale a OBS ni a las TVs.</span>
+    <a class="btn btn-mini" id="salirPractica">Salir de práctica</a>
+  </div>
   <div class="acompanado" id="otrosBar" hidden>
     <span data-icon="ojo"></span><span id="otrosTxt"></span>
   </div>
@@ -52,6 +56,13 @@
         <p class="ayuda">Abre este enlace en Chrome, en la laptop que tiene el micrófono, y presiona <b>Empezar a escuchar</b>. Lo que oiga llega aquí como sugerencias. Solo viaja el texto, no el audio.</p>
         <div class="copiar"><input class="campo" id="oidoLink" readonly><button class="btn btn-sec" id="oidoCopiar" type="button" data-icon="copiar">Copiar</button></div>
       </details>
+      <div class="registro">
+        <div><b>Registro del culto</b><span class="chico" id="registroInfo">Todavía no hay nada.</span></div>
+        <div class="fila">
+          <button type="button" class="btn btn-sec" id="regDescargar" data-icon="bajar" data-icon-size="15">Descargar</button>
+          <button type="button" class="btn btn-mini" id="regBorrar">Empezar de nuevo</button>
+        </div>
+      </div>
       <details class="oido">
         <summary>Ver lo que se ha escuchado</summary>
         <div class="transcript" id="transcript" aria-live="polite"></div>
@@ -61,7 +72,10 @@
 
     <!-- Al aire -->
     <section class="col col-aire" id="ahora">
-      <header class="col-cab"><h3>Al aire</h3><div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div></header>
+      <header class="col-cab"><h3>Al aire</h3>
+        <div class="semaforo" id="semaforo" title="Estado de las conexiones">
+          <span data-s="obs">OBS</span><span data-s="mic">Micrófono</span><span data-s="red">Internet</span>
+        </div><div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div></header>
       <div class="col-cuerpo">
         <div class="monitor-col">
       <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1" allow="autoplay; fullscreen"></iframe><span class="monitor-tag" id="monitorTag">Simulación de la transmisión</span></div>
@@ -114,6 +128,10 @@
         <button type="button" class="chip" data-q="coro 1">Coro 1</button>
       </div>
       <ol class="results" id="results"></ol>
+        <div class="cola-box" id="colaBox" hidden>
+          <div class="hist-cabeza"><h3>Para después</h3><button type="button" class="btn btn-mini" id="colaVaciar">Vaciar</button></div>
+          <ol class="history cola" id="cola"></ol>
+        </div>
 
       <div class="tema">
         <label class="etiqueta con-icono" for="theme" data-icon="tema" data-icon-size="15">Tema del culto</label>
@@ -184,6 +202,11 @@
         <option value="es-ES">Español de España</option>
       </select>
     </label>
+    <div class="practica-opcion">
+      <b>Modo práctica</b>
+      <p class="ayuda">Para aprender o ensayar: la cabina funciona igual, pero nada sale a OBS ni a las TVs.</p>
+      <a class="btn btn-sec" id="irPractica" data-icon="ojo" data-icon-size="15">Abrir la cabina en modo práctica</a>
+    </div>
     <div class="enlaces">
       <span class="chico">Gráficos para OBS, todo junto (logos, letreros y expositor)</span><code id="urlObs"></code>
       <details class="piezas-obs"><summary class="chico">O uno por letrero (cada uno como su propia fuente en OBS)</summary><div id="urlPiezas"></div></details>

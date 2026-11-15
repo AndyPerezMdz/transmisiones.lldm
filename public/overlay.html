@@ -17,6 +17,7 @@
 <script type="module">
 import { subscribe } from '/js/live.js';
 import { roomId, qs } from '/js/db.js';
+import { anunciar } from '/js/presencia.js';
 import { createBanner, createLayers, fitStage, LETREROS, mergeDesign } from '/js/render.js';
 
 if (qs.has('preview')) document.body.classList.add(qs.get('preview') === 'cam' ? 'camara' : 'preview');
@@ -51,13 +52,15 @@ function show(state) {
   for (const [k, b] of Object.entries(tipos)) pinta(k, b, ls[k]);
   if (speaker) pinta('speaker', speaker, state.speaker);
 }
+// La vista previa de la cabina no cuenta como OBS.
+if (!qs.has('preview') && !qs.has('practica')) anunciar(roomId(), { tipo: 'obs', solo: qs.get('solo') || '' });
 subscribe(roomId(), state => { last = state; show(state); }, design => {
   layers?.setDesign(design.layers || {});
   const merged = mergeDesign(design);
   for (const [k, b] of Object.entries(tipos)) b.setDesign(merged.letreros[k]);
   speaker?.setDesign(merged.speaker);
   if (last) { for (const k of Object.keys(seq)) seq[k] = -1; show(last); }
-});
+}, { practica: qs.has('practica') });
 
 </script>
 </body>

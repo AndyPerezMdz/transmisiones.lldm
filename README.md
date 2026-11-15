@@ -72,6 +72,14 @@ Arriba de la vista previa de la cabina se elige **Simulada** (el overlay sobre u
 
 Si el receptor (DJI) va a la laptop de la transmisión y la cabina se maneja en otra, abre en la del micrófono **`/oido?sala=…`** (el enlace viene en la sala y en la cabina, en *¿El micrófono está conectado en otra laptop?*). Presiona **Empezar a escuchar**: lo que reconozca le llega a la cabina como sugerencias por Supabase Realtime. No viaja audio, solo texto, y la cabina muestra el nivel del micrófono remoto y si se perdió la conexión.
 
+### En vivo: semáforo, para después, registro y práctica
+
+- **Semáforo** (arriba del escenario): *OBS* se pone verde cuando hay al menos una fuente de Navegador de OBS abierta en esa sala; *Micrófono* cuando se está escuchando aquí o en el Oído; *Internet* cuando hay conexión.
+- **Para después** (botón **+** en sugerencias y resultados): aparta lo que el expositor anuncia para más adelante; aparece en *Buscar → Para después* y se pone con un clic.
+- **Registro del culto**: todo lo que escuchó el micrófono (con hora), lo que se detectó y lo que se puso en pantalla se guarda en esa computadora por sala y por día. **Descargar** baja un `.txt` con expositor, tema, himnos, coros, citas, letreros y la transcripción.
+- **Modo práctica** (`/control?sala=…&practica=1`, o desde Salas y Ajustes): la cabina funciona igual pero nada sale a OBS ni a las TVs.
+- **Atajos extra**: teclado numérico (`6`/`+` siguiente, `4`/`-` anterior, `0` quitar, `.` ocultar, `Enter` poner la sugerencia), controles de presentación (`AvPág`/`RePág`) y `F13`–`F16` para Stream Deck (siguiente, anterior, quitar, ocultar).
+
 ## Uso
 
 **Voz:** presiona **Escuchar** (`M`). Lo que se detecta aparece como tarjeta. Con `Enter` la pones al aire y con `Supr` la descartas. Si el expositor dice "versículo 18" sin repetir el libro, se usa el último libro y capítulo que mencionó.

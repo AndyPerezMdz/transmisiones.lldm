@@ -322,3 +322,34 @@
 .col-aire { position: relative; top: auto; }
 .col-aire .monitor { width: min(100%, calc(44vh * 16 / 9)); align-self: center; }
 .col-aire .monitor-pie { width: min(100%, calc(44vh * 16 / 9)); align-self: center; }
+
+/* Semáforo de conexiones */
+.semaforo { display: flex; gap: 6px; margin-left: auto; margin-right: 6px; }
+.semaforo span { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font: 600 9.5px var(--sans); letter-spacing: .16em;
+  text-transform: uppercase; color: rgb(241 236 225 / .55); border: 1px solid rgb(255 240 210 / .1); cursor: help; }
+.semaforo span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgb(241 236 225 / .3); }
+.semaforo span[data-ok="si"] { color: #cfe9d9; } .semaforo span[data-ok="si"]::before { background: #6fcf97; box-shadow: 0 0 0 3px rgb(111 207 151 / .15); }
+.semaforo span[data-ok="no"] { color: #f2b0b0; border-color: rgb(226 100 100 / .35); } .semaforo span[data-ok="no"]::before { background: #e26464; animation: latido 1.4s infinite; }
+.semaforo span[data-ok="apagado"]::before { background: #e0b354; }
+@media (max-width: 1280px) { .semaforo span { padding: 4px 8px; letter-spacing: .1em; } }
+
+/* Registro del culto */
+.registro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px;
+  background: var(--campo); border: 1px solid var(--borde); }
+.registro b { display: block; font: 400 17px var(--display); color: var(--titulo); }
+.registro .btn-sec { height: 36px; }
+
+/* Para después */
+.quitar.despues { color: var(--oro-vivo); opacity: .75; }
+.quitar.despues:hover { opacity: 1; background: var(--oro-suave); color: var(--oro-vivo); }
+.results li .despues { margin-left: auto; }
+.cola-box { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--a) 35%, transparent); }
+.cola-box .hist-cabeza { border: 0; padding: 0; }
+
+/* Modo práctica */
+.practica-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 18px; border-radius: var(--r);
+  background: color-mix(in srgb, #5b8def 12%, var(--superficie)); border: 1px solid color-mix(in srgb, #5b8def 35%, transparent); color: var(--titulo); }
+.practica-bar .ico { color: #8fb0f5; }
+.practica-bar .btn { margin-left: auto; }
+body.practica .col-aire::after { border-color: rgb(91 141 239 / .35); }
+.practica-opcion { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--campo); border: 1px solid var(--borde); }

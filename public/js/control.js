@@ -1,5 +1,6 @@
 // Cabina: escucha al expositor, sugiere lo que dijo y controla TVs y OBS.
-import { demo, requireSession, loadSongs, loadBible, roomId } from './db.js';
+import { demo, requireSession, loadSongs, loadBible, roomId, qs } from './db.js';
+import { vigilar } from './presencia.js';
 import { createCatalog } from './catalog.js';
 import { createPublisher, loadRoom } from './live.js';
 import { createTurno } from './turno.js';
@@ -17,11 +18,12 @@ const KIND = { bible: 'Cita', hymn: 'Himno', coro: 'Coro', theme: 'Tema' };
 const DEFAULT_SETTINGS = { bannerSeconds: 25, speakerSeconds: 0, location: '', showBanner: true, voiceLang: 'es-MX' };
 
 const room = roomId();
+const practica = qs.has('practica');
 let catalog = null, ctx = {};
 let suggestions = [];
 const seen = new Map();
 let results = [], sel = 0;
-let state = { rev: 0, item: null, index: 0, blank: false, theme: '', letreros: {},
+let state = { rev: 0, item: null, index: 0, blank: false, theme: '', letreros: {}, cola: [],
   speaker: { visible: false, tag: '', title: '', seq: 0, until: 0 }, speakers: [], avisos: [],
   settings: { ...DEFAULT_SETTINGS }, history: [] };
 
@@ -30,12 +32,14 @@ const ago = t => { const s = Math.round((Date.now() - t) / 1000); return s < 60 
 
 // ---------- estado y acciones ----------
 const publisher = createPublisher(room, {
+  practica,
   getState: () => state,
   onSyncChange(status, message) {
     const s = $('navSala');
     if (!s) return;
     s.dataset.sync = status;
     s.title = status === 'ok' ? 'Conectado: la transmisión recibe los cambios' : status === 'demo' ? 'Modo de prueba: solo esta computadora'
+      : status === 'practica' ? 'Modo práctica: no sale nada a la transmisión'
       : 'Sin internet: las TVs de esta laptop siguen funcionando, pero OBS no recibe cambios. ' + (message || '');
   }
 });
@@ -81,6 +85,7 @@ function showSpeaker(name, role) {
   const secs = Number(state.settings.speakerSeconds) || 0;
   state.speaker = { visible: true, tag: role, title: name, seq: state.speaker.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
   state.speakers = [{ name, role }, ...state.speakers.filter(p => p.name !== name)].slice(0, 6);
+  registrar('puestos', { kind: 'expositor', label: name + (role ? ' (' + role + ')' : '') });
   if (secs > 0) speakerTimer = setTimeout(() => { state.speaker = { ...state.speaker, visible: false }; commit(); }, secs * 1000);
   commit();
 }
@@ -98,6 +103,8 @@ const actions = {
     const clean = { ...ref }; delete clean.label;
     state.history = [{ ref: clean, label: item.label, at: Date.now() }, ...state.history.filter(h => h.label !== item.label)].slice(0, 30);
     dropWhere(s => s.item.key === item.key);
+    state.cola = (state.cola || []).filter(c => c.label !== item.label);
+    registrar('puestos', { kind: item.kind, label: item.label });
     commit();
   },
   go(i) {
@@ -168,6 +175,7 @@ function render() {
   }
   if (document.activeElement !== $('theme')) $('theme').value = state.theme || '';
 
+  renderCola();
   $('tabSpOn').hidden = !state.speaker.visible;
   $('tabAvOn').hidden = !ltOn('aviso');
   const sp = state.speaker;
@@ -277,7 +285,7 @@ function renderSuggestions() {
     const go = el('button', 'btn btn-primario', 'Poner en pantalla'); go.type = 'button'; go.onclick = () => accept(s);
     if (i === 0) go.title = 'Tecla Enter';
     const no = el('button', 'btn btn-mini'); no.append(icon('cerrar', { size: 16 })); no.setAttribute('aria-label', 'Descartar'); no.type = 'button'; no.title = 'Descartar (Supr)'; no.onclick = () => dismiss(s);
-    const acc = el('div', 'acc'); acc.append(go, no);
+    const acc = el('div', 'acc'); acc.append(go, botonDespues(s.item, () => dropWhere(x => x.id === s.id)), no);
     const k = el('span', 'kind'); k.append(kindIcon(s.item.kind, 24));
     li.append(k, label, acc,
       el('div', 'meta', KIND[s.item.kind] + (s.item.byText ? ' · lo leyó sin decir la cita · ' + ago(s.at) : ' · se dijo ' + ago(s.at))
@@ -367,6 +375,10 @@ function heard(text) {
   heardWords = (heardWords + ' ' + text).split(/\s+/).slice(-60).join(' ');
   const [verse] = catalog.findVerses(heardWords, { mode: 'speech', limit: 1 });
   if (verse && !items.some(i => i.key === verse.key)) { items.push(verse); ctx = { ...ctx, book: verse.book, chapter: verse.chapter }; }
+  if (!micTest) {
+    registrar('oido', text);
+    for (const it of items) registrar('detectados', { kind: it.kind, label: it.label });
+  }
   const line = el('p'); line.style.margin = '0 0 6px';
   line.append(document.createTextNode(text + ' '));
   // Durante la prueba de micrófono no se llenan las sugerencias de la cabina.
@@ -492,10 +504,118 @@ function renderResults() {
     if (i === sel) li.append(el('span', 'hint', 'Enter para poner'));
     li.title = 'Poner en pantalla';
     li.onclick = () => actions.air(r);
+    li.append(botonDespues(r));
     ol.append(li);
   });
   ol.children[sel]?.scrollIntoView({ block: 'nearest' });
 }
+
+// ---------- Para después (cola) ----------
+// Cuando el expositor anuncia algo que va a leer o cantar más adelante, se aparta aquí.
+function botonDespues(ref, despues = () => {}) {
+  const b = el('button', 'quitar despues'); b.type = 'button'; b.title = 'Apartar para después'; b.setAttribute('aria-label', 'Apartar para después');
+  b.append(icon('mas', { size: 16 }));
+  b.onclick = e => {
+    e.stopPropagation();
+    const clean = { ...ref }; delete clean.slides; delete clean.banner;
+    if (!(state.cola || []).some(c => c.label === ref.label)) state.cola = [...(state.cola || []), { ref: clean, label: ref.label, kind: ref.kind }].slice(-20);
+    despues(); commit(); toast('Apartado para después: ' + ref.label, 'ok');
+  };
+  return b;
+}
+function renderCola() {
+  const ol = $('cola'); ol.replaceChildren();
+  $('colaBox').hidden = !(state.cola || []).length;
+  for (const c of state.cola || []) {
+    const li = el('li'); const k = el('span', 'k'); k.append(kindIcon(c.kind));
+    const del = el('button', 'quitar'); del.type = 'button'; del.title = 'Quitar'; del.append(icon('cerrar', { size: 14 }));
+    del.onclick = e => { e.stopPropagation(); state.cola = state.cola.filter(x => x.label !== c.label); commit(); };
+    li.append(k, el('span', 't', c.label), del);
+    li.title = 'Poner en pantalla';
+    li.onclick = () => actions.air(c.ref);
+    ol.append(li);
+  }
+}
+$('colaVaciar').onclick = () => { state.cola = []; commit(); };
+
+// ---------- Registro del culto (lo que se escuchó y lo que se puso) ----------
+// Se guarda en esta computadora, por sala y por día, y se descarga como texto.
+const hoy = () => new Date().toLocaleDateString('sv'); // AAAA-MM-DD
+const REG_KEY = 'cabina-registro:' + room + (practica ? ':practica' : '');
+let registro = (() => { try { const r = JSON.parse(localStorage.getItem(REG_KEY) || 'null'); if (r?.fecha === hoy()) return r; } catch {} return null; })()
+  || { fecha: hoy(), inicio: Date.now(), oido: [], detectados: [], puestos: [] };
+let regTimer;
+function registrar(tipo, dato) {
+  if (registro.fecha !== hoy()) registro = { fecha: hoy(), inicio: Date.now(), oido: [], detectados: [], puestos: [] };
+  const lista = registro[tipo];
+  if (tipo !== 'oido' && lista.length && lista[lista.length - 1].label === dato.label && Date.now() - lista[lista.length - 1].at < 60000) return;
+  lista.push(tipo === 'oido' ? { at: Date.now(), text: dato } : { at: Date.now(), ...dato });
+  clearTimeout(regTimer);
+  regTimer = setTimeout(() => { try { localStorage.setItem(REG_KEY, JSON.stringify(registro)); } catch {} pintaRegistro(); }, 800);
+}
+function pintaRegistro() {
+  const n = registro.oido.length, p = registro.puestos.length;
+  $('registroInfo').textContent = n || p ? `${n} frases escuchadas · ${p} cosas puestas en pantalla` : 'Todavía no hay nada.';
+}
+const hora = t => new Date(t).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' });
+function textoRegistro() {
+  const r = registro, sala = $('navSala')?.textContent || '';
+  const fecha = new Date(r.inicio).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const NOMBRE = { bible: 'Citas', hymn: 'Himnos', coro: 'Coros', theme: 'Tema', expositor: 'Expositor', aviso: 'Letreros libres' };
+  const unicos = (lista, kind) => [...new Map(lista.filter(x => x.kind === kind).map(x => [x.label, x])).values()];
+  const L = [];
+  L.push('REGISTRO DEL CULTO — Cabina en Vivo' + (practica ? ' (modo práctica)' : ''));
+  L.push(fecha.charAt(0).toUpperCase() + fecha.slice(1) + (sala ? ' · ' + sala : ''));
+  L.push('');
+  for (const kind of ['expositor', 'theme', 'hymn', 'coro', 'bible', 'aviso']) {
+    const puestos = unicos(r.puestos, kind), dichos = unicos(r.detectados, kind).filter(d => !puestos.some(p => p.label === d.label));
+    if (!puestos.length && !dichos.length) continue;
+    L.push('== ' + NOMBRE[kind].toUpperCase() + ' ==');
+    for (const x of puestos) L.push(`  ${hora(x.at)}  ${x.label}`);
+    for (const x of dichos) L.push(`  ${hora(x.at)}  ${x.label}  (se mencionó, no se puso)`);
+    L.push('');
+  }
+  L.push('== EN ORDEN: LO QUE SE PUSO EN PANTALLA ==');
+  for (const x of r.puestos) L.push(`  ${hora(x.at)}  [${NOMBRE[x.kind] || x.kind}] ${x.label}`);
+  if (!r.puestos.length) L.push('  (nada)');
+  L.push('');
+  L.push('== LO QUE ESCUCHÓ EL MICRÓFONO ==');
+  L.push('(Transcripción automática del navegador: puede tener errores.)');
+  for (const x of r.oido) L.push(`  ${hora(x.at)}  ${x.text}`);
+  if (!r.oido.length) L.push('  (nada)');
+  return L.join('\r\n');
+}
+$('regDescargar').onclick = () => {
+  const blob = new Blob(['﻿' + textoRegistro()], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `culto-${registro.fecha}${practica ? '-practica' : ''}.txt`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$('regBorrar').onclick = async () => {
+  if (!(await modal({ title: 'Empezar un registro nuevo', text: 'Se borra lo que se ha guardado hoy en esta computadora (lo escuchado y lo puesto). Si lo quieres, descárgalo antes.', ok: 'Borrar y empezar', danger: true }))) return;
+  registro = { fecha: hoy(), inicio: Date.now(), oido: [], detectados: [], puestos: [] };
+  try { localStorage.removeItem(REG_KEY); } catch {}
+  pintaRegistro();
+};
+pintaRegistro();
+
+// ---------- Semáforo de conexiones ----------
+let fuentesObs = 0;
+vigilar(practica ? 'practica:' + room : room, lista => { fuentesObs = lista.filter(x => x.tipo === 'obs').length; pintaSemaforo(); });
+function pintaSemaforo() {
+  const set = (k, ok, txt, title) => { const n = document.querySelector(`#semaforo [data-s="${k}"]`); n.dataset.ok = ok; n.textContent = txt; n.title = title; };
+  const sync = $('navSala')?.dataset.sync;
+  const red = navigator.onLine && sync !== 'error';
+  set('red', red ? 'si' : 'no', 'Internet', red ? 'Hay conexión' : 'Sin conexión: OBS no recibe cambios y la voz no funciona');
+  if (practica) set('obs', 'na', 'OBS', 'Modo práctica: no se manda nada a OBS');
+  else set('obs', fuentesObs ? 'si' : 'no', fuentesObs > 1 ? `OBS ×${fuentesObs}` : 'OBS',
+    fuentesObs ? `OBS está recibiendo (${fuentesObs} ${fuentesObs > 1 ? 'fuentes' : 'fuente'} de Navegador)` : 'No hay ninguna fuente de OBS conectada a esta sala');
+  const mic = listening || (oidoVisto && $('oidoRemoto').dataset.estado !== 'pausa');
+  set('mic', mic ? 'si' : 'apagado', 'Micrófono', mic ? (listening ? 'Escuchando en esta computadora' : 'Escuchando desde otra computadora (Oído)') : 'Nadie está escuchando');
+}
+setInterval(pintaSemaforo, 2000);
+addEventListener('online', pintaSemaforo); addEventListener('offline', pintaSemaforo);
 
 // ---------- pestañas de la columna "Poner" ----------
 function setTab(t) {
@@ -536,9 +656,13 @@ document.addEventListener('keydown', e => {
     b: actions.blank, o: () => $('btnBanner').click(), u: actions.location, m: () => micBtn.click(),
     n: () => state.speaker.visible ? hideSpeaker() : $('spForm').requestSubmit(),
     l: () => avisoVisible() ? (hideLetrero('aviso'), commit()) : $('avForm').requestSubmit(),
-    '/': () => { setTab('buscar'); search.focus(); search.select(); }
+    '/': () => { setTab('buscar'); search.focus(); search.select(); },
+    // Teclado numérico, control de presentaciones y Stream Deck (atajos de teclado)
+    Numpad6: actions.next, Numpad4: actions.prev, NumpadAdd: actions.next, NumpadSubtract: actions.prev,
+    Numpad0: actions.clear, NumpadDecimal: actions.blank, NumpadEnter: () => suggestions[0] && accept(suggestions[0]),
+    F13: actions.next, F14: actions.prev, F15: actions.clear, F16: actions.blank
   };
-  const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
+  const fn = (e.code?.startsWith('Numpad') && map[e.code]) || map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
   if (fn) { e.preventDefault(); fn(); }
 });
 
@@ -572,6 +696,7 @@ function fillAviso(a) { $('avText').value = a.text; $('avTag').value = a.tag || 
 function showAviso(a) {
   if (!state.settings.showBanner) return toast('El letrero de la transmisión está apagado en Ajustes.', 'info');
   showLetrero('aviso', a.tag || 'Aviso', a.text, { secs: 0, fecha: fechaTexto(a.fecha, a.hora), lugar: a.lugar });
+  registrar('puestos', { kind: 'aviso', label: [a.tag || 'Aviso', a.text, fechaTexto(a.fecha, a.hora), a.lugar].filter(Boolean).join(' · ') });
   state.avisos = [a, ...(state.avisos || []).filter(x => avKey(x) !== avKey(a))].slice(0, 8);
   commit();
 }
@@ -649,7 +774,7 @@ function setVista(v) {
   try { localStorage.setItem(VISTA_KEY, v); } catch {}
   for (const b of document.querySelectorAll('[data-vista]')) b.classList.toggle('activo', b.dataset.vista === v);
   document.querySelector('.monitor').dataset.vista = v;
-  const src = v === 'obs' ? obsViewUrl(room) : withDemo('/overlay', { sala: room, preview: 'cam' });
+  const src = v === 'obs' && !practica ? obsViewUrl(room) : withDemo('/overlay', { sala: room, preview: 'cam', practica: practica ? '1' : '' });
   if ($('monitor').src !== new URL(src, location.href).href) $('monitor').src = src;
   $('monitorTag').textContent = v === 'obs' ? 'OBS en vivo' : 'Simulación de la transmisión';
   $('monitorTag').classList.toggle('vivo', v === 'obs');
@@ -662,13 +787,18 @@ $('obsPushCopiar').onclick = async () => {
   catch { $('obsPush').select(); toast('Selecciónalo y cópialo con Ctrl + C.', 'info'); }
 };
 
+// ---------- Modo práctica ----------
+$('irPractica').href = withDemo('/control', { sala: room, practica: '1' });
+$('salirPractica').href = withDemo('/control', { sala: room });
+if (practica) { $('practicaBar').hidden = false; document.body.classList.add('practica'); $('irPractica').closest('.practica-opcion').hidden = true; }
+
 // ---------- arranque ----------
 (async () => {
   const session = await requireSession();
   mountNav('cabina');
   // Aviso si alguien más tiene abierta la cabina de esta sala (no bloquea: solo avisa).
   const meta = session.user.user_metadata || {};
-  createTurno('cabina-' + room, { id: session.user.id, name: demo ? 'Otra pestaña' : (meta.name || session.user.email || 'Alguien') }, st => {
+  createTurno((practica ? 'cabina-practica-' : 'cabina-') + room, { id: session.user.id, name: demo ? 'Otra pestaña' : (meta.name || session.user.email || 'Alguien') }, st => {
     const names = [...new Set(st.others.map(o => o.name))];
     $('otrosBar').hidden = !names.length;
     $('otrosTxt').textContent = names.length ? `${names.join(', ')} también ${names.length > 1 ? 'tienen' : 'tiene'} abierta esta cabina. Pónganse de acuerdo: lo que uno ponga reemplaza lo del otro.` : '';
@@ -679,7 +809,7 @@ $('obsPushCopiar').onclick = async () => {
   try {
     const saved = demo ? null : await loadRoom(room);
     if (!demo && !saved) { toast('Esa sala no existe. Elige una desde el inicio.'); setTimeout(() => location.href = '/', 2500); return; }
-    if (saved?.state?.rev) {
+    if (saved?.state?.rev && !practica) {
       state = { ...state, ...saved.state, settings: { ...DEFAULT_SETTINGS, ...saved.state.settings } };
       // Salas guardadas antes de separar los letreros: el único que había pasa a su tipo.
       if (!state.letreros || typeof state.letreros !== 'object') {

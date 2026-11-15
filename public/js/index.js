@@ -31,6 +31,7 @@ function roomCard(room, sb) {
     el('div', { class: 'sala-acciones' },
       el('a', { class: 'btn btn-primario btn-grande', href: withDemo('/control', { sala: room.id }), 'data-icon': 'mic' , text: 'Abrir la cabina' }),
       el('a', { class: 'btn btn-sec btn-grande', href: withDemo('/diseno', { sala: room.id }), 'data-icon': 'paleta', text: 'Diseño' })),
+    el('a', { class: 'btn btn-mini', href: withDemo('/control', { sala: room.id, practica: '1' }), 'data-icon': 'ojo', 'data-icon-size': 14, text: 'Practicar sin salir al aire', style: 'align-self:flex-start' }),
     el('p', { class: 'ayuda', text: 'Abre la cabina en Chrome o Edge para que funcione el micrófono.' }),
     // Configuración de OBS (una sola vez)
     el('div', { class: 'sala-bloque' },

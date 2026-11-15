@@ -258,6 +258,7 @@ txStage.addEventListener('pointermove', e => {
       }
     }
     drag.root.refreshSide?.();
+    placeHandle();
     return;
   }
   if (!drag) return;
@@ -271,6 +272,7 @@ txStage.addEventListener('pointermove', e => {
     drag.target.style.left = drag.obj.x + 'px';
     drag.target.style.top = drag.obj.y + 'px';
   }
+  placeHandle();
 });
 const endDrag = () => { guiaV.hidden = guiaH.hidden = true; if (drag) { drag = null; changed(); } };
 txStage.addEventListener('pointerup', endDrag);

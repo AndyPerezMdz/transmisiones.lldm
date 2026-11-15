@@ -310,7 +310,12 @@ function startListening() {
   try { rec.start(); } catch (err) { toast('No se pudo iniciar el micrófono: ' + err.message); }
 }
 function stopListening() { listening = false; stopLiveMeter(); try { rec?.stop(); } catch {} setMic(false, 'El micrófono está apagado. Presiona Escuchar para volver a empezar.'); interimEl.textContent = ''; }
-micBtn.onclick = () => listening ? stopListening() : startListening();
+micBtn.onclick = async () => {
+  if (listening) return stopListening();
+  if (oidoVisto && $('oidoRemoto').dataset.estado !== 'pausa' && !(await modal({ title: 'Ya se está escuchando en otra computadora',
+    text: 'El Oído de la otra laptop ya está mandando lo que dice el expositor. Si también escuchas aquí, las sugerencias pueden salir repetidas o mezcladas.', ok: 'Escuchar de todos modos', cancel: 'Cancelar' }))) return;
+  startListening();
+};
 micBtn.replaceChildren(icon('mic'), 'Escuchar');
 if (!SR) { micBtn.disabled = true; micStatus.textContent = 'Abre la cabina en Google Chrome o Edge para usar la voz. El buscador funciona igual.'; }
 
@@ -351,9 +356,10 @@ const oido = createOidoLink(room, msg => {
     if (!msg.on) $('oidoParcial').textContent = '';
   }
 });
+let pingN = 0;
 setInterval(() => {
-  oido.send({ t: 'cabina', name: '' });
-  if (oidoVisto && Date.now() - oidoVisto > 6000) {
+  if (++pingN % 2 === 0) oido.send({ t: 'cabina', name: '' }); // cada 4 s
+  if (oidoVisto && Date.now() - oidoVisto > 12000) {
     oidoVisto = 0;
     $('oidoRemoto').hidden = false; $('oidoRemoto').dataset.estado = 'pausa';
     $('oidoTitulo').textContent = 'Se perdió la conexión con la otra computadora';

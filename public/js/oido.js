@@ -8,13 +8,13 @@ import { icon } from './icons.js';
 
 const room = roomId();
 const btn = $('btnOido'), status = $('oidoStatus');
-let meter = null, wakeLock = null, cabinaVista = 0, nivel = { level: 0, verdict: 'ok' }, me = 'Oído';
+let ultimoParcial = 0, meter = null, wakeLock = null, cabinaVista = 0, nivel = { level: 0, verdict: 'ok' }, me = 'Oído';
 
 const link = createOidoLink(room, msg => {
   if (msg.t === 'cabina') { cabinaVista = Date.now(); pintarCabina(msg.name); }
 });
 function pintarCabina(name) {
-  const ok = Date.now() - cabinaVista < 8000;
+  const ok = Date.now() - cabinaVista < 12000;
   const box = $('estadoCabina');
   box.dataset.ok = ok ? '1' : '0';
   box.textContent = ok ? `La cabina está recibiendo${name ? ' (' + name + ')' : ''}.` : 'Esperando a la cabina… ábrela en la otra laptop, en esta misma sala.';
@@ -27,7 +27,8 @@ const listener = createListener({
   onStatus: text => { status.textContent = text; },
   onInterim(text) {
     $('parcial').textContent = text;
-    if (text) link.send({ t: 'parcial', text: text.slice(-200) });
+    // Lo que va diciendo se manda como mucho una vez por segundo (Realtime cobra por mensaje).
+    if (text && Date.now() - ultimoParcial > 1000) { ultimoParcial = Date.now(); link.send({ t: 'parcial', text: text.slice(-200) }); }
   },
   onFinal(text) {
     if (!text) return;
@@ -72,11 +73,14 @@ document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && listener.listening && !wakeLock) try { wakeLock = await navigator.wakeLock?.request('screen'); } catch {}
 });
 
-// Cada medio segundo le dice a la cabina si está escuchando y cómo va el nivel.
+// Le dice a la cabina si está escuchando y cómo va el nivel: cada 1.5 s mientras escucha,
+// cada 5 s cuando no (cada mensaje cuenta contra el límite mensual de Supabase Realtime).
+let ultimoEstado = 0;
 function enviarEstado() {
+  ultimoEstado = Date.now();
   link.send({ t: 'estado', on: listener.listening, level: meter ? nivel.level : 0, verdict: meter ? nivel.verdict : 'ok', device: meter?.label || '', name: me, at: Date.now() });
 }
-setInterval(enviarEstado, 500);
+setInterval(() => { if (Date.now() - ultimoEstado >= (listener.listening ? 1500 : 5000)) enviarEstado(); }, 500);
 addEventListener('pagehide', () => link.send({ t: 'estado', on: false, bye: true, name: me, at: Date.now() }));
 
 (async () => {

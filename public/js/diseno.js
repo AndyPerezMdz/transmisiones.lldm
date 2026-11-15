@@ -1,5 +1,6 @@
 // Editor de diseño: letrero (cantos, citas, tema), nombre del expositor, logos fijos y letra completa.
-import { demo, supa, requireSession, roomId } from './db.js';
+import { demo, supa, requireSession, roomId, qs } from './db.js';
+import { obsViewUrl } from './obs-vista.js';
 import { loadRoom, saveDesign, subscribe } from './live.js';
 import { createTurno } from './turno.js';
 import { $, el, toast, mountNav, modal, themeColors } from './ui.js';
@@ -184,13 +185,37 @@ tiposBox.append(el('button', { type: 'button', class: 'btn btn-mini', text: 'Cop
   for (const k of Object.keys(LETREROS)) if (k !== tipo) design.letreros[k] = clone(design.letreros[tipo]);
   changed(); toast('Listo: todos quedaron igual. Ya puedes ajustar cada uno.', 'ok');
 } }));
-const camToggle = () => { txBox.classList.toggle('camara', $('fakeCam').checked); txBox.classList.toggle('cuadros', !$('fakeCam').checked); };
-$('fakeCam').onchange = camToggle; camToggle();
+const camToggle = () => {
+  const obs = $('fondoObs').checked;
+  txBox.classList.toggle('obs', obs);
+  txBox.classList.toggle('camara', !obs && $('fakeCam').checked);
+  txBox.classList.toggle('cuadros', !obs && !$('fakeCam').checked);
+};
+// Fondo con la imagen real de OBS (la misma que usa la cabina en "OBS en vivo").
+const OBS_KEY = 'diseno-obs:' + room;
+function setFondoObs(on) {
+  $('fondoObs').checked = on;
+  if (on) $('fakeCam').checked = false;
+  try { localStorage.setItem(OBS_KEY, on ? '1' : '0'); } catch {}
+  let fr = txBox.querySelector('.fondo-obs');
+  if (on && !fr) {
+    fr = document.createElement('iframe'); fr.className = 'fondo-obs'; fr.title = 'OBS en vivo'; fr.tabIndex = -1;
+    fr.allow = 'autoplay'; fr.src = obsViewUrl(room);
+    txBox.prepend(fr);
+  } else if (!on && fr) fr.remove();
+  $('avisoObs').hidden = !on;
+  camToggle();
+}
+$('fondoObs').onchange = e => setFondoObs(e.target.checked);
+if (!qs.get('sala')) { $('fondoObs').disabled = true; $('fondoObs').parentElement.title = 'Abre Diseño desde una sala para usarlo'; }
+$('fakeCam').onchange = () => { if ($('fakeCam').checked) setFondoObs(false); camToggle(); };
+camToggle();
+try { if (qs.get('sala') && localStorage.getItem(OBS_KEY) === '1') setFondoObs(true); } catch {}
 // Foto de prueba solo para ver cómo quedan los letreros sobre su templo (no se sube ni se guarda).
 $('fotoPrueba').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   txBox.style.setProperty('--foto-prueba', `url("${URL.createObjectURL(f)}")`);
-  $('fakeCam').checked = true; camToggle();
+  $('fakeCam').checked = true; setFondoObs(false);
 };
 
 // Arrastrar: solo lo que pertenece a la pestaña abierta

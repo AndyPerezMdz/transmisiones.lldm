@@ -66,7 +66,7 @@ Cada tipo de letrero (cita, himno, coro, tema, ubicación y letrero libre) es in
 
 ### Ver la imagen real de OBS en la cabina
 
-Arriba de la vista previa de la cabina se elige **Simulada** (el overlay sobre una foto de ejemplo) u **OBS en vivo**. Para OBS en vivo: en OBS, *Iniciar cámara virtual*; en esa laptop abre el enlace de *Cómo conectar OBS* (también está en el Oído) y déjalo abierto. La imagen viaja por [VDO.Ninja](https://vdo.ninja) de laptop a laptop, sin audio y en calidad baja; no pasa por Supabase.
+Arriba de la vista previa de la cabina se elige **Simulada** (el overlay sobre una foto de ejemplo) u **OBS en vivo**. Para OBS en vivo: en OBS, *Iniciar cámara virtual*; en esa laptop abre el enlace de *Cómo conectar OBS* (también está en el Oído) y déjalo abierto. En Diseño también se puede poner de fondo con *OBS en vivo de fondo*. La imagen viaja por [VDO.Ninja](https://vdo.ninja) de laptop a laptop, sin audio y en calidad baja; no pasa por Supabase.
 
 ### Si el micrófono está en otra laptop
 

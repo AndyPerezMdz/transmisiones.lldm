@@ -55,6 +55,24 @@ const ABBREV = { gn: 'Génesis', gen: 'Génesis', ex: 'Éxodo', lv: 'Levítico',
 const ORDINAL = '(?:(1|2|3|i{1,3}|primera?|primero|segunda?|segundo|tercera?|tercero)\\s+(?:(?:carta|epistola)\\s+)?(?:(?:de|a)\\s+(?:los\\s+|san\\s+)?)?)';
 const ORD_VALUE = { 1: 1, i: 1, primer: 1, primera: 1, primero: 1, 2: 2, ii: 2, segunda: 2, segundo: 2, segund: 2, 3: 3, iii: 3, tercer: 3, tercera: 3, tercero: 3 };
 
+// Variantes de cómo el reconocimiento de voz escribe mal un libro: "filipences", "filipense",
+// "colocenses", "ebreos"… Solo se aceptan si van seguidas de un número (capítulo).
+const NO_VARIANTE = new Set(['numero', 'hecho', 'juans', 'jobs', 'ruts']);
+function variantes(name) {
+  const out = new Set([name]);
+  const add = v => { if (v.length >= 4 && !NO_VARIANTE.has(v)) out.add(v); };
+  for (const v of [...out]) {
+    add(v.replace(/s$/, ''));                       // sin la s final
+    add(v.replace(/s([ei])/g, 'c$1'));              // se/si -> ce/ci
+    add(v.replace(/c([ei])/g, 's$1'));              // ce/ci -> se/si
+    add(v.replace(/z/g, 's'));
+    add(v.replace(/^h/, ''));                       // hebreos -> ebreos
+    add(v.replace(/v/g, 'b')); add(v.replace(/b/g, 'v'));
+  }
+  for (const v of [...out]) { add(v.replace(/s$/, '')); add(v.replace(/s([ei])/g, 'c$1')); }
+  return [...out];
+}
+
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
@@ -66,10 +84,12 @@ function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
     const m = name.match(/^([123]) (.+)$/);
     if (m) {
       const base = norm(m[2]);
-      if (!numbered.has(base)) numbered.set(base, {});
-      numbered.get(base)[m[1]] = name;
+      for (const v of variantes(base)) {
+        if (!numbered.has(v)) numbered.set(v, {});
+        numbered.get(v)[m[1]] = name;
+      }
     } else {
-      for (const alias of EXTRA_ALIASES[name] || [norm(name)]) plain.set(alias, name);
+      for (const alias of [...(EXTRA_ALIASES[name] || []), norm(name)]) for (const v of variantes(alias)) if (!plain.has(v)) plain.set(v, name);
       plain.set(norm(name), name);
     }
   }
@@ -78,7 +98,8 @@ function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
   const abbrAlt = Object.keys(ABBREV).sort((a, b) => b.length - a.length).map(escapeRe).join('|');
 
   const VERSE_WORD = '(?:(?:del?|el|los)\\s+)?(?:versiculos?|versos?|vers|vs?)\\.?';
-  const RANGE = '(?:\\s*(?:-|al?|hasta(?:\\s+el)?|y)\\s*(?:' + VERSE_WORD + '\\s*)?(\\d{1,3}))?';
+  // "8-9", "8 al 9", "8 y 9" o, como lo dicta la voz a veces, "8 9" (el segundo tiene que ser mayor).
+  const RANGE = '(?:(?:\\s*(?:-|–|—|al?|hasta(?:\\s+el)?|y)\\s*|\\s+)(?:' + VERSE_WORD + '\\s*)?(\\d{1,3}))?';
   const CHAPTER_VERSE = '\\s*,?\\s*(?:(?:en\\s+)?(?:el\\s+)?capitulos?\\s*)?(\\d{1,3})(?:\\s*(?::|\\.|,|\\s)\\s*(?:' + VERSE_WORD + '\\s*|del?\\s+)?(\\d{1,3})' + RANGE + ')?';
 
   const reNumbered = new RegExp('\\b' + ORDINAL + '(?:san\\s+)?(' + numAlt + ')\\b' + CHAPTER_VERSE, 'g');
@@ -114,6 +135,21 @@ function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
     const label = book + ' ' + chapter + (from ? ':' + from + (to ? '-' + to : '') : '');
     return { kind: 'bible', key: 'b|' + label, book, chapter, from, to, label };
   }
+  // La voz a veces junta los números: "Filipenses 4:89" (era 4:8-9) o "Filipenses 48 9" (era 4:8-9).
+  // Solo se separan cuando lo que quedó junto no existe en la Biblia.
+  function smartRef(book, chapter, from, to) {
+    const ref = bibleRef(book, chapter, from, to);
+    if (ref && !(from && !ref.from)) return ref;
+    const c = String(chapter ?? ''), f = String(from ?? '');
+    if (/^\d\d$/.test(f) && !to && Number(f[1]) > Number(f[0])) {
+      const r = bibleRef(book, chapter, f[0], f[1]); if (r) return r;
+    }
+    // Solo si lo que sigue completa un rango ("48 9" → 4:8-9); "Juan 99:1" no es nada.
+    if (/^\d\d$/.test(c) && !bible[book]?.[Number(c) - 1] && from && !to && Number(from) > Number(c[1])) {
+      const r = bibleRef(book, c[0], c[1], from); if (r) return r;
+    }
+    return ref;
+  }
 
   function detect(raw, { mode = 'speech', context = {} } = {}) {
     const found = [];
@@ -130,7 +166,7 @@ function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
       const n = ORD_VALUE[m[1]];
       const book = numbered.get(m[2])?.[n];
       if (!book) continue;
-      const ref = bibleRef(book, m[3], m[4], m[5]);
+      const ref = smartRef(book, m[3], m[4], m[5]);
       if (ref) { push(ref, m.index); spans.push([m.index, m.index + m[0].length]); ctx.book = book; ctx.chapter = ref.chapter; }
     }
     for (const m of text.matchAll(rePlain)) {
@@ -139,13 +175,13 @@ function createDetector({ hymns = [], coros = [], bible = {} } = {}) {
       const before = text.slice(Math.max(0, m.index - 12), m.index);
       if (/(?:^|\s)(?:1|2|3|primera?|segunda?|tercera?)\s+(?:de\s+)?(?:san\s+)?$/.test(before) && numbered.has(m[1])) continue;
       const book = plain.get(m[1]);
-      const ref = bibleRef(book, m[2], m[3], m[4]);
+      const ref = smartRef(book, m[2], m[3], m[4]);
       if (ref) { push(ref, m.index); spans.push([m.index, m.index + m[0].length]); ctx.book = book; ctx.chapter = ref.chapter; }
     }
     if (mode === 'manual') {
       for (const m of text.matchAll(reAbbr)) {
         if (used(m.index, m.index + m[0].length)) continue;
-        const ref = bibleRef(ABBREV[m[1]], m[2], m[3], m[4]);
+        const ref = smartRef(ABBREV[m[1]], m[2], m[3], m[4]);
         if (ref) { push(ref, m.index); spans.push([m.index, m.index + m[0].length]); ctx.book = ref.book; ctx.chapter = ref.chapter; }
       }
     }

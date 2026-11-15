@@ -94,3 +94,14 @@ test('versículos por su texto (sin la cita)', () => {
   assert.deepEqual(cat.findVerses('vamos a cantar con mucho gozo hermanos el siguiente canto que todos conocemos', { mode: 'speech' }), []);
   assert.deepEqual(cat.findVerses('buenas noches'), []);
 });
+
+test('citas que la voz escribe raro', () => {
+  for (const t of ['Filipenses 4:8-9', 'Filipenses 4:8 9', 'filipenses cuatro ocho nueve', 'Filipenses 4:89', 'Filipenses 48 9',
+    'filipences 4:8-9', 'Filipense 4:8-9', 'Filipenses 4:8–9', 'Filipenses 4 8 al 9'])
+    assert.deepEqual(labels(t), ['Filipenses 4:8-9'], t);
+  assert.deepEqual(labels('Salmo 119:89'), ['Salmos 119:89']);   // existe: no se parte
+  assert.deepEqual(labels('Ebreos 11:1'), ['Hebreos 11:1']);
+  assert.deepEqual(labels('primera de corintio 13 4'), ['1 Corintios 13:4']);
+  assert.deepEqual(labels('cantemos el himno numero 5'), []);    // "numero" no es Números
+  assert.deepEqual(labels('Juan 3 16 2 veces'), ['Juan 3:16']);
+});

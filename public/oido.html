@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f6f3ec">
+<meta name="theme-color" content="#0e0e11">
 <title>Oído · Cabina en Vivo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='oscuro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/control.css">
 <style>
   .oido-pag { max-width: 760px; }
   .oido-caja { display: flex; flex-direction: column; gap: 16px; }
-  .oido-btn { font-size: 20px; padding: 18px 28px; align-self: flex-start; gap: 10px; }
+  .oido-btn { font-size: 12.5px; height: 54px; padding: 0 28px; align-self: flex-start; gap: 10px; }
   .oido-btn.on { background: var(--rojo, #c0392b); border-color: transparent; }
   .estado-cabina { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); font-weight: 600; color: var(--titulo); }
   .estado-cabina::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #9ca3af; flex: none; }

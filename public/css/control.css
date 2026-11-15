@@ -243,3 +243,82 @@
 }
 .tab kbd { display: none; }
 @media (min-width: 1700px) { .tab kbd { display: inline-block; } }
+
+/* ===== Noche y oro: escenario a la izquierda, Escuchar y Poner a la derecha ===== */
+.cab { max-width: 1440px; padding: 28px 32px 48px; gap: 22px; }
+.cab-grid { gap: 22px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: "aire voz" "aire poner"; align-items: start; }
+.col-aire { grid-row: 1 / span 2; position: sticky; top: 90px; }
+.col { border-radius: var(--r); box-shadow: var(--sombra); }
+.col-cab { padding: 22px 26px 0; }
+.col-cab h3 { font: 400 25px/1.2 var(--display); text-transform: none; letter-spacing: 0; color: var(--titulo); gap: 12px; }
+.col-cab h3 .paso { font-size: 18px; }
+.col-cuerpo { padding: 18px 26px 26px; gap: 16px; }
+.primera, .acompanado { border-radius: var(--r); background: var(--superficie); border-color: var(--borde); }
+
+/* Escenario */
+.col-aire { background: var(--escenario); border: 1px solid var(--borde); background-image: radial-gradient(80% 60% at 100% 0%, color-mix(in srgb, var(--a) 9%, transparent), transparent 65%); }
+.col-aire::after { content: ""; position: absolute; inset: 9px; border: 1px solid color-mix(in srgb, var(--a) 16%, transparent); border-radius: calc(var(--r) - 6px); pointer-events: none; }
+.col-aire .col-cab { padding: 26px 30px 0; }
+.col-aire .col-cab h3 { font: 600 10.5px/1.4 var(--sans); letter-spacing: .28em; text-transform: uppercase; color: var(--oro-vivo); }
+.col-aire .col-cuerpo { display: flex; flex-direction: column; align-items: stretch; gap: 16px; padding: 18px 30px 30px; }
+.col-aire .col-cuerpo > * { grid-column: auto; }
+.monitor { border-radius: 10px; box-shadow: 0 0 0 1px rgb(255 240 210 / .08), 0 30px 50px -36px rgb(0 0 0 / .9); }
+.monitor-tag { font: 600 9.5px var(--sans); letter-spacing: .2em; background: rgb(10 10 12 / .55); }
+.monitor-pie .segmento { background: rgb(255 240 210 / .04); border-color: rgb(255 240 210 / .08); }
+.monitor-pie .segmento .chip { color: rgb(241 236 225 / .7); }
+.monitor-pie .segmento .chip.activo { background: rgb(255 240 210 / .1); color: #f6f1e6; border-color: transparent; }
+.ahora-titulo { font: 400 40px/1.1 var(--display); letter-spacing: -.005em; color: #f6f1e6; }
+.ahora-sub { font: italic 16px var(--display); color: rgb(241 236 225 / .6); }
+.estado { font: 600 10px var(--sans); letter-spacing: .24em; background: transparent; border-color: rgb(255 240 210 / .14); color: rgb(241 236 225 / .6); }
+.estado.vivo { background: transparent; color: #f08a8a; border-color: rgb(224 90 90 / .4); box-shadow: none; }
+.estado.vivo .punto { background: #e05a5a; }
+.estado.pausa { background: transparent; color: var(--oro-vivo); border-color: color-mix(in srgb, var(--a) 40%, transparent); }
+.controles { display: grid; grid-template-columns: 1fr 1.8fr 1fr 1fr; gap: 8px; }
+.controles .btn { height: 50px; min-width: 0; max-width: none; padding: 0 10px; }
+.col-aire .btn-sec { background: rgb(255 240 210 / .04); color: #ece6da; border-color: rgb(255 240 210 / .1); }
+.col-aire .btn-sec:hover { border-color: color-mix(in srgb, var(--a) 45%, transparent); background: rgb(255 240 210 / .07); }
+.col-aire .btn-sec.activo { background: color-mix(in srgb, var(--a) 12%, transparent); color: var(--oro-claro); border-color: color-mix(in srgb, var(--a) 45%, transparent); }
+.col-aire .btn-primario { background: color-mix(in srgb, var(--a) 82%, #f3e3bd); color: #17140d; box-shadow: none; }
+.col-aire .btn-primario:hover { background: color-mix(in srgb, var(--a) 60%, #f6ead0); }
+.col-aire .btn-peligro { color: #f09a9a; border-color: rgb(226 100 100 / .25); background: transparent; }
+.partes li { border-radius: 10px; background: rgb(255 240 210 / .03); border-color: rgb(255 240 210 / .08); }
+.partes li.cur { background: color-mix(in srgb, var(--a) 12%, transparent); border-color: color-mix(in srgb, var(--a) 45%, transparent); box-shadow: none; }
+.partes li b { font: 600 9.5px var(--sans); letter-spacing: .2em; color: var(--oro-claro); }
+.col-aire .bloque { border-top-color: rgb(255 240 210 / .08); }
+.col-aire .bloque-cab h3 { color: rgb(241 236 225 / .45); letter-spacing: .26em; font-size: 10px; }
+.chip-aire { background: rgb(224 90 90 / .08); border-color: rgb(224 90 90 / .25); color: #f1ece1; }
+
+/* Escuchar y Poner */
+.card { border-radius: 12px; background: var(--campo); border-color: var(--borde); }
+.card.first { background: var(--oro-suave); border-color: color-mix(in srgb, var(--a) 40%, transparent); box-shadow: none; }
+.card .kind { color: var(--oro-vivo); }
+.card .label { font: 400 22px/1.2 var(--display); color: var(--titulo); }
+.card .meta { font: italic 13px var(--display); color: var(--suave); }
+.tab { font: 600 10.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; padding: 12px 4px 14px; margin-right: 18px; border-bottom-width: 1px; }
+.tab.activo { color: var(--titulo); border-bottom-color: var(--oro-vivo); }
+.tab .paso { font-size: 15px; }
+.col-tabs { padding: 16px 26px 0; gap: 0; }
+.buscar { font: 400 20px var(--display); padding: 14px 18px; border-radius: 12px; }
+.buscar::placeholder { font-style: italic; }
+.results li, .history li { border-radius: 10px; }
+.results .t, .history .t { font: 400 17px var(--display); }
+.tema { background: transparent; border-radius: 12px; }
+.hist-cabeza h3 { color: var(--oro-vivo); }
+.oido summary { font: italic 15px var(--display); color: var(--suave); }
+
+@media (max-width: 1100px) {
+  .cab-grid { grid-template-columns: 1fr; grid-template-areas: "aire" "poner" "voz"; }
+  .col-aire { grid-row: auto; position: static; }
+}
+@media (max-width: 700px) {
+  .cab { padding: 12px 10px 96px; }
+  .ahora-titulo { font-size: 30px; }
+  .controles { grid-template-columns: 1fr; }
+  .col-cab, .col-cuerpo, .col-tabs { padding-left: 18px; padding-right: 18px; }
+}
+.card .acc .btn-primario { height: 36px; padding: 0 14px; font-size: 10.5px; background: transparent; color: var(--oro-vivo); border: 1px solid color-mix(in srgb, var(--a) 45%, transparent); }
+.card .acc .btn-primario:hover { background: var(--oro-vivo); color: #17140d; }
+.card.first .acc .btn-primario { background: var(--oro-vivo); color: #17140d; border-color: transparent; }
+.col-aire { position: relative; top: auto; }
+.col-aire .monitor { width: min(100%, calc(44vh * 16 / 9)); align-self: center; }
+.col-aire .monitor-pie { width: min(100%, calc(44vh * 16 / 9)); align-self: center; }

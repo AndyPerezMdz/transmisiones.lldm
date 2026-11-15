@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f6f3ec">
+<meta name="theme-color" content="#0e0e11">
 <title>Cabina en Vivo · La Luz del Mundo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='oscuro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
   /* ----- Entrada: el templo con blur + logo, igual que el Itinerario ----- */
@@ -22,9 +22,8 @@
   .auth-tema { position: absolute; top: 16px; right: 16px; background: rgb(255 255 255 / .1); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2); backdrop-filter: blur(6px); }
   .auth-logo { width: 240px; height: auto; margin-bottom: 32px; filter: drop-shadow(0 10px 20px rgb(0 0 0 / .35)); }
   .auth-caja { position: relative; width: 100%; max-width: 384px; overflow: hidden; border-radius: 24px; padding: 30px 28px;
-    background: color-mix(in srgb, var(--superficie) 95%, transparent); box-shadow: 0 25px 50px -12px rgb(0 0 0 / .4), inset 0 0 0 1px rgb(255 255 255 / .4); backdrop-filter: blur(6px); }
-  .auth-caja::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: linear-gradient(to bottom, var(--oro-vivo), var(--marca)); }
-  .auth-caja h1 { text-align: center; font-size: 32px; }
+    background: color-mix(in srgb, var(--superficie) 95%, transparent); box-shadow: 0 30px 60px -24px rgb(0 0 0 / .6), inset 0 0 0 1px rgb(255 240 210 / .08); backdrop-filter: blur(8px); border-radius: 18px; }
+  .auth-caja h1 { text-align: center; font-size: 34px; }
   .auth-caja .sub { text-align: center; color: var(--suave); font-size: 14px; margin: 6px 0 26px; }
   .auth-caja form { display: flex; flex-direction: column; gap: 16px; }
   .auth-error { border-radius: 12px; background: var(--rojo-suave); color: var(--rojo-texto); padding: 8px 12px; font-size: 14px; }

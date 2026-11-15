@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4d3f">
+<meta name="theme-color" content="#0b0f0d">
 <title>Cabina · Cabina en Vivo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='oscuro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/control.css">
 </head>
 <body>
 <main class="cab">
+  <div class="cab-avisos">
   <div class="acompanado" id="otrosBar" hidden>
     <span data-icon="ojo"></span><span id="otrosTxt"></span>
   </div>
@@ -22,67 +23,15 @@
     <div><b>¿Primera vez aquí?</b> Mira en un minuto cómo se usa la cabina.</div>
     <div class="fila"><button class="btn btn-oro" id="verGuia" type="button">Ver cómo se usa</button><button class="btn btn-mini" id="cerrarPrimera" type="button">Ya sé</button></div>
   </div>
-
-  <!-- Lo que se ve ahora -->
-  <section class="tarjeta ahora" id="ahora">
-    <div class="monitor-col">
-      <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1" allow="autoplay; fullscreen"></iframe><span class="monitor-tag" id="monitorTag">Simulación de la transmisión</span></div>
-      <div class="monitor-pie">
-        <div class="segmento" id="vistaModo" role="group" aria-label="Qué se ve en la vista previa">
-          <button type="button" class="chip activo" data-vista="sim">Simulada</button>
-          <button type="button" class="chip" data-vista="obs" data-icon="tv" data-icon-size="14">OBS en vivo</button>
-        </div>
-        <button type="button" class="btn btn-mini" id="obsConfig" data-icon="ajustes" data-icon-size="14">Cómo conectar OBS</button>
-      </div>
-    </div>
-    <div class="ahora-info">
-      <div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div>
-      <div class="ahora-titulo" id="onairLabel">Nada al aire</div>
-      <div class="ahora-sub" id="onairSub">Cuando pongas algo, aparecerá aquí.</div>
-      <div class="controles">
-        <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←" data-icon="anterior">Anterior</button>
-        <button class="btn btn-primario btn-grande" id="btnNext" type="button" title="Tecla → o Espacio" data-icon="siguiente" data-icon-pos="end">Siguiente</button>
-        <button class="btn btn-sec btn-grande" id="btnBlank" type="button" title="Tecla B">Ocultar texto</button>
-        <button class="btn btn-peligro btn-grande" id="btnClear" type="button" title="Tecla Esc">Quitar todo</button>
-      </div>
-      <div class="letrero">
-        <div class="letreros-activos" id="letrerosActivos"></div>
-        <span class="crece"></span>
-        <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O: muestra u oculta el letrero de lo que está en pantalla">Mostrar su letrero</button>
-        <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U" data-icon="ubicacion">Ubicación</button>
-        <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes" data-icon="ajustes">Ajustes</button>
-      </div>
-      <form class="expositor" id="spForm" autocomplete="off">
-        <span class="expositor-tit" data-icon="usuario">Quién expone</span>
-        <input class="campo" id="spName" maxlength="80" placeholder="Nombre, ej. Hno. Juan Pérez">
-        <input class="campo" id="spRole" maxlength="60" placeholder="Cargo (opcional), ej. Ministro">
-        <button class="btn btn-oro" id="btnSpeaker" type="submit" title="Tecla N">Mostrar nombre</button>
-        <div class="recientes" id="spRecent"></div>
-      </form>
-      <form class="expositor" id="avForm" autocomplete="off">
-        <span class="expositor-tit" data-icon="aviso">Letrero libre</span>
-        <input class="campo" id="avText" maxlength="160" placeholder="Lo que quieras mostrar, ej. Bienvenidos a la Santa Cena">
-        <input class="campo" id="avTag" maxlength="60" placeholder="Etiqueta (opcional), ej. Aviso">
-        <div class="av-extra">
-          <label class="chico">Fecha <input class="campo" id="avFecha" type="date"></label>
-          <label class="chico">Hora <input class="campo" id="avHora" type="time"></label>
-          <label class="chico av-lugar">Lugar <input class="campo" id="avLugar" maxlength="80" placeholder="Opcional, ej. Templo principal"></label>
-        </div>
-        <button class="btn btn-oro" id="btnAviso" type="submit" title="Tecla L">Mostrar</button>
-        <div class="recientes" id="avRecent"></div>
-      </form>
-    </div>
-    <ol class="partes" id="slides" aria-label="Partes"></ol>
-  </section>
-
-  <div class="cab-cols">
-    <!-- Voz -->
-    <section class="tarjeta" id="voicePanel">
-      <div class="tarjeta-cabeza">
-        <div class="fila"><span class="paso">1</span><h2>Escuchar al expositor</h2></div>
+  </div>
+  <div class="cab-grid">
+    <!-- 1. Escuchar -->
+    <section class="col" id="voicePanel">
+      <header class="col-cab"><h3><span class="paso">1</span>Escuchar</h3>
         <div class="fila"><button class="btn btn-mini" id="btnMicTest" type="button">Probar micrófono</button>
         <button class="btn btn-primario mic" id="btnMic" type="button">Escuchar</button></div>
-      </div>
+      </header>
+      <div class="col-cuerpo">
       <p class="ayuda" id="micStatus">Presiona <b>Escuchar</b> y la cabina te irá sugiriendo las citas, himnos, coros y el tema que mencione.</p>
       <div class="mic-vivo" id="micNivelBox" hidden>
         <div class="nivel"><div class="nivel-barra" id="micNivel"></div></div>
@@ -107,12 +56,56 @@
         <summary>Ver lo que se ha escuchado</summary>
         <div class="transcript" id="transcript" aria-live="polite"></div>
       </details>
+      </div>
     </section>
 
-    <!-- Buscar -->
-    <section class="tarjeta" id="searchPanel">
-      <div class="tarjeta-cabeza"><div class="fila"><span class="paso">2</span><h2>O búscalo tú</h2></div><span class="chico">Tecla <kbd>/</kbd></span></div>
-      <input class="campo buscar" id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Escribe una cita, un número de himno o un pedazo de letra">
+    <!-- Al aire -->
+    <section class="col col-aire" id="ahora">
+      <header class="col-cab"><h3>Al aire</h3><div class="estado" id="estado"><span class="punto"></span><span id="estadoTxt">Nada en pantalla</span></div></header>
+      <div class="col-cuerpo">
+        <div class="monitor-col">
+      <div class="monitor"><iframe id="monitor" title="Vista de la transmisión" tabindex="-1" allow="autoplay; fullscreen"></iframe><span class="monitor-tag" id="monitorTag">Simulación de la transmisión</span></div>
+      <div class="monitor-pie">
+        <div class="segmento" id="vistaModo" role="group" aria-label="Qué se ve en la vista previa">
+          <button type="button" class="chip activo" data-vista="sim">Simulada</button>
+          <button type="button" class="chip" data-vista="obs" data-icon="tv" data-icon-size="14">OBS en vivo</button>
+        </div>
+        <button type="button" class="btn btn-mini" id="obsConfig" data-icon="ajustes" data-icon-size="14">Cómo conectar OBS</button>
+      </div>
+    </div>
+        <div class="ahora-info">
+          <div class="ahora-titulo" id="onairLabel">Nada al aire</div>
+          <div class="ahora-sub" id="onairSub">Cuando pongas algo, aparecerá aquí.</div>
+        </div>
+        <div class="controles">
+        <button class="btn btn-sec btn-grande" id="btnPrev" type="button" title="Tecla ←" data-icon="anterior">Anterior</button>
+        <button class="btn btn-primario btn-grande" id="btnNext" type="button" title="Tecla → o Espacio" data-icon="siguiente" data-icon-pos="end">Siguiente</button>
+        <button class="btn btn-sec btn-grande" id="btnBlank" type="button" title="Tecla B">Ocultar texto</button>
+        <button class="btn btn-peligro btn-grande" id="btnClear" type="button" title="Tecla Esc">Quitar todo</button>
+      </div>
+        <ol class="partes" id="slides" aria-label="Partes"></ol>
+        <div class="bloque">
+          <div class="bloque-cab"><h3>Letreros en la transmisión</h3></div>
+          <div class="letrero">
+        <div class="letreros-activos" id="letrerosActivos"></div>
+        <span class="crece"></span>
+        <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O: muestra u oculta el letrero de lo que está en pantalla">Mostrar su letrero</button>
+        <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U" data-icon="ubicacion">Ubicación</button>
+        <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes" data-icon="ajustes">Ajustes</button>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Poner -->
+    <section class="col col-poner">
+      <header class="col-cab col-tabs" role="tablist">
+        <button type="button" class="tab activo" data-tab="buscar" role="tab"><span class="paso">2</span>Buscar <kbd>/</kbd></button>
+        <button type="button" class="tab" data-tab="expositor" role="tab" data-icon="usuario" data-icon-size="15">Expositor <i class="tab-on" id="tabSpOn"></i></button>
+        <button type="button" class="tab" data-tab="aviso" role="tab" data-icon="aviso" data-icon-size="15">Letrero libre <i class="tab-on" id="tabAvOn"></i></button>
+      </header>
+      <div class="col-cuerpo tab-panel" data-panel="buscar" id="searchPanel">
+        <input class="campo buscar" id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Escribe una cita, un número de himno o un pedazo de letra">
       <div class="ejemplos" id="ejemplos">
         <span class="chico">Por ejemplo:</span>
         <button type="button" class="chip" data-q="Juan 3:16">Juan 3:16</button>
@@ -133,6 +126,30 @@
       <div class="hist-cabeza"><h3>Lo último que pusiste</h3><button type="button" class="btn btn-mini" id="clearHistory" hidden>Borrar todo</button></div>
       <ol class="history" id="history"></ol>
       <div class="vacio chico" id="noHistory">Todavía nada.</div>
+      </div>
+      <div class="col-cuerpo tab-panel" data-panel="expositor" hidden>
+        <p class="ayuda">Quién expone. Sale en su letrero (tecla <kbd>N</kbd>) y se queda hasta que lo ocultes.</p>
+        <form class="expositor" id="spForm" autocomplete="off">
+                <input class="campo" id="spName" maxlength="80" placeholder="Nombre, ej. Hno. Juan Pérez">
+        <input class="campo" id="spRole" maxlength="60" placeholder="Cargo (opcional), ej. Ministro">
+        <button class="btn btn-oro" id="btnSpeaker" type="submit" title="Tecla N">Mostrar nombre</button>
+        <div class="recientes" id="spRecent"></div>
+      </form>
+      </div>
+      <div class="col-cuerpo tab-panel" data-panel="aviso" hidden>
+        <p class="ayuda">Para avisos o lo que quieran mostrar sin que sea cita ni canto (tecla <kbd>L</kbd>). Se queda hasta que lo ocultes.</p>
+        <form class="expositor" id="avForm" autocomplete="off">
+                <input class="campo" id="avText" maxlength="160" placeholder="Lo que quieras mostrar, ej. Bienvenidos a la Santa Cena">
+        <input class="campo" id="avTag" maxlength="60" placeholder="Etiqueta (opcional), ej. Aviso">
+        <div class="av-extra">
+          <label class="chico">Fecha <input class="campo" id="avFecha" type="date"></label>
+          <label class="chico">Hora <input class="campo" id="avHora" type="time"></label>
+          <label class="chico av-lugar">Lugar <input class="campo" id="avLugar" maxlength="80" placeholder="Opcional, ej. Templo principal"></label>
+        </div>
+        <button class="btn btn-oro" id="btnAviso" type="submit" title="Tecla L">Mostrar</button>
+        <div class="recientes" id="avRecent"></div>
+      </form>
+      </div>
     </section>
   </div>
 </main>

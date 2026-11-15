@@ -168,6 +168,8 @@ function render() {
   }
   if (document.activeElement !== $('theme')) $('theme').value = state.theme || '';
 
+  $('tabSpOn').hidden = !state.speaker.visible;
+  $('tabAvOn').hidden = !ltOn('aviso');
   const sp = state.speaker;
   $('btnSpeaker').textContent = sp.visible ? 'Ocultar nombre' : 'Mostrar nombre';
   $('btnSpeaker').className = 'btn ' + (sp.visible ? 'btn-sec activo' : 'btn-oro');
@@ -495,6 +497,13 @@ function renderResults() {
   ol.children[sel]?.scrollIntoView({ block: 'nearest' });
 }
 
+// ---------- pestañas de la columna "Poner" ----------
+function setTab(t) {
+  for (const b of document.querySelectorAll('.tab')) { b.classList.toggle('activo', b.dataset.tab === t); b.setAttribute('aria-selected', b.dataset.tab === t); }
+  for (const p of document.querySelectorAll('.tab-panel')) p.hidden = p.dataset.panel !== t;
+}
+for (const b of document.querySelectorAll('.tab')) b.onclick = () => setTab(b.dataset.tab);
+
 // ---------- tema ----------
 const themeInput = $('theme');
 const airTheme = () => { const text = themeInput.value.trim(); if (text) { actions.air({ kind: 'theme', text }); themeInput.blur(); } };
@@ -527,7 +536,7 @@ document.addEventListener('keydown', e => {
     b: actions.blank, o: () => $('btnBanner').click(), u: actions.location, m: () => micBtn.click(),
     n: () => state.speaker.visible ? hideSpeaker() : $('spForm').requestSubmit(),
     l: () => avisoVisible() ? (hideLetrero('aviso'), commit()) : $('avForm').requestSubmit(),
-    '/': () => { search.focus(); search.select(); }
+    '/': () => { setTab('buscar'); search.focus(); search.select(); }
   };
   const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
   if (fn) { e.preventDefault(); fn(); }

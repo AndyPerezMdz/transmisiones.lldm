@@ -81,34 +81,35 @@ export const absolute = (path, params) => location.origin + withDemo(path, param
 export function mountNav(active, { roomName = '' } = {}) {
   const sala = qs.get('sala');
   const links = [
-    { id: 'salas', n: 'Salas', href: withDemo('/') },
+    { id: 'salas', n: 'Salas', icon: 'capas', href: withDemo('/') },
     ...(sala ? [
-      { id: 'cabina', n: 'Cabina', href: withDemo('/control', { sala }) },
-      { id: 'diseno', n: 'Diseño', href: withDemo('/diseno', { sala }) }
+      { id: 'cabina', n: 'Cabina', icon: 'mic', href: withDemo('/control', { sala }) },
+      { id: 'diseno', n: 'Diseño', icon: 'paleta', href: withDemo('/diseno', { sala }) }
     ] : []),
-    { id: 'cantos', n: 'Cantos', href: withDemo('/cantos', { sala }) },
-    { id: 'equipo', n: 'Equipo', href: withDemo('/equipo', { sala }) }
+    { id: 'cantos', n: 'Cantos', icon: 'himno', href: withDemo('/cantos', { sala }) },
+    { id: 'equipo', n: 'Equipo', icon: 'personas', href: withDemo('/equipo', { sala }) }
   ];
-  const linkList = () => el('nav', { class: 'nav-links' },
-    links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null, text: l.n })));
-  const salir = el('button', { type: 'button', class: 'nav-boton', text: 'Salir', title: 'Cerrar sesión' });
+  const salir = el('button', { type: 'button', class: 'nav-boton', title: 'Cerrar sesión', 'aria-label': 'Cerrar sesión' }, icon('salir', { size: 18 }));
   salir.onclick = async () => { const sb = await supa(); await sb?.auth.signOut(); location.href = '/'; };
-  const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', 'aria-label': 'Cómo se usa' }, icon('ayuda', { size: 20 }));
+  const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', 'aria-label': 'Cómo se usa' }, icon('ayuda', { size: 18 }));
   help.hidden = true;
-  const header = el('header', { class: 'nav' },
-    el('div', { class: 'nav-in' },
-      el('a', { class: 'nav-marca', href: withDemo('/') },
-        el('img', { src: '/img/antorcha-clara.png', alt: '' }),
-        el('span', {}, el('b', { text: 'Cabina en Vivo' }), el('small', { text: 'La Luz del Mundo' }))),
-      linkList(),
-      el('div', { class: 'nav-der' },
-        roomName ? el('span', { class: 'nav-sala', id: 'navSala', text: roomName }) : el('span', { class: 'nav-sala', id: 'navSala' }),
-        help, themeButton(), demo ? el('span', { class: 'nav-boton', title: 'Sin base de datos', text: 'Demo' }) : salir)),
-    el('div', { class: 'nav-movil' }, linkList()));
-  document.body.prepend(header);
+  const salaBox = el('div', { class: 'lat-sala', hidden: sala ? null : true },
+    el('small', { text: 'Sala' }), el('span', { class: 'nav-sala', id: 'navSala', text: roomName || '…' }));
+  const aside = el('aside', { class: 'lateral' },
+    el('a', { class: 'lat-marca', href: withDemo('/') },
+      el('img', { src: '/img/antorcha-clara.png', alt: '' }),
+      el('span', {}, el('b', { text: 'Cabina en Vivo' }), el('small', { text: 'La Luz del Mundo' }))),
+    salaBox,
+    el('nav', { class: 'lat-links' }, links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null, title: l.n },
+      icon(l.icon, { size: 18 }), el('span', { text: l.n })))),
+    el('div', { class: 'lat-pie' },
+      help, themeButton(), el('span', { class: 'crece' }),
+      demo ? el('span', { class: 'nav-boton solo-lateral', title: 'Sin base de datos', text: 'Demo' }) : salir));
+  document.body.classList.add('con-lateral');
+  document.body.prepend(aside);
   // Pinta la app con la paleta del equipo (ya se aplicó la última conocida antes de dibujar).
   myTeams().then(ts => { const t = pickTeam(ts); if (t) applyTheme(t.theme); }).catch(() => {});
-  return header;
+  return aside;
 }
 
 // Evita que Enter o Espacio repitan el último botón que se presionó con el mouse.

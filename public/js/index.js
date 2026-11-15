@@ -13,7 +13,7 @@ function copyBox(url) {
 }
 
 function roomCard(room, sb) {
-  const rename = el('button', { class: 'btn btn-mini', type: 'button', text: 'Cambiar nombre' });
+  const rename = el('button', { class: 'btn btn-mini', type: 'button', text: 'Cambiar nombre', 'data-icon': 'editar', 'data-icon-size': 14 });
   rename.onclick = async () => {
     const name = await modal({ title: 'Cambiar nombre', input: { label: 'Nombre de la sala', value: room.name, maxLength: 80 }, ok: 'Guardar' });
     if (!name || name === room.name || demo) return;
@@ -21,36 +21,30 @@ function roomCard(room, sb) {
     if (error) return toast(error.message);
     showHome(sb);
   };
+  const fila = (label, url, hint) => el('div', { class: 'enlace-fila' },
+    el('div', { class: 'enlace-tit' }, el('b', { text: label }), hint ? el('span', { class: 'chico', text: hint }) : null), copyBox(url));
   return el('section', { class: 'tarjeta sala' },
-    el('h2', { text: room.name }),
-    el('div', { class: 'pasos' },
-      el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '1' }), el('b', { text: 'Pon los gráficos en OBS (una sola vez)' }),
-        el('p', { class: 'ayuda', text: 'En OBS: Fuentes → + → Navegador → pega este enlace, ancho 1920 y alto 1080. Ponla arriba de las cámaras. Trae los logos, el letrero y el nombre del expositor; como las TVs muestran lo de OBS, también salen ahí.' }),
-        copyBox(absolute('/overlay', { sala: room.id })),
-        el('details', { class: 'opcional piezas' },
-          el('summary', { text: '¿Quieres cada letrero por separado?' }),
-          el('p', { class: 'ayuda', text: 'Agrega en OBS una fuente de Navegador por cada uno (1920 × 1080). Así los ordenas, los ocultas o les pones filtros por separado. Usa estos en lugar del enlace de arriba, no los dos, o se verán doble.' }),
-          ...PIEZAS_OBS.flatMap(p => [el('b', { class: 'chico', text: p.name }), copyBox(absolute('/overlay', { sala: room.id, solo: p.id }))]))),
-      el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '2' }), el('b', { text: 'Abre la cabina en esta laptop' }),
-        el('p', { class: 'ayuda', text: 'Desde ahí pones citas, himnos, el tema y el nombre del expositor. Usa Chrome o Edge para que funcione el micrófono.' }),
-        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-primario', href: withDemo('/control', { sala: room.id }), text: 'Abrir la cabina' }))),
-      el('div', { class: 'paso-fila' },
-        el('span', { class: 'paso', text: '3' }), el('b', { text: 'Ajusta el diseño a su letrero' }),
-        el('p', { class: 'ayuda', text: 'Sube sus logos y su letrero, y acomoda los textos para que todo quede en su lugar.' }),
-        el('div', { class: 'acciones' }, el('a', { class: 'btn btn-sec', href: withDemo('/diseno', { sala: room.id }), text: 'Abrir Diseño', 'data-icon': 'paleta' })))),
-    el('details', { class: 'opcional' },
-      el('summary', { text: 'Opcional: letra completa de cantos y versículos' }),
-      el('p', { class: 'ayuda', text: 'Si quieren mostrar la letra completa, agreguen este enlace en OBS como otra fuente de Navegador (por ejemplo, en una escena “Letra”).' }),
-      copyBox(absolute('/pantalla', { sala: room.id }))),
-    el('details', { class: 'opcional' },
-      el('summary', { text: 'Opcional: el micrófono está en otra laptop' }),
-      el('p', { class: 'ayuda', text: 'Si el micrófono está conectado a otra computadora (por ejemplo, la de la transmisión), abre ahí este enlace en Chrome y presiona Empezar a escuchar. Lo que oiga le llega a la cabina como sugerencias.' }),
-      copyBox(absolute('/oido', { sala: room.id }))),
-    el('div', { class: 'sala-pie' },
-      el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: 'Cantos', 'data-icon': 'himno' }),
-      demo ? null : rename));
+    el('header', { class: 'sala-cab' },
+      el('div', {}, el('h3', { text: 'Sala' }), el('h2', { text: room.name })),
+      demo ? null : rename),
+    // Lo que se usa cada culto
+    el('div', { class: 'sala-acciones' },
+      el('a', { class: 'btn btn-primario btn-grande', href: withDemo('/control', { sala: room.id }), 'data-icon': 'mic' , text: 'Abrir la cabina' }),
+      el('a', { class: 'btn btn-sec btn-grande', href: withDemo('/diseno', { sala: room.id }), 'data-icon': 'paleta', text: 'Diseño' })),
+    el('p', { class: 'ayuda', text: 'Abre la cabina en Chrome o Edge para que funcione el micrófono.' }),
+    // Configuración de OBS (una sola vez)
+    el('div', { class: 'sala-bloque' },
+      el('h3', { text: 'Enlaces para OBS · se configuran una sola vez' }),
+      el('p', { class: 'ayuda', text: 'En OBS: Fuentes → + → Navegador → pega el enlace, 1920 × 1080, arriba de las cámaras. Como las TVs muestran lo de OBS, también salen ahí.' }),
+      fila('Gráficos (todo junto)', absolute('/overlay', { sala: room.id }), 'logos, letreros y expositor'),
+      el('details', { class: 'opcional piezas' },
+        el('summary', { text: 'O cada letrero por separado' }),
+        el('p', { class: 'ayuda', text: 'Una fuente de Navegador por cada uno, para ordenarlos u ocultarlos por separado. Usa estos o el de arriba, no los dos, o se verán doble.' }),
+        ...PIEZAS_OBS.map(p => fila(p.name, absolute('/overlay', { sala: room.id, solo: p.id })))),
+      el('details', { class: 'opcional' },
+        el('summary', { text: 'Más: letra completa y micrófono en otra laptop' }),
+        fila('Letra completa (opcional)', absolute('/pantalla', { sala: room.id }), 'otra fuente de Navegador, por ejemplo en una escena “Letra”'),
+        fila('Oído', absolute('/oido', { sala: room.id }), 'ábrelo en la laptop que tiene el micrófono'))));
 }
 
 let team = null;

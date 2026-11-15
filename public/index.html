@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f4d3f">
+<meta name="theme-color" content="#0b0f0d">
 <title>Cabina en Vivo · La Luz del Mundo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='oscuro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
   /* ----- Entrada: el templo con blur + logo, igual que el Itinerario ----- */
@@ -43,24 +43,21 @@
   .auth-pie a { color: var(--oro-claro); }
 
   /* ----- Salas ----- */
-  .salas { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
-  .sala h2 { font: 600 24px/1.2 var(--display); letter-spacing: -.01em; }
-  .pasos { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
-  .paso-fila { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; }
-  .paso-fila .paso { margin-top: 2px; }
-  .paso-fila > :not(.paso) { grid-column: 2; min-width: 0; }
-  .paso-fila b { color: var(--titulo); font-weight: 650; }
-  .paso-fila .ayuda { grid-column: 2; font-size: 13.5px; }
-  .paso-fila .acciones { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-  .enlace-obs { grid-column: 2; min-width: 0; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-  .enlace-obs code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 10px; border-radius: 10px; }
-  .opcional { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); }
-  .opcional summary { cursor: pointer; font-weight: 600; color: var(--titulo); font-size: 14px; }
-  .opcional .ayuda { margin: 8px 0 4px; font-size: 13.5px; }
-  .opcional .enlace-obs { margin-top: 6px; }
-  .opcional.piezas { margin-top: 10px; }
-  .opcional.piezas b { display: block; margin-top: 10px; }
-  .sala-pie { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--borde); }
+  .salas { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); align-items: start; }
+  .sala { display: flex; flex-direction: column; gap: 14px; }
+  .sala-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .sala h2 { font-size: 22px; font-weight: 700; letter-spacing: -.015em; margin-top: 2px; }
+  .sala-acciones { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+  .sala-bloque { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--borde); }
+  .enlace-fila { display: flex; flex-direction: column; gap: 4px; }
+  .enlace-tit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; }
+  .enlace-tit b { color: var(--titulo); }
+  .enlace-obs { min-width: 0; display: flex; gap: 6px; align-items: center; }
+  .enlace-obs code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 10px; }
+  .enlace-obs .btn { height: 34px; }
+  .opcional { padding: 10px 12px; border-radius: var(--r); background: var(--campo); border: 1px solid var(--borde); display: flex; flex-direction: column; gap: 10px; }
+  .opcional:not([open]) { gap: 0; }
+  .opcional summary { cursor: pointer; font-weight: 600; color: var(--titulo); font-size: 13.5px; }
   .nueva { display: flex; gap: 10px; flex-wrap: wrap; }
   .nueva .campo { margin: 0; flex: 1; min-width: 220px; }
 </style>
@@ -127,7 +124,7 @@
   <div class="pagina-cabeza">
     <div>
       <h1>Tus salas</h1>
-      <p class="ayuda" id="homeAyuda">Una sala es un lugar donde se proyecta (por ejemplo, el templo principal). Sigue los pasos en orden.</p>
+      <p class="ayuda" id="homeAyuda">Una sala es un lugar donde se proyecta (por ejemplo, el templo principal).</p>
     </div>
     <div class="equipo-barra" id="teamBar"></div>
   </div>

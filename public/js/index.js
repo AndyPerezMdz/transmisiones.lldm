@@ -39,6 +39,10 @@ function roomCard(room, sb) {
       el('summary', { text: 'Opcional: letra completa de cantos y versículos' }),
       el('p', { class: 'ayuda', text: 'Si quieren mostrar la letra completa, agreguen este enlace en OBS como otra fuente de Navegador (por ejemplo, en una escena “Letra”).' }),
       copyBox(absolute('/pantalla', { sala: room.id }))),
+    el('details', { class: 'opcional' },
+      el('summary', { text: 'Opcional: el micrófono está en otra laptop' }),
+      el('p', { class: 'ayuda', text: 'Si el micrófono está conectado a otra computadora (por ejemplo, la de la transmisión), abre ahí este enlace en Chrome y presiona Empezar a escuchar. Lo que oiga le llega a la cabina como sugerencias.' }),
+      copyBox(absolute('/oido', { sala: room.id }))),
     el('div', { class: 'sala-pie' },
       el('a', { class: 'btn btn-mini', href: withDemo('/cantos'), text: 'Cantos', 'data-icon': 'himno' }),
       demo ? null : rename));

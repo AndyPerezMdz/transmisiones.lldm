@@ -68,8 +68,20 @@
         <span class="chico" id="micDevice"></span>
         <span class="mic-aviso" id="micAviso"></span>
       </div>
+      <div class="oido-remoto" id="oidoRemoto" hidden>
+        <div class="fila"><span data-icon="mic" data-icon-size="16"></span><b id="oidoTitulo">Escuchando desde otra computadora</b></div>
+        <div class="nivel"><div class="nivel-barra" id="oidoNivel"></div></div>
+        <span class="chico" id="oidoDevice"></span>
+        <span class="mic-aviso" id="oidoAviso"></span>
+        <span class="parcial" id="oidoParcial"></span>
+      </div>
       <ol class="cards" id="suggestions"></ol>
       <div class="vacio" id="noSuggestions">Aquí aparecerán las sugerencias. Tú decides cuál se pone en pantalla con <b>Poner en pantalla</b>.</div>
+      <details class="oido otra-laptop">
+        <summary>¿El micrófono está conectado en otra laptop?</summary>
+        <p class="ayuda">Abre este enlace en Chrome, en la laptop que tiene el micrófono, y presiona <b>Empezar a escuchar</b>. Lo que oiga llega aquí como sugerencias. Solo viaja el texto, no el audio.</p>
+        <div class="copiar"><input class="campo" id="oidoLink" readonly><button class="btn btn-sec" id="oidoCopiar" type="button" data-icon="copiar">Copiar</button></div>
+      </details>
       <details class="oido">
         <summary>Ver lo que se ha escuchado</summary>
         <div class="transcript" id="transcript" aria-live="polite"></div>

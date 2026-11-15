@@ -5,6 +5,8 @@ import { createPublisher, loadRoom } from './live.js';
 import { createTurno } from './turno.js';
 import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
 import { icon } from './icons.js';
+import { openMeter, METER_TXT } from './voz.js';
+import { createOidoLink } from './oido-link.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const ICON_NAME = { bible: 'biblia', hymn: 'himno', coro: 'coro', theme: 'tema' };
@@ -244,38 +246,6 @@ function setMic(on, text) {
   micBtn.replaceChildren(icon(on ? 'detener' : 'mic'), on ? 'Dejar de escuchar' : 'Escuchar');
   if (text) micStatus.textContent = text;
 }
-// ---------- Medidor de volumen (mientras escucha y en la prueba) ----------
-// El reconocimiento de voz del navegador no deja procesar el audio, pero sí podemos
-// medirlo para avisar cuando no llega sonido o cuando la voz satura (gritos, ganancia alta).
-async function openMeter(onFrame) {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-  const ctxA = new (window.AudioContext || window.webkitAudioContext)();
-  const an = ctxA.createAnalyser(); an.fftSize = 1024;
-  ctxA.createMediaStreamSource(stream).connect(an);
-  const buf = new Float32Array(an.fftSize);
-  let raf, quiet = 0, clipped = 0, frames = 0, verdict = 'ok';
-  const loop = () => {
-    an.getFloatTimeDomainData(buf);
-    let sum = 0, peak = 0;
-    for (const v of buf) { sum += v * v; const a = Math.abs(v); if (a > peak) peak = a; }
-    const rms = Math.sqrt(sum / buf.length);
-    frames++; if (peak > 0.97) clipped++;
-    quiet = rms < 0.004 ? quiet + 1 : 0;
-    if (frames >= 60) { // ~1 segundo
-      verdict = clipped / frames > 0.04 ? 'satura' : quiet > 480 ? 'silencio' : 'ok';
-      frames = 0; clipped = 0;
-    }
-    onFrame({ level: Math.min(100, Math.round(rms * 400)), peak, verdict: quiet > 480 ? 'silencio' : verdict });
-    raf = requestAnimationFrame(loop);
-  };
-  loop();
-  return { label: stream.getAudioTracks()[0]?.label || 'Micrófono predeterminado',
-    close() { cancelAnimationFrame(raf); stream.getTracks().forEach(t => t.stop()); ctxA.close(); } };
-}
-const METER_TXT = {
-  satura: 'La voz está saturando (gritos o ganancia muy alta): baja la ganancia del micrófono o del receptor. Si satura, el reconocimiento no entiende.',
-  silencio: 'No está llegando sonido. Revisa que el micrófono esté encendido y que sea el que usa el navegador.'
-};
 let liveMeter = null;
 async function startLiveMeter() {
   if (liveMeter || !navigator.mediaDevices?.getUserMedia) return;
@@ -348,6 +318,40 @@ function heard(text) {
   while (finalsEl.children.length > 40) finalsEl.lastChild.remove();
 }
 window.simularVoz = heard; // para probar sin micrófono desde la consola
+
+// ---------- Oído en otra computadora ----------
+// La laptop que tiene el micrófono abre /oido y manda aquí el texto que reconoce.
+let oidoVisto = 0, oidoNombre = '';
+const oido = createOidoLink(room, msg => {
+  if (msg.t === 'voz') heard(String(msg.text || '').slice(0, 500));
+  else if (msg.t === 'parcial') $('oidoParcial').textContent = String(msg.text || '').slice(-160);
+  else if (msg.t === 'estado') {
+    oidoVisto = msg.bye ? 0 : Date.now(); oidoNombre = msg.name || '';
+    const box = $('oidoRemoto');
+    box.hidden = !oidoVisto;
+    box.dataset.estado = msg.on ? msg.verdict : 'pausa';
+    $('oidoTitulo').textContent = msg.on ? `Escuchando desde otra computadora${oidoNombre ? ' (' + oidoNombre + ')' : ''}` : 'La otra computadora está conectada, pero no está escuchando';
+    $('oidoNivel').style.width = (msg.on ? msg.level : 0) + '%';
+    $('oidoDevice').textContent = msg.on && msg.device ? 'Micrófono: ' + msg.device : '';
+    $('oidoAviso').textContent = msg.on ? (METER_TXT[msg.verdict] || '') : '';
+    if (!msg.on) $('oidoParcial').textContent = '';
+  }
+});
+setInterval(() => {
+  oido.send({ t: 'cabina', name: '' });
+  if (oidoVisto && Date.now() - oidoVisto > 6000) {
+    oidoVisto = 0;
+    $('oidoRemoto').hidden = false; $('oidoRemoto').dataset.estado = 'pausa';
+    $('oidoTitulo').textContent = 'Se perdió la conexión con la otra computadora';
+    $('oidoAviso').textContent = 'Revisa que la página del Oído siga abierta y que haya internet.';
+    $('oidoParcial').textContent = ''; $('oidoDevice').textContent = '';
+  }
+}, 2000);
+$('oidoLink').value = absolute('/oido', { sala: room });
+$('oidoCopiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('oidoLink').value); toast('Enlace copiado.', 'ok'); }
+  catch { $('oidoLink').select(); toast('Selecciónalo y cópialo con Ctrl + C.', 'info'); }
+};
 
 // ---------- Prueba de micrófono ----------
 const PHRASES = [

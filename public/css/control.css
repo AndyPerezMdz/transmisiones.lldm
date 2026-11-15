@@ -158,3 +158,15 @@
 .consejos { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); }
 .consejos b { color: var(--titulo); font-size: 14px; }
 .consejos b:not(:first-child) { margin-top: 8px; }
+
+/* Oído en otra computadora */
+.oido-remoto { display: flex; flex-direction: column; gap: 6px; margin: -4px 0 14px; padding: 12px 14px; border-radius: 14px; background: var(--campo); border: 1px solid var(--borde); }
+.oido-remoto b { color: var(--titulo); }
+.oido-remoto[data-estado="pausa"] .nivel-barra { width: 0 !important; }
+.oido-remoto[data-estado="satura"] .nivel-barra { background: #e5484d; }
+.oido-remoto .parcial { font-size: 13.5px; color: var(--suave); font-style: italic; }
+.oido-remoto .parcial:empty { display: none; }
+.otra-laptop { margin-bottom: 10px; }
+.otra-laptop .ayuda { margin: 8px 0; }
+.copiar { display: flex; gap: 8px; }
+.copiar .campo { flex: 1; min-width: 0; font-size: 13px; }

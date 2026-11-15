@@ -60,6 +60,10 @@ El plan gratis pausa el proyecto tras una semana sin actividad. El archivo `.git
 5. **Micrófono**: conecta el receptor (por ejemplo DJI) por USB y elígelo como entrada en *Configuración → Sonido* de Windows. La primera vez, el navegador te pedirá permiso para usarlo.
 6. **Cámaras desde celulares**: abre https://vdo.ninja en cada celular, elige *Add your camera to OBS* y pega el enlace *view* en una fuente *Navegador* de OBS.
 
+### Si el micrófono está en otra laptop
+
+Si el receptor (DJI) va a la laptop de la transmisión y la cabina se maneja en otra, abre en la del micrófono **`/oido?sala=…`** (el enlace viene en la sala y en la cabina, en *¿El micrófono está conectado en otra laptop?*). Presiona **Empezar a escuchar**: lo que reconozca le llega a la cabina como sugerencias por Supabase Realtime. No viaja audio, solo texto, y la cabina muestra el nivel del micrófono remoto y si se perdió la conexión.
+
 ## Uso
 
 **Voz:** presiona **Escuchar** (`M`). Lo que se detecta aparece como tarjeta. Con `Enter` la pones al aire y con `Supr` la descartas. Si el expositor dice "versículo 18" sin repetir el libro, se usa el último libro y capítulo que mencionó.

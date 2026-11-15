@@ -37,9 +37,9 @@
         <button class="btn btn-peligro btn-grande" id="btnClear" type="button" title="Tecla Esc">Quitar todo</button>
       </div>
       <div class="letrero">
-        <span class="letrero-estado" id="overlayStatus">Letrero de la transmisión: oculto</span>
+        <div class="letreros-activos" id="letrerosActivos"></div>
         <span class="crece"></span>
-        <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O">Mostrar letrero</button>
+        <button class="btn btn-sec" id="btnBanner" type="button" title="Tecla O: muestra u oculta el letrero de lo que está en pantalla">Mostrar su letrero</button>
         <button class="btn btn-sec" id="btnLocation" type="button" title="Tecla U" data-icon="ubicacion">Ubicación</button>
         <button class="btn btn-sec" id="btnSettings" type="button" title="Ajustes" data-icon="ajustes">Ajustes</button>
       </div>
@@ -159,7 +159,8 @@
       </select>
     </label>
     <div class="enlaces">
-      <span class="chico">Gráficos para OBS (logos, letrero y expositor)</span><code id="urlObs"></code>
+      <span class="chico">Gráficos para OBS, todo junto (logos, letreros y expositor)</span><code id="urlObs"></code>
+      <details class="piezas-obs"><summary class="chico">O uno por letrero (cada uno como su propia fuente en OBS)</summary><div id="urlPiezas"></div></details>
       <span class="chico">Letra completa, opcional (otra fuente de Navegador en OBS)</span><code id="urlTv"></code>
     </div>
     <div class="dialogo-pie">
@@ -199,7 +200,7 @@
     <h2 class="titulo" style="font-size:22px">Cómo se usa la cabina</h2>
     <ol class="guia">
       <li><span class="paso">1</span><div><b>Presiona “Escuchar”.</b> La cabina oye al expositor por el micrófono. Cuando diga una cita (“Juan capítulo 3, versículo 16”), un himno, un coro o el tema, aparece una tarjeta.</div></li>
-      <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en el letrero de la transmisión (y por lo tanto en las TVs). Nada sale solo.</div></li>
+      <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en su letrero de la transmisión (y por lo tanto en las TVs). Cada tipo tiene el suyo: la cita, el canto, el tema y el letrero libre pueden estar al aire a la vez, y cada uno se quita con su ✕. Nada sale solo.</div></li>
       <li><span class="paso">3</span><div><b>Avanza con “Siguiente”</b> para pasar de versículo o de estrofa. <b>Quitar todo</b> deja las TVs con el fondo (y el tema, si hay).</div></li>
       <li><span class="paso" data-icon="aviso" data-icon-size="14"></span><div><b>Letrero libre:</b> para avisos o lo que quieran mostrar sin que sea cita ni canto. Escríbelo en “Letrero libre” y presiona <b>Mostrar</b>; se queda hasta que lo ocultes. Su diseño se cambia en Diseño → Letrero libre.</div></li>
       <li><span class="paso" data-icon="usuario" data-icon-size="14"></span><div><b>Nombre del expositor:</b> escríbelo arriba en “Quién expone” y presiona <b>Mostrar nombre</b>. Se queda abajo a la izquierda hasta que lo ocultes.</div></li>

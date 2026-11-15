@@ -176,3 +176,13 @@
 .av-extra label { display: flex; flex-direction: column; gap: 4px; flex: 0 1 170px; font-weight: 600; }
 .av-extra .av-lugar { flex: 1 1 220px; }
 .av-extra .campo { margin: 0; padding: 8px 10px; flex: none; width: 100%; }
+
+/* Letreros al aire (uno por tipo) */
+.letreros-activos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; flex: 1 1 260px; }
+.chip-aire { border-color: color-mix(in srgb, var(--rojo) 45%, var(--borde)); }
+.chip-aire .usar { cursor: default; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-aire .usar::before { content: "● "; color: var(--rojo); }
+.piezas-obs { margin: 2px 0 6px; }
+.piezas-obs summary { cursor: pointer; }
+#urlPiezas { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+#urlPiezas code { display: block; }

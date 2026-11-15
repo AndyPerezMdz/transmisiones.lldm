@@ -60,6 +60,10 @@ El plan gratis pausa el proyecto tras una semana sin actividad. El archivo `.git
 5. **Micrófono**: conecta el receptor (por ejemplo DJI) por USB y elígelo como entrada en *Configuración → Sonido* de Windows. La primera vez, el navegador te pedirá permiso para usarlo.
 6. **Cámaras desde celulares**: abre https://vdo.ninja en cada celular, elige *Add your camera to OBS* y pega el enlace *view* en una fuente *Navegador* de OBS.
 
+### Letreros por separado en OBS
+
+Cada tipo de letrero (cita, himno, coro, tema, ubicación y letrero libre) es independiente: pueden estar varios al aire a la vez y poner uno no quita los demás (solo himno y coro se reemplazan entre sí). Si quieren manejarlos como fuentes distintas en OBS, en vez del enlace general usen uno por pieza: `/overlay?sala=…&solo=lectura` (también `himno`, `coro`, `tema`, `ubicacion`, `aviso`, `expositor`, `logos`, o varios separados por comas). Los enlaces vienen en la sala, en *¿Quieres cada letrero por separado?*.
+
 ### Si el micrófono está en otra laptop
 
 Si el receptor (DJI) va a la laptop de la transmisión y la cabina se maneja en otra, abre en la del micrófono **`/oido?sala=…`** (el enlace viene en la sala y en la cabina, en *¿El micrófono está conectado en otra laptop?*). Presiona **Empezar a escuchar**: lo que reconozca le llega a la cabina como sugerencias por Supabase Realtime. No viaja audio, solo texto, y la cabina muestra el nivel del micrófono remoto y si se perdió la conexión.

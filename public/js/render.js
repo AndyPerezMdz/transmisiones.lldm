@@ -74,12 +74,28 @@ export const LETREROS = {
   aviso:     { name: 'Letrero libre', icon: 'aviso', sample: ['Aviso', 'Lo que quieran mostrar'],
     extra: { fecha: 'Domingo 15 de noviembre · 6:00 p.m.', lugar: 'Templo principal' } }
 };
-const bannerDefault = () => lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
+// Piezas que se pueden pedir por separado en el overlay (?solo=…), una fuente de OBS por cada una.
+export const PIEZAS_OBS = [
+  ...Object.entries(LETREROS).map(([id, l]) => ({ id, name: 'Letrero: ' + l.name, icon: l.icon })),
+  { id: 'expositor', name: 'Nombre del expositor', icon: 'usuario' },
+  { id: 'logos', name: 'Logos fijos', icon: 'imagen' }
+];
+
+// Cada letrero arranca en un lugar distinto para que no se encimen cuando salen varios a la vez.
+const LUGAR_INICIAL = {
+  lectura:   { position: 'arriba-der', margin: { x: 70, y: 250 } },
+  himno:     { position: 'arriba-izq', margin: { x: 70, y: 250 } },
+  coro:      { position: 'arriba-izq', margin: { x: 70, y: 250 } },   // himno y coro no salen juntos
+  tema:      { position: 'arriba-der', margin: { x: 70, y: 420 } },
+  ubicacion: { position: 'abajo-der',  margin: { x: 70, y: 210 } },
+  aviso:     { position: 'arriba-izq', margin: { x: 70, y: 420 } }
+};
+const bannerDefault = (k = 'lectura') => lowerThird({ ...(LUGAR_INICIAL[k] || LUGAR_INICIAL.lectura),
   tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } });
 
 export const DEFAULT_DESIGN = {
   // Cantos, citas, tema y ubicación: de inicio arriba a la derecha, abajo del logo de la iglesia.
-  letreros: Object.fromEntries(Object.keys(LETREROS).map(k => [k, bannerDefault()])),
+  letreros: Object.fromEntries(Object.keys(LETREROS).map(k => [k, bannerDefault(k)])),
   // Nombre del expositor: abajo a la izquierda, encima de la imagen central.
   speaker: lowerThird({ position: 'abajo-izq', margin: { x: 70, y: 210 },
     tag: { x: 120, y: 720, w: 500 }, title: { x: 120, y: 762, w: 900 } }),

@@ -117,10 +117,17 @@ function drawTx() {
   layers.setDesign(design.layers);
   for (const [k, b] of Object.entries(tipos)) {
     b.setDesign(design.letreros[k]);
-    if (k === tipo) b.show(...LETREROS[k].sample, { instant: true, ...LETREROS[k].extra }); else b.hide();
+    // Los demás letreros se ven tenues, para acomodar este sin que se encimen (y el imán se pega a ellos).
+    const otro = !editKind() || k !== tipo || editPath() === 'speaker';
+    b.root.classList.toggle('fantasma', otro && tab !== 'screen');
+    // Himno y coro nunca salen juntos: de fantasma se ve solo uno.
+    const pareja = (k === 'coro' && tipo !== 'coro') || (k === 'himno' && tipo === 'coro');
+    if ((tab === 'screen' && k !== tipo) || (otro && pareja)) b.hide();
+    else b.show(...LETREROS[k].sample, { instant: true, ...LETREROS[k].extra });
   }
   speakerLt.setDesign(design.speaker);
   speakerLt.show('Ministro', 'Hno. Juan Pérez', { instant: true });
+  speakerLt.root.classList.toggle('fantasma', editPath() !== 'speaker' && tab !== 'screen');
   const k = editKind();
   const imgMode = k && lt().mode === 'image';
   $('bannerEmpty').hidden = !(imgMode && !lt().image?.url);

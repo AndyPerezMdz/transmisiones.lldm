@@ -1,4 +1,5 @@
 // Inicio: entrar y elegir sala, con pasos guiados.
+import { PIEZAS_OBS } from './render.js';
 import { demo, supa, qs, acceptInvites, myTeams, pickTeam, rememberTeam } from './db.js';
 import { $, el, toast, mountNav, themeButton, withDemo, absolute, modal } from './ui.js';
 
@@ -26,7 +27,11 @@ function roomCard(room, sb) {
       el('div', { class: 'paso-fila' },
         el('span', { class: 'paso', text: '1' }), el('b', { text: 'Pon los gráficos en OBS (una sola vez)' }),
         el('p', { class: 'ayuda', text: 'En OBS: Fuentes → + → Navegador → pega este enlace, ancho 1920 y alto 1080. Ponla arriba de las cámaras. Trae los logos, el letrero y el nombre del expositor; como las TVs muestran lo de OBS, también salen ahí.' }),
-        copyBox(absolute('/overlay', { sala: room.id }))),
+        copyBox(absolute('/overlay', { sala: room.id })),
+        el('details', { class: 'opcional piezas' },
+          el('summary', { text: '¿Quieres cada letrero por separado?' }),
+          el('p', { class: 'ayuda', text: 'Agrega en OBS una fuente de Navegador por cada uno (1920 × 1080). Así los ordenas, los ocultas o les pones filtros por separado. Usa estos en lugar del enlace de arriba, no los dos, o se verán doble.' }),
+          ...PIEZAS_OBS.flatMap(p => [el('b', { class: 'chico', text: p.name }), copyBox(absolute('/overlay', { sala: room.id, solo: p.id }))]))),
       el('div', { class: 'paso-fila' },
         el('span', { class: 'paso', text: '2' }), el('b', { text: 'Abre la cabina en esta laptop' }),
         el('p', { class: 'ayuda', text: 'Desde ahí pones citas, himnos, el tema y el nombre del expositor. Usa Chrome o Edge para que funcione el micrófono.' }),

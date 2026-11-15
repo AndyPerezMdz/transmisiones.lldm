@@ -6,6 +6,7 @@ import { createTurno } from './turno.js';
 import { $, toast, mountNav, absolute, withDemo, modal } from './ui.js';
 import { icon } from './icons.js';
 import { openMeter, METER_TXT } from './voz.js';
+import { PIEZAS_OBS } from './render.js';
 import { createOidoLink } from './oido-link.js';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -19,7 +20,7 @@ let catalog = null, ctx = {};
 let suggestions = [];
 const seen = new Map();
 let results = [], sel = 0;
-let state = { rev: 0, item: null, index: 0, blank: false, theme: '', overlay: { visible: false, tag: '', title: '', seq: 0, until: 0 },
+let state = { rev: 0, item: null, index: 0, blank: false, theme: '', letreros: {},
   speaker: { visible: false, tag: '', title: '', seq: 0, until: 0 }, speakers: [], avisos: [],
   settings: { ...DEFAULT_SETTINGS }, history: [] };
 
@@ -44,15 +45,34 @@ function commit() {
   render();
 }
 
-let overlayTimer;
+// Cada tipo de letrero (cita, himno, coro, tema, ubicación, libre) tiene su propio estado:
+// se pueden ver varios a la vez y poner uno no quita los demás. Himno y coro comparten lugar
+// (es lo que se está cantando), así que poner uno quita el otro.
 const TYPE_OF = { bible: 'lectura', hymn: 'himno', coro: 'coro', theme: 'tema' };
-function showOverlay(tag, title, type = 'lectura', secs = Number(state.settings.bannerSeconds), extra = {}) {
-  clearTimeout(overlayTimer);
-  if (!state.settings.showBanner || !title) { state.overlay = { ...state.overlay, visible: false }; return; }
-  state.overlay = { visible: true, tag, title, type, fecha: extra.fecha || '', lugar: extra.lugar || '', seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
-  if (secs > 0) overlayTimer = setTimeout(() => { state.overlay = { ...state.overlay, visible: false }; commit(); }, secs * 1000);
+const LT_TIPOS = ['lectura', 'himno', 'coro', 'tema', 'ubicacion', 'aviso'];
+const LT_NOMBRE = { lectura: 'Cita', himno: 'Himno', coro: 'Coro', tema: 'Tema', ubicacion: 'Ubicación', aviso: 'Letrero libre' };
+const vacio = () => ({ visible: false, tag: '', title: '', fecha: '', lugar: '', seq: 0, until: 0 });
+const ltTimers = {};
+const lt = t => (state.letreros[t] ??= vacio());
+const ltOn = t => !!state.letreros[t]?.visible;
+function showLetrero(type, tag, title, { secs = Number(state.settings.bannerSeconds), fecha = '', lugar = '' } = {}) {
+  clearTimeout(ltTimers[type]);
+  if (!state.settings.showBanner || !title) { hideLetrero(type); return; }
+  if (type === 'himno') hideLetrero('coro');
+  if (type === 'coro') hideLetrero('himno');
+  state.letreros[type] = { visible: true, tag, title, fecha, lugar, seq: lt(type).seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
+  if (secs > 0) ltTimers[type] = setTimeout(() => { hideLetrero(type); commit(); }, secs * 1000);
 }
-function hideOverlay() { clearTimeout(overlayTimer); state.overlay = { ...state.overlay, visible: false }; }
+function hideLetrero(type) { clearTimeout(ltTimers[type]); if (state.letreros[type]) state.letreros[type] = { ...state.letreros[type], visible: false }; }
+function hideLetreros() { for (const t of LT_TIPOS) hideLetrero(t); }
+// Al abrir la cabina se vuelven a programar los que tenían tiempo.
+function reprogramar() {
+  for (const t of LT_TIPOS) {
+    const o = state.letreros[t]; if (!o?.visible) continue;
+    if (o.until && o.until <= Date.now()) { o.visible = false; continue; }
+    if (o.until) ltTimers[t] = setTimeout(() => { hideLetrero(t); commit(); }, o.until - Date.now());
+  }
+}
 
 let speakerTimer;
 function showSpeaker(name, role) {
@@ -69,9 +89,11 @@ const actions = {
   air(ref) {
     const item = catalog?.resolve(ref);
     if (!item) return toast('No se encontró eso en el catálogo.');
-    state.item = item; state.index = 0; state.blank = false;
+    // El tema no le quita la pantalla a lo que ya está (un canto o una cita): solo sale en su letrero.
+    const soloLetrero = item.kind === 'theme' && state.item && state.item.kind !== 'theme';
+    if (!soloLetrero) { state.item = item; state.index = 0; state.blank = false; }
     if (item.kind === 'theme') state.theme = item.banner.title;
-    showOverlay(item.banner.tag, item.banner.title, TYPE_OF[item.kind]);
+    showLetrero(TYPE_OF[item.kind], item.banner.tag, item.banner.title);
     const clean = { ...ref }; delete clean.label;
     state.history = [{ ref: clean, label: item.label, at: Date.now() }, ...state.history.filter(h => h.label !== item.label)].slice(0, 30);
     dropWhere(s => s.item.key === item.key);
@@ -83,18 +105,21 @@ const actions = {
   },
   next() { if (state.item) actions.go(state.index + 1); },
   prev() { if (state.item) actions.go(state.index - 1); },
-  clear() { state.item = null; state.index = 0; state.blank = false; hideOverlay(); commit(); },
+  clear() { state.item = null; state.index = 0; state.blank = false; hideLetreros(); commit(); },
   blank() { state.blank = !state.blank; commit(); },
-  banner(show) {
-    if (show && state.item?.banner) showOverlay(state.item.banner.tag, state.item.banner.title, TYPE_OF[state.item.kind]);
-    else if (show && state.theme) showOverlay('Tema', state.theme, 'tema');
-    else if (show && state.settings.location) showOverlay('Transmitiendo desde', state.settings.location, 'ubicacion');
-    else hideOverlay();
+  // Muestra u oculta el letrero de lo que está en pantalla (o del tema si no hay nada).
+  banner() {
+    const type = state.item ? TYPE_OF[state.item.kind] : state.theme ? 'tema' : null;
+    if (!type) return toast('No hay nada en pantalla para mostrar en el letrero.', 'info');
+    if (ltOn(type)) hideLetrero(type);
+    else if (state.item) showLetrero(type, state.item.banner.tag, state.item.banner.title);
+    else showLetrero('tema', 'Tema', state.theme);
     commit();
   },
   location() {
+    if (ltOn('ubicacion')) { hideLetrero('ubicacion'); return commit(); }
     if (!state.settings.location) return toast('Primero escribe la ubicación en Ajustes.', 'info');
-    showOverlay('Transmitiendo desde', state.settings.location, 'ubicacion'); commit();
+    showLetrero('ubicacion', 'Transmitiendo desde', state.settings.location); commit();
   }
 };
 
@@ -118,17 +143,28 @@ function render() {
   $('btnPrev').disabled = !item || state.index === 0;
   $('mPrev').disabled = !item || state.index === 0;
   $('mNext').disabled = !item || state.index >= item.slides.length - 1;
-  $('mClear').disabled = !item && !state.overlay.visible;
+  $('mClear').disabled = !item && !LT_TIPOS.some(ltOn);
   $('btnNext').disabled = !item || state.index >= item.slides.length - 1;
   $('btnBlank').disabled = !item;
   $('btnBlank').textContent = state.blank ? 'Mostrar texto' : 'Ocultar texto';
   $('btnBlank').classList.toggle('activo', state.blank);
-  $('btnBanner').textContent = state.overlay.visible ? 'Ocultar letrero' : 'Mostrar letrero';
-  $('btnBanner').classList.toggle('activo', state.overlay.visible);
-  const os = $('overlayStatus');
-  os.textContent = state.overlay.visible ? 'En la transmisión: ' + state.overlay.tag + ' · ' + state.overlay.title
-    : state.settings.showBanner ? 'Letrero de la transmisión: oculto' : 'Letrero de la transmisión: apagado en Ajustes';
-  os.classList.toggle('on', state.overlay.visible);
+  const curType = item ? TYPE_OF[item.kind] : state.theme ? 'tema' : null;
+  $('btnBanner').textContent = curType && ltOn(curType) ? 'Ocultar su letrero' : 'Mostrar su letrero';
+  $('btnBanner').classList.toggle('activo', !!curType && ltOn(curType));
+  $('btnBanner').disabled = !curType;
+  $('btnLocation').classList.toggle('activo', ltOn('ubicacion'));
+  // Letreros al aire: uno por tipo, cada uno se quita con su ✕.
+  const act = $('letrerosActivos'); act.replaceChildren();
+  const on = LT_TIPOS.filter(ltOn);
+  if (!on.length) act.append(el('span', 'letrero-estado', state.settings.showBanner ? 'Letreros de la transmisión: ninguno al aire' : 'Letreros de la transmisión: apagados en Ajustes'));
+  for (const t of on) {
+    const o = state.letreros[t];
+    const chip = el('span', 'chip chip-nombre chip-aire');
+    chip.append(el('span', 'usar', LT_NOMBRE[t] + ': ' + o.title));
+    const del = el('button', 'quitar'); del.append(icon('cerrar', { size: 14 })); del.type = 'button'; del.title = 'Quitar este letrero'; del.setAttribute('aria-label', 'Quitar letrero ' + LT_NOMBRE[t]);
+    del.onclick = () => { hideLetrero(t); commit(); };
+    chip.append(del); act.append(chip);
+  }
   if (document.activeElement !== $('theme')) $('theme').value = state.theme || '';
 
   const sp = state.speaker;
@@ -472,7 +508,7 @@ $('mClear').onclick = actions.clear;
 $('btnNext').onclick = actions.next;
 $('btnClear').onclick = actions.clear;
 $('btnBlank').onclick = actions.blank;
-$('btnBanner').onclick = () => actions.banner(!state.overlay.visible);
+$('btnBanner').onclick = () => actions.banner();
 $('btnLocation').onclick = actions.location;
 // Evita que Enter o Espacio repitan el último botón presionado.
 document.addEventListener('click', e => { const b = e.target.closest('button'); if (b && e.detail > 0) b.blur(); });
@@ -489,7 +525,7 @@ document.addEventListener('keydown', e => {
     Escape: actions.clear,
     b: actions.blank, o: () => $('btnBanner').click(), u: actions.location, m: () => micBtn.click(),
     n: () => state.speaker.visible ? hideSpeaker() : $('spForm').requestSubmit(),
-    l: () => avisoVisible() ? (hideOverlay(), commit()) : $('avForm').requestSubmit(),
+    l: () => avisoVisible() ? (hideLetrero('aviso'), commit()) : $('avForm').requestSubmit(),
     '/': () => { search.focus(); search.select(); }
   };
   const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
@@ -503,7 +539,7 @@ $('clearHistory').onclick = async () => {
 // ---------- letrero libre ----------
 // Para avisos o cualquier texto que no sea cita ni canto. Se queda hasta que lo ocultes.
 // Puede llevar fecha, hora y lugar en un renglón abajo.
-const avisoVisible = () => state.overlay.visible && state.overlay.type === 'aviso';
+const avisoVisible = () => ltOn('aviso');
 const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
 function fechaTexto(fecha, hora) {
   let out = '';
@@ -520,19 +556,19 @@ function fechaTexto(fecha, hora) {
 }
 const avForm = () => ({ text: $('avText').value.trim(), tag: $('avTag').value.trim(), fecha: $('avFecha').value, hora: $('avHora').value, lugar: $('avLugar').value.trim() });
 const avKey = a => [a.text, a.tag || '', a.fecha || '', a.hora || '', a.lugar || ''].join('|');
-const avShown = a => avisoVisible() && a.text === state.overlay.title && (a.tag || 'Aviso') === state.overlay.tag
-  && fechaTexto(a.fecha, a.hora) === (state.overlay.fecha || '') && (a.lugar || '') === (state.overlay.lugar || '');
+const avShown = a => { const o = state.letreros.aviso; return avisoVisible() && a.text === o.title && (a.tag || 'Aviso') === o.tag
+  && fechaTexto(a.fecha, a.hora) === (o.fecha || '') && (a.lugar || '') === (o.lugar || ''); };
 function fillAviso(a) { $('avText').value = a.text; $('avTag').value = a.tag || ''; $('avFecha').value = a.fecha || ''; $('avHora').value = a.hora || ''; $('avLugar').value = a.lugar || ''; }
 function showAviso(a) {
   if (!state.settings.showBanner) return toast('El letrero de la transmisión está apagado en Ajustes.', 'info');
-  showOverlay(a.tag || 'Aviso', a.text, 'aviso', 0, { fecha: fechaTexto(a.fecha, a.hora), lugar: a.lugar });
+  showLetrero('aviso', a.tag || 'Aviso', a.text, { secs: 0, fecha: fechaTexto(a.fecha, a.hora), lugar: a.lugar });
   state.avisos = [a, ...(state.avisos || []).filter(x => avKey(x) !== avKey(a))].slice(0, 8);
   commit();
 }
 $('avForm').addEventListener('submit', e => {
   e.preventDefault();
   const a = avForm();
-  if (avisoVisible() && (!a.text || avShown(a))) { hideOverlay(); commit(); return; }
+  if (avisoVisible() && (!a.text || avShown(a))) { hideLetrero('aviso'); commit(); return; }
   if (!a.text) { $('avText').focus(); return toast('Escribe lo que quieres mostrar.', 'info'); }
   showAviso(a);
   document.activeElement?.blur();
@@ -566,6 +602,7 @@ $('btnSettings').onclick = () => {
   form.speakerSeconds.value = s.speakerSeconds ?? 0;
   $('urlTv').textContent = absolute('/pantalla', { sala: room });
   $('urlObs').textContent = absolute('/overlay', { sala: room });
+  $('urlPiezas').replaceChildren(...PIEZAS_OBS.flatMap(p => [el('span', 'chico', p.name), el('code', '', absolute('/overlay', { sala: room, solo: p.id }))]));
   dlg.showModal();
 };
 dlg.addEventListener('close', () => {
@@ -574,7 +611,7 @@ dlg.addEventListener('close', () => {
   const spSecs = Math.max(0, Math.min(3600, parseInt(form.speakerSeconds.value, 10) || 0));
   state.settings = { ...state.settings, location: form.location.value.trim().slice(0, 120), bannerSeconds: secs, speakerSeconds: spSecs,
     showBanner: form.showBanner.checked, voiceLang: form.voiceLang.value };
-  if (!state.settings.showBanner) hideOverlay();
+  if (!state.settings.showBanner) hideLetreros();
   commit();
   if (listening) { stopListening(); setTimeout(startListening, 400); }
 });
@@ -613,7 +650,13 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
     if (!demo && !saved) { toast('Esa sala no existe. Elige una desde el inicio.'); setTimeout(() => location.href = '/', 2500); return; }
     if (saved?.state?.rev) {
       state = { ...state, ...saved.state, settings: { ...DEFAULT_SETTINGS, ...saved.state.settings } };
-      state.overlay = { ...state.overlay, visible: state.overlay.visible && (!state.overlay.until || state.overlay.until > Date.now()) };
+      // Salas guardadas antes de separar los letreros: el único que había pasa a su tipo.
+      if (!state.letreros || typeof state.letreros !== 'object') {
+        const o = saved.state.overlay || {}, t = LT_TIPOS.includes(o.type) ? o.type : 'lectura';
+        state.letreros = o.visible ? { [t]: { ...vacio(), ...o } } : {};
+      }
+      delete state.overlay;
+      reprogramar();
       state.speaker = { visible: false, tag: '', title: '', seq: 0, until: 0, ...state.speaker };
       state.speaker.visible = state.speaker.visible && (!state.speaker.until || state.speaker.until > Date.now());
       state.speakers ??= [];

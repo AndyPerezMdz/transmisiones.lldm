@@ -109,3 +109,8 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .guia-v { top: 0; width: 3px; height: 1080px; margin-left: -1px; }
 .guia-h { left: 0; height: 3px; width: 1920px; margin-top: -1px; }
 .guia[hidden] { display: none; }
+
+/* Letreros que no se están editando: se ven tenues y no se pueden agarrar */
+.lt.fantasma { pointer-events: none; }
+.lt.fantasma.on { opacity: .38 !important; }
+.lt.fantasma * { pointer-events: none !important; }

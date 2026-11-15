@@ -22,35 +22,41 @@ import { createBanner, createLayers, fitStage, LETREROS, mergeDesign } from '/js
 if (qs.has('preview')) document.body.classList.add(qs.get('preview') === 'cam' ? 'camara' : 'preview');
 const stage = document.getElementById('stage');
 fitStage(stage, document.documentElement, { center: qs.get('preview') === 'cam' });
-const layers = createLayers(stage);
-// Un letrero por tipo (cita, himno, coro, tema, ubicación), cada uno con su diseño y su lugar.
-const tipos = Object.fromEntries(Object.keys(LETREROS).map(k => [k, createBanner(stage, { kind: 'banner', path: 'letreros.' + k })]));
-const speaker = createBanner(stage, { kind: 'speaker' });
-const seq = { overlay: -1, speaker: -1 }, timers = {};
-let shownType = null;
+// ?solo=himno (o varios: ?solo=lectura,tema) muestra solo esas piezas, para tener una fuente
+// de OBS por letrero. Piezas: los tipos de letrero, "expositor" y "logos". Sin ?solo sale todo.
+const solo = qs.get('solo') ? new Set(qs.get('solo').split(',').map(s => s.trim())) : null;
+const quiero = k => !solo || solo.has(k);
+const layers = quiero('logos') ? createLayers(stage) : null;
+// Un letrero por tipo (cita, himno, coro, tema, ubicación, libre), cada uno con su diseño, su lugar y su propio estado.
+const tipos = Object.fromEntries(Object.keys(LETREROS).filter(quiero).map(k => [k, createBanner(stage, { kind: 'banner', path: 'letreros.' + k })]));
+const speaker = quiero('expositor') ? createBanner(stage, { kind: 'speaker' }) : null;
+const seq = {}, timers = {};
 let last = null;
 
-// Cada letrero se muestra mientras esté visible y no haya pasado su tiempo.
+// Estado de cada letrero. Las salas guardadas antes de separar los letreros traen uno solo (state.overlay).
+function letreros(state) {
+  if (state.letreros) return state.letreros;
+  const o = state.overlay || {}, t = LETREROS[o.type] ? o.type : 'lectura';
+  return { [t]: o };
+}
+function pinta(key, b, o = {}) {
+  clearTimeout(timers[key]);
+  const left = o.until ? o.until - Date.now() : Infinity;
+  if (!o.visible || left <= 0) { b.hide(); return; }
+  if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title, { fecha: o.fecha || '', lugar: o.lugar || '' }); }
+  if (left !== Infinity) timers[key] = setTimeout(b.hide, left);
+}
 function show(state) {
-  for (const key of ['overlay', 'speaker']) {
-    const o = state[key] || {};
-    const type = LETREROS[o.type] ? o.type : 'lectura';
-    const b = key === 'speaker' ? speaker : tipos[type];
-    clearTimeout(timers[key]);
-    if (key === 'overlay' && shownType && shownType !== type) tipos[shownType].hide();
-    const left = o.until ? o.until - Date.now() : Infinity;
-    if (!o.visible || left <= 0) { b.hide(); continue; }
-    if (key === 'overlay') shownType = type;
-    if (o.seq !== seq[key]) { seq[key] = o.seq; b.show(o.tag, o.title, { fecha: o.fecha || '', lugar: o.lugar || '' }); }
-    if (left !== Infinity) timers[key] = setTimeout(b.hide, left);
-  }
+  const ls = letreros(state);
+  for (const [k, b] of Object.entries(tipos)) pinta(k, b, ls[k]);
+  if (speaker) pinta('speaker', speaker, state.speaker);
 }
 subscribe(roomId(), state => { last = state; show(state); }, design => {
-  layers.setDesign(design.layers || {});
+  layers?.setDesign(design.layers || {});
   const merged = mergeDesign(design);
   for (const [k, b] of Object.entries(tipos)) b.setDesign(merged.letreros[k]);
-  speaker.setDesign(merged.speaker);
-  if (last) { seq.overlay = seq.speaker = -1; show(last); }
+  speaker?.setDesign(merged.speaker);
+  if (last) { for (const k of Object.keys(seq)) seq[k] = -1; show(last); }
 });
 
 </script>

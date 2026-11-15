@@ -38,7 +38,7 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .editando .lt-imagen img.sel { outline-offset: 0; }
 .editando .lt-imagen .lt-txt[hidden] { display: none; }
 
-.barra-guardar { position: fixed; left: var(--lat, 0px); right: 0; bottom: 0; z-index: 15; display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+.barra-guardar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: flex; align-items: center; gap: 10px; padding: 12px 20px;
   background: color-mix(in srgb, var(--superficie) 94%, transparent); border-top: 1px solid var(--borde); backdrop-filter: blur(8px); }
 .barra-guardar.cambios #saveMsg { color: var(--titulo); font-weight: 600; }
 .barra-guardar.cambios #saveMsg::before { content: "● "; color: var(--oro); }

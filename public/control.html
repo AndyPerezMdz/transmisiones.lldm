@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b0f0d">
+<meta name="theme-color" content="#f6f3ec">
 <title>Cabina · Cabina en Vivo</title>
 <link rel="icon" href="/img/icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='oscuro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
+<script>try{var d=document.documentElement,t=localStorage.getItem('tema');if(!t)t='claro';if(t==='oscuro')d.classList.add('dark');var c=JSON.parse(localStorage.getItem('cabina-colores')||'null');if(c&&c.p&&c.a){d.style.setProperty('--p',c.p);d.style.setProperty('--a',c.a)}}catch(e){}</script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/control.css">
 </head>
@@ -27,7 +27,7 @@
   <div class="cab-grid">
     <!-- 1. Escuchar -->
     <section class="col" id="voicePanel">
-      <header class="col-cab"><h3><span class="paso">1</span>Escuchar</h3>
+      <header class="col-cab"><h3><span class="paso">1</span>Escuchar al expositor</h3>
         <div class="fila"><button class="btn btn-mini" id="btnMicTest" type="button">Probar micrófono</button>
         <button class="btn btn-primario mic" id="btnMic" type="button">Escuchar</button></div>
       </header>

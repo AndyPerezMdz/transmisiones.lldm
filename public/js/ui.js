@@ -93,23 +93,21 @@ export function mountNav(active, { roomName = '' } = {}) {
   salir.onclick = async () => { const sb = await supa(); await sb?.auth.signOut(); location.href = '/'; };
   const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', 'aria-label': 'Cómo se usa' }, icon('ayuda', { size: 18 }));
   help.hidden = true;
-  const salaBox = el('div', { class: 'lat-sala', hidden: sala ? null : true },
-    el('small', { text: 'Sala' }), el('span', { class: 'nav-sala', id: 'navSala', text: roomName || '…' }));
-  const aside = el('aside', { class: 'lateral' },
-    el('a', { class: 'lat-marca', href: withDemo('/') },
-      el('img', { src: '/img/antorcha-clara.png', alt: '' }),
-      el('span', {}, el('b', { text: 'Cabina en Vivo' }), el('small', { text: 'La Luz del Mundo' }))),
-    salaBox,
-    el('nav', { class: 'lat-links' }, links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null, title: l.n },
-      icon(l.icon, { size: 18 }), el('span', { text: l.n })))),
-    el('div', { class: 'lat-pie' },
-      help, themeButton(), el('span', { class: 'crece' }),
-      demo ? el('span', { class: 'nav-boton solo-lateral', title: 'Sin base de datos', text: 'Demo' }) : salir));
-  document.body.classList.add('con-lateral');
-  document.body.prepend(aside);
+  const sala_ = sala ? el('span', { class: 'nav-sala', id: 'navSala', text: roomName || '…' }) : el('span', { class: 'nav-sala', id: 'navSala', hidden: true });
+  const linkList = () => el('nav', { class: 'nav-links' }, links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null },
+    icon(l.icon, { size: 16 }), el('span', { text: l.n }))));
+  const header = el('header', { class: 'nav' },
+    el('div', { class: 'nav-in' },
+      el('a', { class: 'nav-marca', href: withDemo('/') },
+        el('img', { src: '/img/antorcha-clara.png', alt: '' }),
+        el('span', {}, el('b', { text: 'Cabina en Vivo' }), el('small', { text: 'La Luz del Mundo' }))),
+      linkList(),
+      el('div', { class: 'nav-der' }, sala_, help, themeButton(),
+        demo ? el('span', { class: 'nav-boton', title: 'Sin base de datos', text: 'Demo' }) : salir)));
+  document.body.prepend(header);
   // Pinta la app con la paleta del equipo (ya se aplicó la última conocida antes de dibujar).
   myTeams().then(ts => { const t = pickTeam(ts); if (t) applyTheme(t.theme); }).catch(() => {});
-  return aside;
+  return header;
 }
 
 // Evita que Enter o Espacio repitan el último botón que se presionó con el mouse.

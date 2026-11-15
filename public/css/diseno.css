@@ -95,3 +95,17 @@ input[type=range] { width: 100%; margin-top: 8px; }
 .tabs .btn { gap: 8px; }
 .turno-icono { display: flex; }
 .vista-pie .btn-mini { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Cuadrícula y guías del imán (en coordenadas de 1920 × 1080) */
+.cuadricula { position: absolute; inset: 0; pointer-events: none; z-index: 40;
+  background:
+    linear-gradient(rgb(255 255 255 / .6), rgb(255 255 255 / .6)) 958px 0 / 4px 100% no-repeat,
+    linear-gradient(rgb(255 255 255 / .6), rgb(255 255 255 / .6)) 0 538px / 100% 4px no-repeat,
+    linear-gradient(to right, rgb(255 255 255 / .2) 2px, transparent 2px) -1px 0 / 120px 120px,
+    linear-gradient(to bottom, rgb(255 255 255 / .2) 2px, transparent 2px) 0 -1px / 120px 120px; }
+.cuadricula::after { content: ""; position: absolute; inset: 54px 96px; border: 3px dashed rgb(226 196 120 / .75); border-radius: 4px; }
+.cuadricula[hidden] { display: none; }
+.guia { position: absolute; z-index: 41; pointer-events: none; background: #ff3fa4; box-shadow: 0 0 6px rgb(255 63 164 / .8); }
+.guia-v { top: 0; width: 3px; height: 1080px; margin-left: -1px; }
+.guia-h { left: 0; height: 3px; width: 1920px; margin-top: -1px; }
+.guia[hidden] { display: none; }

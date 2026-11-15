@@ -48,10 +48,12 @@
           <button type="button" class="chip" data-sample="3">Ubicación</button>
         </div>
         <label class="fila chico"><input type="checkbox" id="fakeCam" checked> Ver sobre una imagen de ejemplo</label>
+        <label class="fila chico" title="Líneas cada 120 px, el centro y el margen seguro de la pantalla"><input type="checkbox" id="verCuadricula"> Cuadrícula</label>
+        <label class="fila chico" title="Al arrastrar, se pega al centro, a la cuadrícula y a la orilla de lo demás (mantén Shift para moverlo libre)"><input type="checkbox" id="iman" checked> Imán</label>
         <label class="btn btn-mini" for="fotoPrueba" title="Solo para ver cómo queda; no se guarda" data-icon="camara" data-icon-size="15">Probar con una foto de tu templo</label>
         <input type="file" id="fotoPrueba" accept="image/*" hidden>
       </div>
-      <p class="chico con-icono" id="dragHint" hidden data-icon="mover" data-icon-size="15">Arrastra para mover. Jala el círculo dorado de la esquina para cambiar el tamaño. Con las flechas del teclado lo mueves de a poquito (Shift = más rápido).</p>
+      <p class="chico con-icono" id="dragHint" hidden data-icon="mover" data-icon-size="15">Arrastra para mover. Jala el círculo dorado de la esquina para cambiar el tamaño. Con las flechas del teclado lo mueves de a poquito (Shift = más rápido). Con el imán se pega al centro y a lo demás; Shift al arrastrar lo suelta.</p>
     </div>
 
     <aside class="panel tarjeta" id="pLetrero">

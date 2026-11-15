@@ -62,6 +62,57 @@ const speakerLt = createBanner(txStage, { kind: 'speaker' });
 const instanceFor = path => (path === 'speaker' ? speakerLt : tipos[path.split('.')[1]]);
 txStage.classList.add('editando', 'edit-banner');
 
+// ---------- Cuadrícula e imán ----------
+const pref = (k, def) => { try { const v = localStorage.getItem(k); return v == null ? def : v === '1'; } catch { return def; } };
+const savePref = (k, v) => { try { localStorage.setItem(k, v ? '1' : '0'); } catch {} };
+const grid = document.createElement('div'); grid.className = 'cuadricula';
+const guiaV = document.createElement('div'); guiaV.className = 'guia guia-v'; guiaV.hidden = true;
+const guiaH = document.createElement('div'); guiaH.className = 'guia guia-h'; guiaH.hidden = true;
+txStage.append(grid, guiaV, guiaH);
+$('verCuadricula').checked = pref('diseno-cuadricula', false);
+$('iman').checked = pref('diseno-iman', true);
+grid.hidden = !$('verCuadricula').checked;
+$('verCuadricula').onchange = e => { grid.hidden = !e.target.checked; savePref('diseno-cuadricula', e.target.checked); };
+$('iman').onchange = e => savePref('diseno-iman', e.target.checked);
+const W = 1920, H = 1080, SAFE_X = 96, SAFE_Y = 54, CELL = 120;
+
+// Rectángulo de un elemento en coordenadas del escenario (1920 × 1080).
+function stageRect(node) {
+  const r = node.getBoundingClientRect(), b = txStage.getBoundingClientRect(), k = txBox.clientWidth / W;
+  return { l: (r.left - b.left) / k, t: (r.top - b.top) / k, r: (r.right - b.left) / k, b: (r.bottom - b.top) / k };
+}
+// Calcula cuánto hay que mover el elemento para que se pegue a lo más cercano.
+function snapDelta(node, e) {
+  guiaV.hidden = guiaH.hidden = true;
+  if (!$('iman').checked || e.shiftKey) return { dx: 0, dy: 0 };
+  const me = stageRect(node);
+  if (me.r - me.l < 2) return { dx: 0, dy: 0 };
+  const xs = [W / 2, SAFE_X, W - SAFE_X, 0, W], ys = [H / 2, SAFE_Y, H - SAFE_Y, 0, H];
+  for (let x = CELL; x < W; x += CELL) xs.push(x);
+  for (let y = CELL; y < H; y += CELL) ys.push(y);
+  // La orilla de lo demás y su reflejo: así el logo de la izquierda y el de la derecha quedan parejos.
+  for (const other of txStage.querySelectorAll('[data-drag]')) {
+    if (other === node || other.contains(node) || node.contains(other) || other.classList.contains('tirador')) continue;
+    const lt = other.closest('.lt');
+    if (lt && !lt.classList.contains('on')) continue;
+    if (other.hidden || other.offsetParent === null) continue;
+    const o = stageRect(other);
+    if (o.r - o.l < 2) continue;
+    xs.push(o.l, o.r, (o.l + o.r) / 2, W - o.l, W - o.r);
+    ys.push(o.t, o.b, (o.t + o.b) / 2);
+  }
+  const limit = 10 / (txBox.clientWidth / W); // unos 10 px en pantalla
+  const best = (edges, targets) => {
+    let m = null;
+    for (const v of edges) for (const t of targets) { const d = t - v; if (Math.abs(d) <= limit && (!m || Math.abs(d) < Math.abs(m.d))) m = { d, at: t }; }
+    return m;
+  };
+  const bx = best([me.l, (me.l + me.r) / 2, me.r], xs), by = best([me.t, (me.t + me.b) / 2, me.b], ys);
+  if (bx) { guiaV.hidden = false; guiaV.style.left = bx.at + 'px'; }
+  if (by) { guiaH.hidden = false; guiaH.style.top = by.at + 'px'; }
+  return { dx: bx ? Math.round(bx.d) : 0, dy: by ? Math.round(by.d) : 0 };
+}
+
 function drawTx() {
   layers.setDesign(design.layers);
   for (const [k, b] of Object.entries(tipos)) {
@@ -197,6 +248,15 @@ txStage.addEventListener('pointermove', e => {
     drag.obj.y = Math.max(-20, Math.min(1000, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
     drag.root.style.setProperty('--fx', drag.obj.x + 'px');
     drag.root.style.setProperty('--fy', drag.obj.y + 'px');
+    const card = drag.root.querySelector('.lt-card');
+    if (card) {
+      const { dx, dy } = snapDelta(card, e);
+      if (dx || dy) {
+        drag.obj.x += dx; drag.obj.y += dy;
+        drag.root.style.setProperty('--fx', drag.obj.x + 'px');
+        drag.root.style.setProperty('--fy', drag.obj.y + 'px');
+      }
+    }
     drag.root.refreshSide?.();
     return;
   }
@@ -205,8 +265,14 @@ txStage.addEventListener('pointermove', e => {
   drag.obj.y = Math.max(-1000, Math.min(1060, Math.round(drag.y + (e.clientY - drag.startY) / drag.scale)));
   drag.target.style.left = drag.obj.x + 'px';
   drag.target.style.top = drag.obj.y + 'px';
+  const { dx, dy } = snapDelta(drag.target, e);
+  if (dx || dy) {
+    drag.obj.x += dx; drag.obj.y += dy;
+    drag.target.style.left = drag.obj.x + 'px';
+    drag.target.style.top = drag.obj.y + 'px';
+  }
 });
-const endDrag = () => { if (drag) { drag = null; changed(); } };
+const endDrag = () => { guiaV.hidden = guiaH.hidden = true; if (drag) { drag = null; changed(); } };
 txStage.addEventListener('pointerup', endDrag);
 txStage.addEventListener('pointercancel', endDrag);
 

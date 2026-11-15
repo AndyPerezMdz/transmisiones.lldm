@@ -48,6 +48,7 @@
   .pasos { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
   .paso-fila { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; }
   .paso-fila .paso { margin-top: 2px; }
+  .paso-fila > :not(.paso) { grid-column: 2; min-width: 0; }
   .paso-fila b { color: var(--titulo); font-weight: 650; }
   .paso-fila .ayuda { grid-column: 2; font-size: 13.5px; }
   .paso-fila .acciones { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }

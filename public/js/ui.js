@@ -1,5 +1,5 @@
 // Piezas de interfaz compartidas: tema claro/oscuro, barra de navegación y avisos.
-import { demo, supa, qs, myTeams, pickTeam } from './db.js';
+import { demo, supa, qs, myTeams, pickTeam, manualUrl } from './db.js';
 import { icon, hydrateIcons } from './icons.js';
 export { icon };
 
@@ -92,6 +92,13 @@ export function mountNav(active, { roomName = '' } = {}) {
   const salir = el('button', { type: 'button', class: 'nav-boton', title: 'Cerrar sesión', 'aria-label': 'Cerrar sesión' }, icon('salir', { size: 18 }));
   salir.onclick = async () => { const sb = await supa(); await sb?.auth.signOut(); location.href = '/'; };
   const help = el('button', { type: 'button', class: 'nav-boton', id: 'navAyuda', title: 'Cómo se usa', 'aria-label': 'Cómo se usa' }, icon('ayuda', { size: 18 }));
+  const manual = el('button', { type: 'button', class: 'nav-boton', title: 'Manual de usuario (PDF)', 'aria-label': 'Manual de usuario' }, icon('texto', { size: 17 }), el('span', { class: 'nav-manual', text: 'Manual' }));
+  manual.onclick = async () => {
+    // La pestaña se abre antes de pedir el enlace para que el navegador no la bloquee.
+    const w = window.open('', '_blank');
+    try { const url = await manualUrl(); if (w) w.location = url; else location.href = url; }
+    catch (err) { w?.close(); toast(err.message, 'info'); }
+  };
   help.hidden = true;
   const sala_ = sala ? el('span', { class: 'nav-sala', id: 'navSala', text: roomName || '…' }) : el('span', { class: 'nav-sala', id: 'navSala', hidden: true });
   const linkList = () => el('nav', { class: 'nav-links' }, links.map(l => el('a', { href: l.href, class: l.id === active ? 'activo' : null },
@@ -102,7 +109,7 @@ export function mountNav(active, { roomName = '' } = {}) {
         el('img', { src: '/img/antorcha-clara.png', alt: '' }),
         el('span', {}, el('b', { text: 'Cabina en Vivo' }), el('small', { text: 'La Luz del Mundo' }))),
       linkList(),
-      el('div', { class: 'nav-der' }, sala_, help, themeButton(),
+      el('div', { class: 'nav-der' }, sala_, manual, help, themeButton(),
         demo ? el('span', { class: 'nav-boton', title: 'Sin base de datos', text: 'Demo' }) : salir)));
   document.body.prepend(header);
   // Pinta la app con la paleta del equipo (ya se aplicó la última conocida antes de dibujar).

@@ -87,3 +87,18 @@ export function pickTeam(teams) {
 export function rememberTeam(id) { try { localStorage.setItem(TEAM_KEY, id); } catch {} }
 // Equipo actual de quien está usando la app (o null si todavía no lo invitan).
 export async function currentTeam() { return pickTeam(await myTeams()); }
+
+// ---------- Manual de usuario (PDF en el bucket "manual" de Supabase) ----------
+export const MANUAL_ARCHIVO = 'manual-cabina-en-vivo.pdf';
+export async function manualUrl() {
+  if (demo) throw new Error('En modo de prueba no hay manual: ábrelo desde el sitio con tu cuenta.');
+  const sb = await supa();
+  const bucket = sb.storage.from('manual');
+  // Si el bucket es privado se usa un enlace firmado (dura 1 hora); si es público, el enlace directo.
+  const { data, error } = await bucket.createSignedUrl(MANUAL_ARCHIVO, 3600);
+  if (!error && data?.signedUrl) return data.signedUrl;
+  const pub = bucket.getPublicUrl(MANUAL_ARCHIVO).data.publicUrl;
+  const r = await fetch(pub, { method: 'HEAD' }).catch(() => null);
+  if (r?.ok) return pub;
+  throw new Error('Todavía no está el manual. Súbelo en Supabase → Storage → manual con el nombre ' + MANUAL_ARCHIVO + '.');
+}

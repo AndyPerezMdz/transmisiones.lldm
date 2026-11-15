@@ -78,6 +78,7 @@ Si el receptor (DJI) va a la laptop de la transmisión y la cabina se maneja en 
 - **Para después** (botón **+** en sugerencias y resultados): aparta lo que el expositor anuncia para más adelante; aparece en *Buscar → Para después* y se pone con un clic.
 - **Registro del culto**: todo lo que escuchó el micrófono (con hora), lo que se detectó y lo que se puso en pantalla se guarda en esa computadora por sala y por día. **Descargar** baja un `.txt` con expositor, tema, himnos, coros, citas, letreros y la transcripción.
 - **Modo práctica** (`/control?sala=…&practica=1`, o desde Salas y Ajustes): la cabina funciona igual pero nada sale a OBS ni a las TVs.
+- **Manual**: el botón *Manual* de la barra abre el PDF del bucket `manual` de Supabase (archivo `manual-cabina-en-vivo.pdf`; se sube desde Storage).
 - **Atajos extra**: teclado numérico (`6`/`+` siguiente, `4`/`-` anterior, `0` quitar, `.` ocultar, `Enter` poner la sugerencia), controles de presentación (`AvPág`/`RePág`) y `F13`–`F16` para Stream Deck (siguiente, anterior, quitar, ocultar).
 
 ## Uso

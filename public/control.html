@@ -50,6 +50,13 @@
         <button class="btn btn-oro" id="btnSpeaker" type="submit" title="Tecla N">Mostrar nombre</button>
         <div class="recientes" id="spRecent"></div>
       </form>
+      <form class="expositor" id="avForm" autocomplete="off">
+        <span class="expositor-tit" data-icon="aviso">Letrero libre</span>
+        <input class="campo" id="avText" maxlength="160" placeholder="Lo que quieras mostrar, ej. Bienvenidos a la Santa Cena">
+        <input class="campo" id="avTag" maxlength="60" placeholder="Etiqueta (opcional), ej. Aviso">
+        <button class="btn btn-oro" id="btnAviso" type="submit" title="Tecla L">Mostrar</button>
+        <div class="recientes" id="avRecent"></div>
+      </form>
     </div>
     <ol class="partes" id="slides" aria-label="Partes"></ol>
   </section>
@@ -189,6 +196,7 @@
       <li><span class="paso">1</span><div><b>Presiona “Escuchar”.</b> La cabina oye al expositor por el micrófono. Cuando diga una cita (“Juan capítulo 3, versículo 16”), un himno, un coro o el tema, aparece una tarjeta.</div></li>
       <li><span class="paso">2</span><div><b>Presiona “Poner en pantalla”</b> en la tarjeta. Sale en el letrero de la transmisión (y por lo tanto en las TVs). Nada sale solo.</div></li>
       <li><span class="paso">3</span><div><b>Avanza con “Siguiente”</b> para pasar de versículo o de estrofa. <b>Quitar todo</b> deja las TVs con el fondo (y el tema, si hay).</div></li>
+      <li><span class="paso" data-icon="aviso" data-icon-size="14"></span><div><b>Letrero libre:</b> para avisos o lo que quieran mostrar sin que sea cita ni canto. Escríbelo en “Letrero libre” y presiona <b>Mostrar</b>; se queda hasta que lo ocultes. Su diseño se cambia en Diseño → Letrero libre.</div></li>
       <li><span class="paso" data-icon="usuario" data-icon-size="14"></span><div><b>Nombre del expositor:</b> escríbelo arriba en “Quién expone” y presiona <b>Mostrar nombre</b>. Se queda abajo a la izquierda hasta que lo ocultes.</div></li>
       <li><span class="paso" data-icon="editar" data-icon-size="14"></span><div><b>¿No lo detectó?</b> Escríbelo en “O búscalo tú”: <code>Juan 3:16</code>, <code>himno 25</code>, <code>coro 7</code> o un pedazo de la letra, y presiona Enter.</div></li>
     </ol>
@@ -202,6 +210,7 @@
       <span><kbd>B</kbd> ocultar texto</span>
       <span><kbd>O</kbd> letrero</span>
       <span><kbd>N</kbd> nombre del expositor</span>
+      <span><kbd>L</kbd> letrero libre</span>
       <span><kbd>M</kbd> micrófono</span>
       <span><kbd>/</kbd> buscar</span>
     </div>

@@ -20,7 +20,7 @@ let suggestions = [];
 const seen = new Map();
 let results = [], sel = 0;
 let state = { rev: 0, item: null, index: 0, blank: false, theme: '', overlay: { visible: false, tag: '', title: '', seq: 0, until: 0 },
-  speaker: { visible: false, tag: '', title: '', seq: 0, until: 0 }, speakers: [],
+  speaker: { visible: false, tag: '', title: '', seq: 0, until: 0 }, speakers: [], avisos: [],
   settings: { ...DEFAULT_SETTINGS }, history: [] };
 
 // ---------- utilidades ----------
@@ -46,10 +46,9 @@ function commit() {
 
 let overlayTimer;
 const TYPE_OF = { bible: 'lectura', hymn: 'himno', coro: 'coro', theme: 'tema' };
-function showOverlay(tag, title, type = 'lectura') {
+function showOverlay(tag, title, type = 'lectura', secs = Number(state.settings.bannerSeconds)) {
   clearTimeout(overlayTimer);
   if (!state.settings.showBanner || !title) { state.overlay = { ...state.overlay, visible: false }; return; }
-  const secs = Number(state.settings.bannerSeconds);
   state.overlay = { visible: true, tag, title, type, seq: state.overlay.seq + 1, until: secs > 0 ? Date.now() + secs * 1000 : 0 };
   if (secs > 0) overlayTimer = setTimeout(() => { state.overlay = { ...state.overlay, visible: false }; commit(); }, secs * 1000);
 }
@@ -145,6 +144,20 @@ function render() {
     del.onclick = () => { state.speakers = state.speakers.filter(x => x.name !== p.name || x.role !== p.role); commit(); };
     chip.append(use, del);
     rec.append(chip);
+  }
+
+  const avOn = avisoVisible();
+  $('btnAviso').textContent = avOn ? 'Ocultar' : 'Mostrar';
+  $('btnAviso').className = 'btn ' + (avOn ? 'btn-sec activo' : 'btn-oro');
+  const avr = $('avRecent'); avr.replaceChildren();
+  for (const a of state.avisos || []) {
+    const chip = el('span', 'chip chip-nombre');
+    const use = el('button', 'usar', a.text + (a.tag ? ' · ' + a.tag : '')); use.type = 'button'; use.title = 'Mostrar este letrero';
+    use.onclick = () => { $('avText').value = a.text; $('avTag').value = a.tag || ''; showAviso(a.text, a.tag || ''); };
+    const del = el('button', 'quitar'); del.append(icon('cerrar', { size: 14 })); del.type = 'button'; del.title = 'Quitar de la lista'; del.setAttribute('aria-label', 'Quitar ' + a.text);
+    del.onclick = () => { state.avisos = state.avisos.filter(x => x.text !== a.text || x.tag !== a.tag); commit(); };
+    chip.append(use, del);
+    avr.append(chip);
   }
 
   const list = $('slides'); list.replaceChildren();
@@ -469,6 +482,7 @@ document.addEventListener('keydown', e => {
     Escape: actions.clear,
     b: actions.blank, o: () => $('btnBanner').click(), u: actions.location, m: () => micBtn.click(),
     n: () => state.speaker.visible ? hideSpeaker() : $('spForm').requestSubmit(),
+    l: () => avisoVisible() ? (hideOverlay(), commit()) : $('avForm').requestSubmit(),
     '/': () => { search.focus(); search.select(); }
   };
   const fn = map[e.key.length === 1 ? e.key.toLowerCase() : e.key] || map[e.key];
@@ -478,6 +492,28 @@ document.addEventListener('keydown', e => {
 $('clearHistory').onclick = async () => {
   if (await modal({ title: 'Borrar lo último que pusiste', text: 'Se borra la lista. Lo que está en pantalla no cambia.', ok: 'Sí, borrar', danger: true })) { state.history = []; commit(); }
 };
+
+// ---------- letrero libre ----------
+// Para avisos o cualquier texto que no sea cita ni canto. Se queda hasta que lo ocultes.
+const avisoVisible = () => state.overlay.visible && state.overlay.type === 'aviso';
+function showAviso(text, tag) {
+  if (!state.settings.showBanner) return toast('El letrero de la transmisión está apagado en Ajustes.', 'info');
+  showOverlay(tag || 'Aviso', text, 'aviso', 0);
+  state.avisos = [{ text, tag }, ...(state.avisos || []).filter(a => a.text !== text || a.tag !== tag)].slice(0, 8);
+  commit();
+}
+$('avForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const text = $('avText').value.trim(), tag = $('avTag').value.trim();
+  if (avisoVisible() && (!text || (text === state.overlay.title && (tag || 'Aviso') === state.overlay.tag))) { hideOverlay(); commit(); return; }
+  if (!text) { $('avText').focus(); return toast('Escribe lo que quieres mostrar.', 'info'); }
+  showAviso(text, tag);
+  document.activeElement?.blur();
+});
+for (const id of ['avText', 'avTag']) $(id).addEventListener('input', () => {
+  const differs = avisoVisible() && ($('avText').value.trim() !== state.overlay.title || ($('avTag').value.trim() || 'Aviso') !== state.overlay.tag);
+  $('btnAviso').textContent = differs ? 'Cambiar' : avisoVisible() ? 'Ocultar' : 'Mostrar';
+});
 
 // ---------- expositor ----------
 $('spForm').addEventListener('submit', e => {
@@ -555,6 +591,7 @@ for (const chip of document.querySelectorAll('#ejemplos .chip')) {
       state.speaker = { visible: false, tag: '', title: '', seq: 0, until: 0, ...state.speaker };
       state.speaker.visible = state.speaker.visible && (!state.speaker.until || state.speaker.until > Date.now());
       state.speakers ??= [];
+      state.avisos ??= [];
     }
     document.title = (saved?.name ? saved.name + ' · ' : '') + 'Cabina en Vivo';
     if ($('navSala')) $('navSala').textContent = saved?.name || 'Sala de prueba';

@@ -69,7 +69,8 @@ export const LETREROS = {
   himno:     { name: 'Himno', icon: 'himno', sample: ['Himno 25', 'Un título de himno algo largo'] },
   coro:      { name: 'Coro', icon: 'coro', sample: ['Coro', 'Alabemos con alegría'] },
   tema:      { name: 'Tema', icon: 'tema', sample: ['Tema', 'La fe que vence al mundo'] },
-  ubicacion: { name: 'Ubicación', icon: 'ubicacion', sample: ['Transmitiendo desde', 'Colonia, ciudad, estado'] }
+  ubicacion: { name: 'Ubicación', icon: 'ubicacion', sample: ['Transmitiendo desde', 'Colonia, ciudad, estado'] },
+  aviso:     { name: 'Letrero libre', icon: 'aviso', sample: ['Aviso', 'Lo que quieran mostrar'] }
 };
 const bannerDefault = () => lowerThird({ position: 'arriba-der', margin: { x: 70, y: 250 },
   tag: { x: 1180, y: 250 }, title: { x: 1180, y: 292, w: 680 } });
